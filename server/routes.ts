@@ -7,6 +7,7 @@ import multer from "multer";
 import { db } from "./db";
 import OpenAI from "openai";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
 import { 
   uploadedAudio, 
@@ -217,7 +218,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Call KIE.ai SUNO API with proxy
       const proxyAgent = createProxyAgent();
-      const sunoResponse = await fetch('https://api.kie.ai/api/v1/generate', {
+      const sunoResponse = await nodeFetch('https://api.kie.ai/api/v1/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -225,7 +226,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify(sunoPayload),
         agent: proxyAgent
-      } as any);
+      });
 
       if (!sunoResponse.ok) {
         const errorData = await sunoResponse.json().catch(() => ({}));
@@ -383,7 +384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Call KIE.ai upload-cover SUNO API with proxy
       const proxyAgent = createProxyAgent();
-      const sunoResponse = await fetch('https://api.kie.ai/api/v1/generate/upload-cover', {
+      const sunoResponse = await nodeFetch('https://api.kie.ai/api/v1/generate/upload-cover', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -391,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         body: JSON.stringify(coverPayload),
         agent: proxyAgent
-      } as any);
+      });
 
       if (!sunoResponse.ok) {
         const errorData = await sunoResponse.json().catch(() => ({}));
@@ -440,12 +441,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Checking status for taskId:', taskId);
       const proxyAgent = createProxyAgent();
-      const response = await fetch(`https://api.kie.ai/api/v1/generate/record-info?taskId=${taskId}`, {
+      const response = await nodeFetch(`https://api.kie.ai/api/v1/generate/record-info?taskId=${taskId}`, {
         headers: {
           'Authorization': `Bearer ${sunoApiKey}`
         },
         agent: proxyAgent
-      } as any);
+      });
 
       const data = await response.json();
       console.log(`KIE.ai status for task ${taskId}:`, JSON.stringify(data, null, 2));
@@ -835,7 +836,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Call SUNO WAV conversion API with proxy
       const proxyAgent = createProxyAgent();
-      const wavResponse = await fetch('https://api.kie.ai/api/v1/wav/generate', {
+      const wavResponse = await nodeFetch('https://api.kie.ai/api/v1/wav/generate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -847,7 +848,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           callBackUrl
         }),
         agent: proxyAgent
-      } as any);
+      });
       
       if (!wavResponse.ok) {
         const errorData = await wavResponse.json().catch(() => ({}));
@@ -929,12 +930,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Call SUNO API to get WAV status with proxy
       // Note: Exact endpoint for status polling may vary - check SUNO docs
       const proxyAgent = createProxyAgent();
-      const response = await fetch(`https://api.kie.ai/api/v1/wav/get?taskId=${taskId}`, {
+      const response = await nodeFetch(`https://api.kie.ai/api/v1/wav/get?taskId=${taskId}`, {
         headers: {
           'Authorization': `Bearer ${sunoApiKey}`
         },
         agent: proxyAgent
-      } as any);
+      });
       
       if (!response.ok) {
         return res.status(response.status).json({
