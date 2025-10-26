@@ -161,7 +161,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: prompt,
         model: model,
         instrumental: instrumental,
-        customMode: customMode
+        customMode: customMode,
+        callBackUrl: '' // Empty callback URL - we use polling instead
       };
 
       // Add vocal gender only in custom mode (per KIE.ai API spec)
