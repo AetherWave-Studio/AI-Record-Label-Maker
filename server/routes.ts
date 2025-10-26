@@ -1044,6 +1044,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Proxy endpoint for downloading external images (bypasses CORS)
+  app.get("/api/download-image", isAuthenticated, async (req: any, res) => {
+    try {
+      const { url, filename } = req.query;
+
+      if (!url || !filename) {
+        return res.status(400).json({ error: 'URL and filename are required' });
+      }
+
+      // Fetch the image from the external URL
+      const response = await fetch(url as string);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+
+      const buffer = await response.arrayBuffer();
+      const contentType = response.headers.get('content-type') || 'image/png';
+
+      // Set headers to force download
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Length', buffer.byteLength.toString());
+
+      // Send the image buffer
+      res.send(Buffer.from(buffer));
+
+    } catch (error: any) {
+      console.error('Image download proxy error:', error);
+      res.status(500).json({ error: 'Failed to download image', details: error.message });
+    }
+  });
+
   // Music Video Generation with Fal.ai Seedance
   app.post("/api/generate-video-fal", isAuthenticated, async (req: any, res) => {
     try {

@@ -3156,41 +3156,21 @@ window.premiumPlayer = {
     try {
     console.log('Downloading file:', url);
     
-    // For external URLs (like OpenAI/DALL-E), try to fetch and download
-    const response = await fetch(url, { mode: 'cors' });
-    if (!response.ok) throw new Error('Fetch failed');
+    // Use backend proxy to download external images (bypasses CORS)
+    const proxyUrl = `/api/download-image?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
     
-    const blob = await response.blob();
-    const blobUrl = window.URL.createObjectURL(blob);
-
+    // Create a temporary link and trigger download
     const link = document.createElement('a');
-    link.href = blobUrl;
+    link.href = proxyUrl;
     link.download = filename;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
-    // Clean up the blob URL after a delay
-    setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+    
     console.log('Download initiated for:', filename);
     } catch (error) {
-    console.error('Download failed, trying direct download:', error);
-    // Fallback: use direct link with download attribute
-    try {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      console.log('Direct download initiated for:', filename);
-    } catch (fallbackError) {
-      console.error('All download methods failed:', fallbackError);
-      alert('Download failed. Opening in new tab - please right-click and select "Save Image As..."');
-      window.open(url, '_blank');
-    }
+    console.error('Download failed:', error);
+    alert('Download failed. Please try again or right-click and select "Save Image As..."');
     }
     }
 
