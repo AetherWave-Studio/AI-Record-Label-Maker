@@ -169,6 +169,7 @@ export const ServiceType = z.enum([
   'music_generation',
   'video_generation', 
   'image_generation',
+  'album_art_generation',
   'wav_conversion'
 ]);
 export type ServiceType = z.infer<typeof ServiceType>;
@@ -178,6 +179,7 @@ export const SERVICE_CREDIT_COSTS: Record<ServiceType, number> = {
   music_generation: 5,
   video_generation: 10,
   image_generation: 3,
+  album_art_generation: 3, // Same cost as regular image generation
   wav_conversion: 2,
 };
 
@@ -186,6 +188,7 @@ export const UNLIMITED_SERVICE_PLANS: Record<ServiceType, PlanType[]> = {
   music_generation: ['studio', 'creator', 'all_access'],
   video_generation: ['all_access'],
   image_generation: ['all_access'],
+  album_art_generation: ['all_access'], // Album art unlimited for All Access plan
   wav_conversion: ['studio', 'creator', 'all_access'], // WAV conversion free for paid plans
 };
 

@@ -950,9 +950,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Example: Image generation endpoint stub (for future implementation)
-  // This demonstrates server-side plan validation for image engines
-  app.post("/api/generate-image", isAuthenticated, async (req: any, res) => {
+  // Album Art Generation with DALL-E 3
+  app.post("/api/generate-art", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -961,26 +960,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const { prompt, engine = 'dall-e-2' } = req.body;
-      const userPlan = user.subscriptionPlan as PlanType;
+      const { prompt, style = 'abstract' } = req.body;
       
-      // Validate engine is allowed for user's plan
-      if (!validateImageEngine(userPlan, engine as ImageEngine)) {
-        return res.status(403).json({
-          error: 'Engine not allowed',
-          message: `Your ${user.subscriptionPlan} plan does not include ${engine} engine. Upgrade to Studio or higher to unlock premium image engines.`,
-          allowedEngines: PLAN_FEATURES[userPlan].allowedImageEngines
+      // Validate inputs
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'Invalid prompt' });
+      }
+      
+      if (prompt.length > 1000) {
+        return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
+      }
+      
+      // Validate OpenAI API key
+      const openaiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+      const openaiBaseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+      
+      if (!openaiKey) {
+        return res.status(500).json({ error: 'OpenAI API key not configured' });
+      }
+      
+      // Deduct credits for album art generation
+      const creditResult = await storage.deductCredits(userId, 'album_art_generation');
+      
+      if (!creditResult.success) {
+        return res.status(403).json({ 
+          error: 'Insufficient credits',
+          credits: creditResult.newBalance,
+          required: SERVICE_CREDIT_COSTS.album_art_generation,
+          message: creditResult.error || 'You need more credits to generate album art. Upgrade your plan or wait for daily reset.'
         });
       }
       
-      // TODO: Call image generation API (e.g., OpenAI DALL-E, Stability AI, etc.)
-      return res.status(501).json({
-        message: 'Image generation not yet implemented',
-        validatedEngine: engine
+      // Style descriptions for enhanced prompts
+      const styleDescriptions: Record<string, string> = {
+        cyberpunk: 'cyberpunk aesthetic, neon lights, futuristic cityscape, dark background with bright neon accents',
+        abstract: 'abstract art, flowing shapes, vibrant colors, artistic interpretation',
+        retro: 'retro vaporwave aesthetic, 80s style, pink and purple gradients, nostalgic vibes',
+        minimal: 'minimalist design, clean lines, simple composition, modern aesthetic',
+        surreal: 'surrealist art, dreamlike imagery, unexpected elements, artistic creativity',
+        photorealistic: 'photorealistic, highly detailed, professional photography style'
+      };
+      
+      const styleHint = styleDescriptions[style] || styleDescriptions.abstract;
+      const enhancedPrompt = `Album cover art: ${prompt}. Style: ${styleHint}. Square format, professional music album cover design.`;
+      
+      console.log('Generating album art with DALL-E 3:', { prompt, style, enhancedPrompt });
+      
+      // Initialize OpenAI client
+      const openai = new OpenAI({
+        apiKey: openaiKey,
+        baseURL: openaiBaseUrl,
       });
+      
+      // Call DALL-E 3 API
+      const imageResponse = await openai.images.generate({
+        model: 'dall-e-3',
+        prompt: enhancedPrompt,
+        n: 1,
+        size: '1024x1024',
+        quality: 'standard'
+      });
+      
+      if (!imageResponse.data || imageResponse.data.length === 0) {
+        throw new Error('No image data returned from DALL-E API');
+      }
+      
+      const imageData = imageResponse.data[0];
+      
+      return res.status(200).json({
+        imageUrl: imageData.url,
+        prompt: prompt,
+        style: style,
+        revisedPrompt: imageData.revised_prompt
+      });
+      
     } catch (error: any) {
-      console.error('Image generation error:', error);
-      res.status(500).json({ error: error.message });
+      console.error('Album art generation error:', error);
+      res.status(500).json({
+        error: 'Failed to generate album art',
+        details: error.message
+      });
     }
   });
 
