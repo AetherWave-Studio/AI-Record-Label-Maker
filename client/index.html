@@ -4013,6 +4013,10 @@ async function generateMedia() {
         document.getElementById('album-art-track-title').textContent = `Style for "${trackTitle}"`;
         document.getElementById('album-art-modal').style.display = 'flex';
         
+        // Clear artist name input
+        const artistInput = document.getElementById('album-art-artist-name');
+        if (artistInput) artistInput.value = '';
+        
         // Reset all styles and select photorealistic by default
         this.updateSelection();
       },
@@ -4053,22 +4057,31 @@ async function generateMedia() {
         const trackTitle = this.trackTitle;
         const style = this.selectedStyle;
         
+        // Get artist name from input
+        const artistInput = document.getElementById('album-art-artist-name');
+        const artistName = artistInput ? artistInput.value.trim() : '';
+        
         this.close();
         
-        // Now call the actual generation function
-        await window.generateAlbumArtForTrack(trackId, trackTitle, style);
+        // Now call the actual generation function with artist name
+        await window.generateAlbumArtForTrack(trackId, trackTitle, style, artistName);
       }
     };
 
     // Generate album art for a specific track with selected style
-    window.generateAlbumArtForTrack = async function(trackId, trackTitle, style) {
+    window.generateAlbumArtForTrack = async function(trackId, trackTitle, style, artistName = '') {
       const resultDiv = document.getElementById(`visual-result-${trackId}`);
       resultDiv.innerHTML = `<p style="color: var(--accent-color); font-size: 0.9rem;">🎨 Generating ${style} album art with DALL-E 3...</p>`;
 
       try {
-        const artPrompt = `Album cover art for the song "${trackTitle}". Music-themed, artistic, vibrant, professional album artwork design`;
+        // Build prompt with artist name if provided
+        let artPrompt = `Album cover art for the song "${trackTitle}". Music-themed, artistic, vibrant, professional album artwork design`;
+        
+        if (artistName) {
+          artPrompt += `. The artist name is "${artistName}" - include this artist name prominently on the album cover`;
+        }
 
-        console.log('Generating album art with prompt:', artPrompt, 'Style:', style);
+        console.log('Generating album art with prompt:', artPrompt, 'Style:', style, 'Artist:', artistName || 'none');
 
         const response = await fetch('/api/generate-art', {
           method: 'POST',
@@ -4326,6 +4339,25 @@ updateMediaInputs();
         <div class="modal-title">Generate Album Art</div>
         <div class="modal-subtitle" id="album-art-track-title">Select art style</div>
       </div>
+      
+      <!-- Artist Name Input -->
+      <div style="margin-bottom: 1.5rem;">
+        <label for="album-art-artist-name" class="form-label" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--text-color);">
+          Artist Name (optional)
+        </label>
+        <input 
+          type="text" 
+          id="album-art-artist-name" 
+          class="form-input" 
+          placeholder="Enter artist name to appear on the cover..."
+          data-testid="input-artist-name"
+          style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.3); background: rgba(0, 0, 0, 0.3); color: var(--text-color); font-size: 0.95rem;"
+        />
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;">
+          DALL-E will include this name on the album cover design
+        </div>
+      </div>
+
       <div class="download-options">
         <div class="download-option" onclick="window.albumArtModal.selectStyle('photorealistic', event)" data-testid="style-photorealistic" data-style="photorealistic">
           <div class="download-option-info">
