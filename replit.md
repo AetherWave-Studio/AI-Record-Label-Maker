@@ -122,8 +122,22 @@ Preferred communication style: Simple, everyday language.
   - Backend proxy endpoint for CORS-free downloads
 - **Fal.ai Seedance**: AI music video generation (requires FAL_KEY)
   - Supports text-to-video, image-to-video, and reference-to-video modes
-  - Lite/Pro model variants with 720p/1080p resolution options
-  - 5 or 10 second duration support
+  - Lite/Pro model variants with 512p/720p/1080p/4K resolution options
+  - 3/5/10 second duration support
+  - **Quality-Based Credit Pricing**:
+    - Base cost: 3 credits (Lite, 512p, 3s)
+    - Model multiplier: Lite=1x, Pro=2x
+    - Resolution multiplier: 512p=1x, 720p=1.5x, 1080p=2x, 4K=3x
+    - Duration multiplier: (seconds/3)x
+    - Example: Pro 4K 10s = 60 credits (3 × 2 × 3 × 3.33)
+  - **Free Account Restrictions**:
+    - Locked to default settings only (Lite, 512p, 3s = 3 credits)
+    - Quality/Resolution/Duration dropdowns disabled in UI
+    - Backend validation prevents API bypass attempts
+  - **Paid Account Benefits**:
+    - Full access to all quality settings
+    - Credits deducted based on selected quality
+    - All Access plan: unlimited video generation (no credit deduction)
 - **Replit AI Integrations**: OpenAI chat via environment credentials
 - **Google Fonts**: Inter font family
 
