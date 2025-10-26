@@ -3151,7 +3151,7 @@ window.premiumPlayer = {
       });
     }
 
-    // Helper function to download files properly (bypasses CORS and preview issues)
+    // Helper function to download images (bypasses CORS and preview issues)
     window.downloadFile = async function(url, filename) {
     try {
     console.log('Downloading file:', url);
@@ -3171,6 +3171,39 @@ window.premiumPlayer = {
     } catch (error) {
     console.error('Download failed:', error);
     alert('Download failed. Please try again or right-click and select "Save Image As..."');
+    }
+    }
+
+    // Helper function to download videos (prevents opening in same window)
+    window.downloadVideo = async function(url, filename) {
+    try {
+    console.log('Downloading video:', url);
+    
+    // Fetch the video as a blob
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Download failed');
+    
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    // Create download link with blob URL
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    }, 100);
+    
+    console.log('Video download initiated for:', filename);
+    } catch (error) {
+    console.error('Video download failed:', error);
+    alert('Download failed. Please try again or right-click the video and select "Save Video As..."');
     }
     }
 
@@ -3739,7 +3772,7 @@ async function generateMedia() {
     <div class="result-title">✅ Video Generated with Fal.ai Seedance 1.0${generationTime}</div>
     <video controls autoplay loop src="${data.videoUrl}" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;"></video>
     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-    <a href="${data.videoUrl}" download="aetherwave-${selectedUseCase}.mp4" class="download-btn">Download Video</a>
+    <button onclick="downloadVideo('${data.videoUrl}', 'aetherwave-${selectedUseCase}.mp4')" class="download-btn" style="cursor: pointer;">Download Video</button>
     ${data.seed ? `<span class="download-btn" style="cursor: default;">Seed: ${data.seed}</span>` : ''}
     </div>
     <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
@@ -3905,7 +3938,7 @@ async function generateMedia() {
     </video>
     ${data.coverUrl ? `<img src="${data.coverUrl}" alt="Video thumbnail" style="display: none;">` : ''}
     <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-    <button onclick="downloadFile('${data.videoUrl}', 'seedance-video.mp4')" class="download-btn" style="cursor: pointer;">Download Video</button>
+    <button onclick="downloadVideo('${data.videoUrl}', 'seedance-video.mp4')" class="download-btn" style="cursor: pointer;">Download Video</button>
     ${data.seed ? `<span class="download-btn" style="cursor: default;">Seed: ${data.seed}</span>` : ''}
     </div>
     <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
@@ -4077,7 +4110,7 @@ async function generateMedia() {
     <video controls autoplay loop style="width: 100%; border-radius: 8px; margin-top: 0.5rem;">
     <source src="${data.videoUrl}" type="video/mp4">
     </video>
-    <button onclick="downloadFile('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
+    <button onclick="downloadVideo('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
     `;
     } else if (response.status === 202 || data.status === 'processing') {
     // Fallback for async responses (shouldn't happen with Fal.ai)
@@ -4121,7 +4154,7 @@ async function generateMedia() {
     <video controls style="width: 100%; border-radius: 8px; margin-top: 0.5rem;">
     <source src="${statusData.videoUrl}" type="video/mp4">
     </video>
-    <button onclick="downloadFile('${statusData.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
+    <button onclick="downloadVideo('${statusData.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
     `;
     } else if (statusData.status === 'failed') {
     clearInterval(checkInterval);
@@ -4166,7 +4199,7 @@ async function generateMedia() {
     <video controls style="width: 100%; border-radius: 8px; margin-top: 0.5rem;">
     <source src="${data.videoUrl}" type="video/mp4">
     </video>
-    <button onclick="downloadFile('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
+    <button onclick="downloadVideo('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
     `;
     }
     }
