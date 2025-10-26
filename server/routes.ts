@@ -46,31 +46,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update user credits (for admin or internal use)
-  app.post('/api/user/credits', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { credits } = req.body;
-      
-      if (typeof credits !== 'number') {
-        return res.status(400).json({ message: "Invalid credits value" });
-      }
-      
-      const updatedUser = await storage.updateUserCredits(userId, credits);
-      
-      if (!updatedUser) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      res.json({
-        credits: updatedUser.credits,
-        subscriptionPlan: updatedUser.subscriptionPlan
-      });
-    } catch (error) {
-      console.error("Error updating credits:", error);
-      res.status(500).json({ message: "Failed to update credits" });
+  // Deduct user credits (internal server-side only - not exposed to client)
+  // This should only be called by server-side generation endpoints after validating the request
+  async function deductCredits(userId: string, amount: number): Promise<boolean> {
+    const user = await storage.getUser(userId);
+    if (!user) return false;
+    
+    // Check if user has unlimited plan
+    const unlimitedPlans = ['studio', 'creator', 'all_access'];
+    if (unlimitedPlans.includes(user.subscriptionPlan)) {
+      return true; // No deduction needed for unlimited plans
     }
-  });
+    
+    // Check if user has enough credits
+    if (user.credits < amount) {
+      return false; // Insufficient credits
+    }
+    
+    // Deduct credits
+    await storage.updateUserCredits(userId, user.credits - amount);
+    return true;
+  }
+
+  // NOTE: POST /api/user/credits endpoint removed for security
+  // Credits can only be modified server-side via generation endpoints
 
   const httpServer = createServer(app);
 
