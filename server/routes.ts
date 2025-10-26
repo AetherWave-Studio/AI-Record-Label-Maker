@@ -1182,15 +1182,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Reference mode uses array of image URLs
           input.image_urls = [imageSource];
         } else {
-          // First-frame mode uses single image URL
+          // First-frame mode uses single image URL (image-to-video)
           input.image_url = imageSource;
+          
+          // Add end frame if provided (only for image-to-video mode)
+          if (end_image_url) {
+            input.end_image_url = end_image_url;
+            console.log('Using end frame:', end_image_url);
+          }
         }
-      }
-      
-      // Note: end_image_url is not supported by Seedance models
-      // Seedance only supports start frame (image-to-video) or reference images
-      if (end_image_url) {
-        console.warn('Warning: end_image_url parameter is not supported by Fal.ai Seedance models and will be ignored');
       }
 
       // Subscribe to the model (streaming response)
