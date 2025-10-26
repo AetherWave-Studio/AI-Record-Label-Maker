@@ -971,12 +971,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
       }
       
-      // Validate OpenAI API key
-      const openaiKey = process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
-      const openaiBaseUrl = process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+      // Validate OpenAI API key - prefer direct key for DALL-E 3
+      const openaiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
       
       if (!openaiKey) {
-        return res.status(500).json({ error: 'OpenAI API key not configured' });
+        return res.status(500).json({ error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your secrets.' });
       }
       
       // Deduct credits for album art generation
@@ -1006,10 +1005,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('Generating album art with DALL-E 3:', { prompt, style, enhancedPrompt });
       
-      // Initialize OpenAI client
+      // Initialize OpenAI client with official API endpoint (NOT Replit proxy)
+      // DALL-E 3 requires direct OpenAI API, not the Replit AI Integration proxy
       const openai = new OpenAI({
         apiKey: openaiKey,
-        baseURL: openaiBaseUrl,
+        // Don't set baseURL - use official OpenAI endpoint for DALL-E 3
       });
       
       // Call DALL-E 3 API
