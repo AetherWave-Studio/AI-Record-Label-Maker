@@ -7,6 +7,7 @@ import multer from "multer";
 import { db } from "./db";
 import OpenAI from "openai";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import { fal } from "@fal-ai/client";
 import { 
   uploadedAudio, 
   PLAN_FEATURES,
@@ -1039,6 +1040,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({
         error: 'Failed to generate album art',
         details: error.message
+      });
+    }
+  });
+
+  // Music Video Generation with Fal.ai Seedance
+  app.post("/api/generate-video-fal", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const {
+        prompt,
+        imageData,
+        imageMode = 'first-frame',
+        modelVersion = 'lite',
+        resolution = '720p',
+        duration = '5',
+        cameraFixed = false,
+        seed = -1,
+        enableSafetyChecker = true
+      } = req.body;
+
+      if (!prompt) {
+        return res.status(400).json({
+          error: 'Invalid request. Prompt is required for video generation.'
+        });
+      }
+
+      // Validate Fal.ai API key
+      const falApiKey = process.env.FAL_KEY;
+      if (!falApiKey) {
+        return res.status(500).json({ error: 'Fal.ai API key not configured. Please add FAL_KEY to your secrets.' });
+      }
+
+      // Set API key for Fal client
+      process.env.FAL_KEY = falApiKey;
+
+      // Deduct credits for video generation
+      const creditResult = await storage.deductCredits(userId, 'video_generation');
+
+      if (!creditResult.success) {
+        return res.status(403).json({
+          error: 'Insufficient credits',
+          credits: creditResult.newBalance,
+          required: SERVICE_CREDIT_COSTS.video_generation,
+          message: creditResult.error || 'You need more credits to generate videos. Upgrade your plan or wait for daily reset.'
+        });
+      }
+
+      // Determine which Fal.ai model to use
+      let modelId;
+      if (imageData) {
+        if (imageMode === 'reference') {
+          modelId = modelVersion === 'pro'
+            ? 'fal-ai/bytedance/seedance/v1/pro/reference-to-video'
+            : 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
+        } else {
+          modelId = modelVersion === 'pro'
+            ? 'fal-ai/bytedance/seedance/v1/pro/image-to-video'
+            : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
+        }
+      } else {
+        modelId = modelVersion === 'pro'
+          ? 'fal-ai/bytedance/seedance/v1/pro/text-to-video'
+          : 'fal-ai/bytedance/seedance/v1/lite/text-to-video';
+      }
+
+      console.log('Generating video with Fal.ai Seedance:', {
+        model: modelId,
+        prompt: prompt,
+        hasImage: !!imageData,
+        imageMode: imageData ? imageMode : 'none',
+        resolution: resolution,
+        duration: duration
+      });
+
+      // Build request input
+      const input: any = {
+        prompt: prompt,
+        num_frames: duration === '10' ? 241 : 121,
+        enable_safety_checker: enableSafetyChecker
+      };
+
+      // Add resolution
+      if (resolution === '512p') {
+        input.resolution = '480p';
+      } else {
+        input.resolution = resolution;
+      }
+
+      // Add image if provided
+      if (imageData) {
+        if (imageMode === 'reference') {
+          input.image_urls = [imageData];
+        } else {
+          input.image_url = imageData;
+        }
+      }
+
+      // Subscribe to the model (streaming response)
+      const result = await fal.subscribe(modelId, {
+        input: input,
+        logs: true,
+        onQueueUpdate: (update: any) => {
+          console.log('Fal.ai queue update:', update.status);
+        }
+      });
+
+      console.log('Fal.ai video generation complete');
+
+      // Extract video URL (type assertion needed for Fal.ai response structure)
+      const resultData = result as any;
+      const videoUrl = resultData.data?.video?.url ||
+        resultData.video?.url ||
+        resultData.video_url ||
+        resultData.data?.video_url ||
+        resultData.url;
+
+      if (videoUrl) {
+        console.log('✅ Video URL extracted:', videoUrl);
+        return res.status(200).json({
+          status: 'complete',
+          videoUrl: videoUrl,
+          model: modelId,
+          seed: resultData.data?.seed || resultData.seed,
+          timings: resultData.timings || resultData.data?.timings
+        });
+      } else {
+        console.error('❌ No video URL found in response');
+        return res.status(500).json({
+          error: 'Video generation completed but no video URL found in response',
+          result: result
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Fal.ai Video Generation Error:', error);
+      res.status(500).json({
+        error: 'Failed to generate video with Fal.ai',
+        details: error.message,
+        body: error.body
       });
     }
   });
