@@ -50,6 +50,32 @@ function validateMusicModel(planType: PlanType, model: MusicModel): boolean {
   return allowedModels.includes(model);
 }
 
+// Calculate video generation credits based on quality settings
+function calculateVideoCredits(
+  modelVersion: 'lite' | 'pro',
+  resolution: '512p' | '720p' | '1080p',
+  duration: number
+): number {
+  // Base cost by model
+  const modelMultiplier = modelVersion === 'pro' ? 2 : 1; // Pro is 2x
+  
+  // Resolution multiplier
+  let resolutionMultiplier = 1;
+  if (resolution === '720p') resolutionMultiplier = 1.5;
+  if (resolution === '1080p') resolutionMultiplier = 2;
+  
+  // Duration multiplier (3s = 1x, 5s = 1.5x, 10s = 2x)
+  const durationMultiplier = duration / 3;
+  
+  // Base cost is 3 credits for lowest settings (lite, 512p, 3s)
+  const baseCredits = 3;
+  const totalCredits = Math.ceil(baseCredits * modelMultiplier * resolutionMultiplier * durationMultiplier);
+  
+  console.log(`Video credits calculation: ${modelVersion} ${resolution} ${duration}s = ${totalCredits} credits (base: ${baseCredits}, model: ${modelMultiplier}x, res: ${resolutionMultiplier}x, duration: ${durationMultiplier}x)`);
+  
+  return totalCredits;
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup Replit Auth
   await setupAuth(app);
@@ -1159,16 +1185,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set API key for Fal client
       process.env.FAL_KEY = falApiKey;
 
-      // Deduct credits for video generation
-      const creditResult = await storage.deductCredits(userId, 'video_generation');
+      // Validate quality settings for free accounts
+      if (user.subscriptionPlan === 'free') {
+        if (modelVersion !== 'lite' || resolution !== '512p' || parseInt(duration) !== 3) {
+          return res.status(403).json({
+            error: 'Free accounts can only use default settings (Lite model, 512p, 3 seconds)',
+            message: 'Please upgrade your plan to access higher quality video generation settings.'
+          });
+        }
+      }
 
-      if (!creditResult.success) {
-        return res.status(403).json({
-          error: 'Insufficient credits',
-          credits: creditResult.newBalance,
-          required: SERVICE_CREDIT_COSTS.video_generation,
-          message: creditResult.error || 'You need more credits to generate videos. Upgrade your plan or wait for daily reset.'
-        });
+      // Calculate credits based on quality settings
+      const requiredCredits = calculateVideoCredits(
+        modelVersion as 'lite' | 'pro',
+        resolution as '512p' | '720p' | '1080p',
+        parseInt(duration)
+      );
+
+      // Check if plan has unlimited video generation
+      const hasUnlimitedVideo = ['all_access'].includes(user.subscriptionPlan);
+
+      // Deduct credits for video generation (skip for unlimited plans)
+      if (!hasUnlimitedVideo) {
+        const currentCredits = user.credits || 0;
+        if (currentCredits < requiredCredits) {
+          return res.status(403).json({
+            error: 'Insufficient credits',
+            credits: currentCredits,
+            required: requiredCredits,
+            message: `You need ${requiredCredits} credits to generate this video. Upgrade your plan or wait for daily reset.`
+          });
+        }
+
+        // Deduct the calculated amount
+        const newCredits = currentCredits - requiredCredits;
+        await storage.updateUserCredits(userId, newCredits);
+        console.log(`Deducted ${requiredCredits} credits for video generation. New balance: ${newCredits}`);
+      } else {
+        console.log('Unlimited plan - skipping credit deduction');
       }
 
       // Determine which Fal.ai model to use
