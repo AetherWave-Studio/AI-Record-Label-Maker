@@ -3548,13 +3548,6 @@ window.premiumPlayer = {
                   </svg>
                   Album Art
                 </button>
-                <button class="action-btn" onclick="generateVisualForTrack('${musicTaskId}', '${track.id}', '${track.title}', 'video')" data-testid="button-generate-video-${index}">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="23 7 16 12 23 17 23 7"/>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                  </svg>
-                  Music Video
-                </button>
               </div>
               <audio preload="metadata" src="${track.streamAudioUrl || track.audioUrl}" data-track-id="${track.id}"></audio>
               <div id="visual-result-${track.id}" style="margin-top: 0.5rem;"></div>
@@ -4179,156 +4172,13 @@ async function generateMedia() {
       }
     };
 
-    // Generate visual (image/video) for a specific track
+    // Generate visual (album art) for a specific track - opens album art style modal
     window.generateVisualForTrack = async function(musicTaskId, trackId, trackTitle, type) {
-    const resultDiv = document.getElementById(`visual-result-${trackId}`);
-
-    // For album art, open style selection modal
-    if (type === 'image') {
-      window.albumArtModal.open(trackId, trackTitle);
-      return;
-    }
-
-    // Only ask for prompt for video generation
-    let prompt = null;
-    if (type === 'video') {
-    prompt = window.prompt(
-    `Describe the music video for "${trackTitle}"`,
-    `Music video for ${trackTitle}`
-    );
-    if (!prompt) return;
-    }
-
-    resultDiv.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem;">Generating ${type}...</p>`;
-
-    try {
-    if (type === 'video') {
-    // Generate music video using Fal.ai Seedance 1.0 (synchronous - no polling!)
-    const response = await fetch('/api/generate-video-fal', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-    prompt: prompt,
-    modelVersion: 'lite', // Fast generation
-    resolution: '720p',
-    duration: '5',
-    enableSafetyChecker: true
-    })
-    });
-
-    const data = await response.json();
-
-    console.log('Fal.ai video generation response:', data);
-
-    if (!response.ok) {
-    console.error('Video generation error response:', data);
-    throw new Error(data.details || data.error || 'Failed to generate video');
-    }
-
-    // Fal.ai returns video synchronously - display immediately
-    if (data.status === 'complete' && data.videoUrl) {
-    resultDiv.innerHTML = `
-    <p style="color: #4ade80; font-size: 0.9rem;">✅ Music video complete! (Fal.ai Seedance)</p>
-    <video controls autoplay loop style="width: 100%; border-radius: 8px; margin-top: 0.5rem;">
-    <source src="${data.videoUrl}" type="video/mp4">
-    </video>
-    <button onclick="downloadVideo('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
-    `;
-    } else if (response.status === 202 || data.status === 'processing') {
-    // Fallback for async responses (shouldn't happen with Fal.ai)
-    const videoTaskId = data.taskId;
-
-    console.log('Video generation started. Task ID:', videoTaskId);
-
-    resultDiv.innerHTML = `
-    <p style="color: var(--accent-color); font-size: 0.9rem;"><img src="/assets/icon-set/camera1-icon.png" style="width: 18px; height: 18px; margin-right: 0.5rem; vertical-align: middle;"> Video generation started with Seedance 1.0!</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Task ID: ${videoTaskId}</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem;">This may take 5-10 minutes. Checking status every 10 seconds...</p>
-    `;
-
-    let pollCount = 0;
-    const maxPolls = 60; // 10 minutes max (60 * 10 seconds)
-
-    // Poll for completion
-    const checkInterval = setInterval(async () => {
-    pollCount++;
-    console.log(`Poll attempt ${pollCount}/${maxPolls} for video task: ${videoTaskId}`);
-
-    try {
-    const statusResponse = await fetch(`/api/video-status?taskId=${videoTaskId}`);
-    console.log('Status response status:', statusResponse.status);
-
-    if (!statusResponse.ok) {
-    console.error('Status check failed with status:', statusResponse.status);
-    const errorText = await statusResponse.text();
-    console.error('Error response:', errorText);
-    throw new Error(`Status check failed: ${statusResponse.status} - ${errorText}`);
-    }
-
-    const statusData = await statusResponse.json();
-    console.log('Status data received:', statusData);
-
-    if (statusData.status === 'complete') {
-    clearInterval(checkInterval);
-    console.log('Video complete! URL:', statusData.videoUrl);
-    resultDiv.innerHTML = `
-    <p style="color: #4ade80; font-size: 0.9rem;">✅ Music video complete! (Seedance 1.0)</p>
-    <video controls style="width: 100%; border-radius: 8px; margin-top: 0.5rem;">
-    <source src="${statusData.videoUrl}" type="video/mp4">
-    </video>
-    <button onclick="downloadVideo('${statusData.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
-    `;
-    } else if (statusData.status === 'failed') {
-    clearInterval(checkInterval);
-    console.error('Video generation failed:', statusData.error || statusData.details);
-    resultDiv.innerHTML = `<p style="color: #ff6b6b; font-size: 0.9rem;">❌ Video generation failed: ${statusData.error || statusData.details || 'Unknown error'}</p>`;
-    } else {
-    // Still processing - update message with progress
-    const progressMsg = statusData.jobStatus || statusData.status || 'processing';
-    const elapsedTime = Math.floor((pollCount * 10) / 60);
-    const elapsedSeconds = (pollCount * 10) % 60;
-    console.log('Still processing. Status:', progressMsg, 'Full status data:', JSON.stringify(statusData));
-    resultDiv.innerHTML = `
-    <p style="color: var(--accent-color); font-size: 0.9rem;"><img src="/assets/icon-set/camera1-icon.png" style="width: 18px; height: 18px; margin-right: 0.5rem; vertical-align: middle;"> Generating music video... (${progressMsg})</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">Time elapsed: ${elapsedTime}m ${elapsedSeconds}s</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem;">Poll ${pollCount}/${maxPolls} - Task: ${videoTaskId}</p>
-    `;
-    }
-
-    // Timeout check
-    if (pollCount >= maxPolls) {
-    clearInterval(checkInterval);
-    console.error('Video generation timed out after', maxPolls * 10, 'seconds');
-    resultDiv.innerHTML = `
-    <p style="color: #ff6b6b; font-size: 0.9rem;">⏱️ Video generation timed out</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">The video may still be processing. Task ID: ${videoTaskId}</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem;">Check the browser console for more details.</p>
-    `;
-    }
-    } catch (error) {
-    console.error('Status check error:', error);
-    resultDiv.innerHTML = `
-    <p style="color: #ff6b6b; font-size: 0.9rem;">❌ Error checking video status</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.25rem;">${error.message}</p>
-    <p style="color: var(--text-muted); font-size: 0.8rem;">Check browser console for details. Task: ${videoTaskId}</p>
-    `;
-    clearInterval(checkInterval);
-    }
-    }, 10000); // Check every 10 seconds
-    } else if (data.videoUrl) {
-    // Video already complete (unlikely)
-    resultDiv.innerHTML = `
-    <video controls style="width: 100%; border-radius: 8px; margin-top: 0.5rem;">
-    <source src="${data.videoUrl}" type="video/mp4">
-    </video>
-    <button onclick="downloadVideo('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
-    `;
-    }
-    }
-    } catch (error) {
-    console.error(`${type} generation error:`, error);
-    resultDiv.innerHTML = `<p style="color: #ff6b6b; font-size: 0.9rem;">Error: ${error.message}</p>`;
-    }
+      // Only album art generation is supported in Panel 1
+      // Video generation is now exclusively through "Turn into Video" after album art is created
+      if (type === 'image') {
+        window.albumArtModal.open(trackId, trackTitle);
+      }
     };
 
     // Event listeners - Chat
