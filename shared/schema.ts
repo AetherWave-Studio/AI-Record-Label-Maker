@@ -66,7 +66,7 @@ export const PlanType = z.enum(['free', 'studio', 'creator', 'all_access']);
 export type PlanType = z.infer<typeof PlanType>;
 
 // Video resolution options (for future video generation)
-export const VideoResolution = z.enum(['720p', '1080p', '4k']);
+export const VideoResolution = z.enum(['512p', '720p', '1080p', '4k']);
 export type VideoResolution = z.infer<typeof VideoResolution>;
 
 // Image engine options (for future image generation)
@@ -97,7 +97,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     videoGeneration: true,
     imageGeneration: true,
     wavConversion: false, // WAV conversion is paid-only
-    allowedVideoResolutions: ['720p'], // Only lowest resolution
+    allowedVideoResolutions: ['512p'], // Only lowest resolution (lite, 512p, 3s)
     allowedImageEngines: ['dall-e-2'], // Only basic engine
     allowedMusicModels: ['V3_5', 'V4'], // Only beginner models
     maxCreditsPerDay: 50,
@@ -109,7 +109,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     videoGeneration: true,
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
-    allowedVideoResolutions: ['720p', '1080p', '4k'], // All resolutions
+    allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
@@ -121,7 +121,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     videoGeneration: true,
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
-    allowedVideoResolutions: ['720p', '1080p', '4k'], // All resolutions
+    allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
@@ -133,7 +133,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     videoGeneration: true,
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
-    allowedVideoResolutions: ['720p', '1080p', '4k'], // All resolutions
+    allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
@@ -175,9 +175,10 @@ export const ServiceType = z.enum([
 export type ServiceType = z.infer<typeof ServiceType>;
 
 // Credit cost configuration for each service type
+// NOTE: video_generation uses dynamic pricing based on quality settings (see calculateVideoCredits in routes.ts)
 export const SERVICE_CREDIT_COSTS: Record<ServiceType, number> = {
   music_generation: 5,
-  video_generation: 10,
+  video_generation: 3, // Base cost for lowest settings (lite, 512p, 3s) - higher quality costs more
   image_generation: 3,
   album_art_generation: 3, // Same cost as regular image generation
   wav_conversion: 2,
