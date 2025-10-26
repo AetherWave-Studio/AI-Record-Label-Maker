@@ -98,6 +98,12 @@
     66% { transform: translate(-20px, 20px) scale(0.9); }
     }
 
+    @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
     /* Header */
     header {
     position: relative;
@@ -2679,6 +2685,30 @@ window.premiumPlayer = {
       mp3Option.style.background = 'rgba(139, 92, 246, 0.15)';
       mp3Option.style.borderColor = 'var(--aetherwave-purple)';
     }
+    
+    // Add Pro badge to WAV option for free users
+    const wavOption = document.querySelector('[data-testid="option-wav"]');
+    if (wavOption && userPlanType === 'free') {
+      // Add visual "locked" state
+      wavOption.style.opacity = '0.6';
+      wavOption.style.cursor = 'not-allowed';
+      
+      // Add Pro badge if not already present
+      const wavTitle = wavOption.querySelector('.download-option-title');
+      if (wavTitle && !wavTitle.querySelector('.pro-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'pro-badge';
+        badge.textContent = 'PRO';
+        badge.style.cssText = 'margin-left: 0.5rem; padding: 0.125rem 0.5rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; font-size: 0.65rem; font-weight: 700; border-radius: 4px; vertical-align: middle;';
+        wavTitle.appendChild(badge);
+      }
+    } else if (wavOption && userPlanType !== 'free') {
+      // Remove locked state for paid users
+      wavOption.style.opacity = '1';
+      wavOption.style.cursor = 'pointer';
+      const badge = wavOption.querySelector('.pro-badge');
+      if (badge) badge.remove();
+    }
   },
 
   closeDownloadModal() {
@@ -2687,6 +2717,23 @@ window.premiumPlayer = {
   },
 
   selectFormat(format) {
+    // Check if user is trying to select WAV on free plan
+    if (format === 'wav' && userPlanType === 'free') {
+      // Show upgrade notification
+      const wavOption = document.querySelector('[data-testid="option-wav"]');
+      if (wavOption) {
+        // Visual feedback - shake animation
+        wavOption.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          wavOption.style.animation = '';
+        }, 500);
+      }
+      
+      // Show upgrade tooltip
+      showNotification('WAV downloads require Studio plan or higher. Upgrade to unlock lossless audio!', 'error');
+      return; // Don't select WAV
+    }
+    
     this.selectedFormat = format;
     
     // Update UI to show selection
