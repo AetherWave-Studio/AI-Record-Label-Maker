@@ -4100,8 +4100,11 @@ async function generateMedia() {
         if (data.imageUrl) {
           resultDiv.innerHTML = `
             <p style="color: #4ade80; font-size: 0.9rem;">✅ Album art complete! (DALL-E 3 - ${style})</p>
-            <img src="${data.imageUrl}" alt="Album art" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" />
-            <button onclick="downloadFile('${data.imageUrl}', '${trackTitle}-art.png')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Image</button>
+            <img src="${data.imageUrl}" alt="Album art" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" data-testid="img-album-art-${trackId}" />
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+              <button onclick="downloadFile('${data.imageUrl}', '${trackTitle}-art.png')" class="download-btn" style="cursor: pointer;" data-testid="button-download-art-${trackId}">Download Image</button>
+              <button onclick="window.turnAlbumArtIntoVideo('${trackId}', '${trackTitle}', '${data.imageUrl}')" class="download-btn" style="cursor: pointer; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border: none; color: white;" data-testid="button-turn-into-video-${trackId}">🎬 Turn into Video</button>
+            </div>
             ${data.revisedPrompt ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">DALL-E enhanced: ${data.revisedPrompt}</p>` : ''}
           `;
         } else {
@@ -4110,6 +4113,69 @@ async function generateMedia() {
       } catch (error) {
         console.error('Album art generation error:', error);
         resultDiv.innerHTML = `<p style="color: #ff6b6b; font-size: 0.9rem;">Error: ${error.message}</p>`;
+      }
+    };
+
+    // Turn album art into a 5-second video using Seedance image-to-video
+    window.turnAlbumArtIntoVideo = async function(trackId, trackTitle, albumArtUrl) {
+      const resultDiv = document.getElementById(`visual-result-${trackId}`);
+      
+      // Save current content (album art) to restore if error
+      const originalContent = resultDiv.innerHTML;
+      
+      // Show loading state while preserving album art image
+      const albumArtImg = resultDiv.querySelector('img');
+      const imgHtml = albumArtImg ? albumArtImg.outerHTML : '';
+      
+      resultDiv.innerHTML = `
+        ${imgHtml}
+        <p style="color: var(--accent-color); font-size: 0.9rem; margin-top: 0.5rem;">🎬 Turning album art into 5-second video...</p>
+        <p style="color: var(--text-muted); font-size: 0.8rem;">Using Seedance image-to-video generation...</p>
+      `;
+
+      try {
+        const response = await fetch('/api/generate-video-fal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: `Animated music video for "${trackTitle}", dynamic camera movement, cinematic effects`,
+            imageUrl: albumArtUrl,  // Use album art as source image
+            modelVersion: 'lite',     // Fast generation
+            resolution: '720p',       // Good quality
+            duration: '5',            // Fixed 5 seconds
+            enableSafetyChecker: true
+          })
+        });
+
+        const data = await response.json();
+        console.log('Album art to video response:', data);
+
+        if (!response.ok) {
+          console.error('Video generation error response:', data);
+          throw new Error(data.details || data.error || 'Failed to generate video from album art');
+        }
+
+        // Display the generated video
+        if (data.status === 'complete' && data.videoUrl) {
+          resultDiv.innerHTML = `
+            <p style="color: #4ade80; font-size: 0.9rem;">✅ Album art video complete! (5s Seedance)</p>
+            <video controls autoplay loop style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" data-testid="video-album-art-${trackId}">
+              <source src="${data.videoUrl}" type="video/mp4">
+            </video>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+              <button onclick="downloadVideo('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="cursor: pointer;" data-testid="button-download-video-${trackId}">Download Video</button>
+              <button onclick="this.parentElement.parentElement.innerHTML = \`${originalContent.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`" class="download-btn" style="cursor: pointer;" data-testid="button-show-art-${trackId}">Show Album Art</button>
+            </div>
+          `;
+        } else {
+          throw new Error('Video generation completed but no video URL returned');
+        }
+      } catch (error) {
+        console.error('Album art to video error:', error);
+        // Restore original content on error
+        resultDiv.innerHTML = originalContent;
+        // Show error message below
+        resultDiv.innerHTML += `<p style="color: #ff6b6b; font-size: 0.9rem; margin-top: 0.5rem;">Error: ${error.message}</p>`;
       }
     };
 
