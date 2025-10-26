@@ -1188,9 +1188,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate quality settings for free accounts
       if (user.subscriptionPlan === 'free') {
-        if (modelVersion !== 'lite' || resolution !== '512p' || parseInt(duration) !== 3) {
+        if (modelVersion !== 'lite' || resolution !== '512p' || parseInt(duration) !== 5) {
           return res.status(403).json({
-            error: 'Free accounts can only use default settings (Lite model, 512p, 3 seconds)',
+            error: 'Free accounts can only use default settings (Lite model, 512p, 5 seconds)',
             message: 'Please upgrade your plan to access higher quality video generation settings.'
           });
         }
