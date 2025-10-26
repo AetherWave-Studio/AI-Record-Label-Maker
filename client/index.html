@@ -1792,8 +1792,8 @@
     <div class="form-group" id="video-resolution-group" style="display: none;">
     <label class="form-label">Resolution</label>
     <select id="media-resolution">
-    <option value="512p">512p (Fastest, Lower Quality)</option>
-    <option value="720p" selected>720p (Balanced)</option>
+    <option value="512p" selected>512p (Fastest, Lower Quality)</option>
+    <option value="720p">720p (Balanced)</option>
     <option value="1080p">1080p (Highest Quality, Slower)</option>
     </select>
     </div>
@@ -1801,7 +1801,8 @@
     <div class="form-group" id="video-duration-group" style="display: none;">
     <label class="form-label">Duration</label>
     <select id="media-duration">
-    <option value="5" selected>5 seconds</option>
+    <option value="3" selected>3 seconds (Free)</option>
+    <option value="5">5 seconds</option>
     <option value="10">10 seconds</option>
     </select>
     </div>
@@ -1897,6 +1898,11 @@
           userPlanType = data.planType;
           updateCreditsDisplay();
           
+          // Apply video quality restrictions if on video tab
+          if (selectedMediaType === 'video') {
+            applyVideoQualityRestrictions();
+          }
+          
           // Auto-check for daily reset
           await checkDailyReset();
         } else if (response.status === 401) {
@@ -1947,6 +1953,47 @@
           creditsElement.textContent = userCredits;
           creditsIndicator.title = `${userCredits} credits remaining - Click to upgrade`;
         }
+      }
+    }
+    
+    function applyVideoQualityRestrictions() {
+      const quality = document.getElementById('media-quality');
+      const resolution = document.getElementById('media-resolution');
+      const duration = document.getElementById('media-duration');
+      
+      if (userPlanType === 'free') {
+        // Free accounts can only use lowest settings
+        quality.value = 'lite';
+        resolution.value = '512p';
+        duration.value = '3';
+        
+        // Disable all dropdowns
+        quality.disabled = true;
+        resolution.disabled = true;
+        duration.disabled = true;
+        
+        // Add visual indicator
+        quality.style.opacity = '0.6';
+        resolution.style.opacity = '0.6';
+        duration.style.opacity = '0.6';
+        
+        // Add tooltips
+        quality.title = 'Upgrade to access higher quality models';
+        resolution.title = 'Upgrade to access higher resolutions';
+        duration.title = 'Upgrade to access longer durations';
+      } else {
+        // Paid accounts can use all settings
+        quality.disabled = false;
+        resolution.disabled = false;
+        duration.disabled = false;
+        
+        quality.style.opacity = '1';
+        resolution.style.opacity = '1';
+        duration.style.opacity = '1';
+        
+        quality.title = '';
+        resolution.title = '';
+        duration.title = '';
       }
     }
     
@@ -4273,6 +4320,11 @@ mediaTypeBtns.forEach(btn => {
     btn.classList.add('active');
     selectedMediaType = btn.dataset.type;
     updateMediaInputs();
+    
+    // Apply video quality restrictions for free accounts
+    if (selectedMediaType === 'video') {
+      applyVideoQualityRestrictions();
+    }
   });
 });
 
