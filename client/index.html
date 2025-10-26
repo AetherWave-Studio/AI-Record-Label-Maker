@@ -3717,13 +3717,19 @@ async function generateMedia() {
             }
 
         } else {
-            // Image generation with OpenAI DALL-E 3
+            // Image generation with Fal.ai Nano Banana (supports reference images)
             const requestBody = {
                 prompt: prompt,
-                style: document.getElementById('media-image-style').value  // Fixed: Pull from dropdown!
+                style: document.getElementById('media-image-style').value
             };
 
-            console.log('Generating image with DALL-E 3...');
+            // Add reference image if uploaded
+            if (uploadedImageData) {
+                requestBody.referenceImage = uploadedImageData;
+                console.log('Using reference image for image generation');
+            }
+
+            console.log('Generating image with Fal.ai Nano Banana...');
 
             const response = await fetch('/api/generate-art', {
                 method: 'POST',
@@ -3741,10 +3747,12 @@ async function generateMedia() {
 
             // Display image result
             if (data.imageUrl) {
+                const referenceLabel = data.hasReference ? ' (with Reference)' : '';
                 mediaResult.innerHTML = `
                     <div class="result-box">
-                        <div class="result-title">✅ Image Generated with DALL-E 3</div>
+                        <div class="result-title">✅ Image Generated${referenceLabel}</div>
                         <img src="${data.imageUrl}" alt="Generated image" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" />
+                        ${data.description ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">AI: ${data.description}</p>` : ''}
                         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
                             <button onclick="downloadFile('${data.imageUrl}', 'aetherwave-${selectedUseCase}.png')" class="download-btn" style="cursor: pointer;">Download Image</button>
                         </div>
