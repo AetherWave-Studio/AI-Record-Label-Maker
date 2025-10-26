@@ -110,6 +110,9 @@ Preferred communication style: Simple, everyday language.
 **Third-Party Services**:
 - **Neon Database**: Serverless PostgreSQL hosting
 - **KIE.ai SUNO API**: AI music generation (requires SUNO_API_KEY)
+  - **Proxy Configuration**: All KIE.ai API calls route through Webshare static proxy to solve IP whitelisting issues
+  - Proxy credentials stored in environment secrets: PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD
+  - Uses https-proxy-agent for Node.js fetch proxy support
 - **Replit AI Integrations**: OpenAI chat via environment credentials
 - **Google Fonts**: Inter font family
 
