@@ -196,6 +196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         : 'https://example.com';
       const callbackUrl = `${baseUrl}/api/music-callback`;
       
+      // Build complete KIE.ai payload with all optional parameters
       const sunoPayload: any = {
         prompt: prompt,
         model: model,
@@ -204,17 +205,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         callBackUrl: callbackUrl
       };
 
-      // Add vocal gender only in custom mode (per KIE.ai API spec)
+      // Add optional parameters when in custom mode
       if (customMode) {
-        sunoPayload.vocalGender = vocalGender;
-      }
-
-      if (customMode && title) {
-        sunoPayload.title = title;
-      }
-      
-      if (customMode && style) {
-        sunoPayload.style = style;
+        if (vocalGender) sunoPayload.vocalGender = vocalGender;
+        if (title) sunoPayload.title = title;
+        if (style) sunoPayload.style = style;
       }
 
       console.log('Sending to KIE.ai:', JSON.stringify(sunoPayload, null, 2));
@@ -442,8 +437,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'API key not configured' });
       }
 
+      console.log('Checking status for taskId:', taskId);
       const proxyAgent = createProxyAgent();
-      const response = await fetch(`https://api.kie.ai/api/v1/get?ids=${taskId}`, {
+      const response = await fetch(`https://api.kie.ai/api/v1/generate/record-info?taskId=${taskId}`, {
         headers: {
           'Authorization': `Bearer ${sunoApiKey}`
         },
@@ -453,23 +449,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await response.json();
       console.log(`KIE.ai status for task ${taskId}:`, JSON.stringify(data, null, 2));
       
-      // Format response for frontend
-      if (data.code === 200 && data.data && data.data.length > 0) {
-        const tracks = data.data.map((track: any) => ({
+      // KIE.ai response format: { code: 200, data: { taskId, status, response: { sunoData: [...] } } }
+      if (data.code === 200 && data.data) {
+        const taskData = data.data;
+        const taskStatus = taskData.status; // PENDING, TEXT_SUCCESS, FIRST_SUCCESS, SUCCESS
+        
+        // Extract tracks from response.sunoData if available
+        const sunoData = taskData.response?.sunoData || [];
+        const tracks = sunoData.map((track: any) => ({
           id: track.id,
           title: track.title,
-          audioUrl: track.audio_url,
-          streamAudioUrl: track.stream_audio_url,
-          imageUrl: track.image_url,
-          status: track.status
+          audioUrl: track.audioUrl,
+          streamAudioUrl: track.streamAudioUrl,
+          imageUrl: track.imageUrl,
+          prompt: track.prompt,
+          tags: track.tags,
+          duration: track.duration
         }));
 
         res.json({
-          status: data.data[0].status,
+          status: taskStatus,
           tracks: tracks
         });
       } else {
-        res.json({ status: 'pending', tracks: [] });
+        // Return error or pending status
+        res.json({ 
+          status: 'pending', 
+          tracks: [],
+          error: data.msg || 'Unknown status'
+        });
       }
 
     } catch (error: any) {
