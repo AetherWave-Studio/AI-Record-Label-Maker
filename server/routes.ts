@@ -1091,6 +1091,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         prompt,
         imageData,
+        image_url,
+        end_image_url,
         imageMode = 'first-frame',
         modelVersion = 'lite',
         resolution = '720p',
@@ -1128,8 +1130,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine which Fal.ai model to use
+      // Support both imageData (base64) and image_url (URL)
+      const hasImage = imageData || image_url;
+      
       let modelId;
-      if (imageData) {
+      if (hasImage) {
         if (imageMode === 'reference') {
           modelId = modelVersion === 'pro'
             ? 'fal-ai/bytedance/seedance/v1/pro/reference-to-video'
@@ -1148,8 +1153,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Generating video with Fal.ai Seedance:', {
         model: modelId,
         prompt: prompt,
-        hasImage: !!imageData,
-        imageMode: imageData ? imageMode : 'none',
+        hasImage: hasImage,
+        imageMode: hasImage ? imageMode : 'none',
+        imageSource: imageData ? 'base64' : (image_url ? 'url' : 'none'),
         resolution: resolution,
         duration: duration
       });
@@ -1168,13 +1174,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         input.resolution = resolution;
       }
 
-      // Add image if provided
-      if (imageData) {
+      // Add image if provided (support both base64 and URL)
+      const imageSource = imageData || image_url;
+      
+      if (imageSource) {
         if (imageMode === 'reference') {
-          input.image_urls = [imageData];
+          // Reference mode uses array of image URLs
+          input.image_urls = [imageSource];
         } else {
-          input.image_url = imageData;
+          // First-frame mode uses single image URL
+          input.image_url = imageSource;
         }
+      }
+      
+      // Note: end_image_url is not supported by Seedance models
+      // Seedance only supports start frame (image-to-video) or reference images
+      if (end_image_url) {
+        console.warn('Warning: end_image_url parameter is not supported by Fal.ai Seedance models and will be ignored');
       }
 
       // Subscribe to the model (streaming response)

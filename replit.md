@@ -65,6 +65,7 @@ Preferred communication style: Simple, everyday language.
 - **Music**: `/api/generate-music`, `/api/upload-cover-music`, `/api/music-status/:taskId`
 - **Audio**: `/api/upload-audio`, `/api/audio/:id`, `/api/convert-to-wav`
 - **User**: `/api/user/credits`, `/api/user/preferences`, `/api/user/credits/check-reset`
+- **Media**: `/api/generate-art` (DALL-E 3), `/api/generate-video-fal` (Fal.ai Seedance), `/api/download-image` (CORS proxy)
 - **Chat**: `/api/chat` (OpenAI via Replit AI Integration)
 - **Auth**: `/api/auth/user` (Replit Auth)
 
@@ -114,7 +115,15 @@ Preferred communication style: Simple, everyday language.
 - **KIE.ai SUNO API**: AI music generation (requires SUNO_API_KEY)
   - **Proxy Configuration**: All KIE.ai API calls route through Webshare static proxy to solve IP whitelisting issues
   - Proxy credentials stored in environment secrets: PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD
-  - Uses https-proxy-agent for Node.js fetch proxy support
+  - Uses node-fetch v2 with https-proxy-agent for reliable proxy support
+- **OpenAI API**: DALL-E 3 album art generation (requires OPENAI_API_KEY)
+  - Direct API calls (not through Replit proxy)
+  - Supports 6 art styles: photorealistic, abstract, cyberpunk, retro, minimal, surreal
+  - Backend proxy endpoint for CORS-free downloads
+- **Fal.ai Seedance**: AI music video generation (requires FAL_KEY)
+  - Supports text-to-video, image-to-video, and reference-to-video modes
+  - Lite/Pro model variants with 720p/1080p resolution options
+  - 5 or 10 second duration support
 - **Replit AI Integrations**: OpenAI chat via environment credentials
 - **Google Fonts**: Inter font family
 
