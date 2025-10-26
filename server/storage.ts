@@ -1,13 +1,12 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type User, type UpsertUser } from "@shared/schema";
 
-// modify the interface with any CRUD methods
-// you might need
-
+// Storage interface for user and credit operations
 export interface IStorage {
+  // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  // Credit operations
+  updateUserCredits(userId: string, credits: number): Promise<User | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -21,16 +20,32 @@ export class MemStorage implements IStorage {
     return this.users.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const existingUser = this.users.get(userData.id!);
+    
+    const user: User = {
+      id: userData.id || '',
+      email: userData.email || null,
+      firstName: userData.firstName || null,
+      lastName: userData.lastName || null,
+      profileImageUrl: userData.profileImageUrl || null,
+      subscriptionPlan: userData.subscriptionPlan || 'free',
+      credits: existingUser?.credits ?? userData.credits ?? 100,
+      createdAt: existingUser?.createdAt || new Date(),
+      updatedAt: new Date(),
+    };
+    
+    this.users.set(user.id, user);
+    return user;
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+  async updateUserCredits(userId: string, credits: number): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    user.credits = credits;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
     return user;
   }
 }
