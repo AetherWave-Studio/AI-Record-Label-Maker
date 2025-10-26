@@ -412,6 +412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       const data = await response.json();
+      console.log(`KIE.ai status for task ${taskId}:`, JSON.stringify(data, null, 2));
       
       // Format response for frontend
       if (data.code === 200 && data.data && data.data.length > 0) {
