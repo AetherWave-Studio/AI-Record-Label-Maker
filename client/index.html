@@ -3933,6 +3933,9 @@ async function generateMedia() {
         this.selectedStyle = 'photorealistic';
         document.getElementById('album-art-track-title').textContent = `Style for "${trackTitle}"`;
         document.getElementById('album-art-modal').style.display = 'flex';
+        
+        // Reset all styles and select photorealistic by default
+        this.updateSelection();
       },
 
       close: function() {
@@ -3941,13 +3944,27 @@ async function generateMedia() {
         this.trackTitle = null;
       },
 
-      selectStyle: function(style) {
+      selectStyle: function(style, evt) {
         this.selectedStyle = style;
-        // Visual feedback - highlight selected style
+        this.updateSelection();
+      },
+
+      updateSelection: function() {
+        // Reset all options
         document.querySelectorAll('#album-art-modal .download-option').forEach(opt => {
           opt.style.backgroundColor = '';
+          const checkmark = opt.querySelector('.style-checkmark');
+          if (checkmark) checkmark.style.display = 'none';
         });
-        event.target.closest('.download-option').style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+        
+        // Highlight selected option
+        const selectedOption = document.querySelector(`#album-art-modal .download-option[data-style="${this.selectedStyle}"]`);
+        if (selectedOption) {
+          selectedOption.style.backgroundColor = 'rgba(139, 92, 246, 0.15)';
+          selectedOption.style.borderColor = 'rgba(139, 92, 246, 0.5)';
+          const checkmark = selectedOption.querySelector('.style-checkmark');
+          if (checkmark) checkmark.style.display = 'block';
+        }
       },
 
       generate: async function() {
@@ -4265,57 +4282,57 @@ updateMediaInputs();
         <div class="modal-subtitle" id="album-art-track-title">Select art style</div>
       </div>
       <div class="download-options">
-        <div class="download-option" onclick="window.albumArtModal.selectStyle('photorealistic')" data-testid="style-photorealistic">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('photorealistic', event)" data-testid="style-photorealistic" data-style="photorealistic">
           <div class="download-option-info">
             <div class="download-option-title">Photorealistic</div>
             <div class="download-option-desc">Highly detailed, professional photography style</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="style-checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <div class="download-option" onclick="window.albumArtModal.selectStyle('abstract')" data-testid="style-abstract">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('abstract', event)" data-testid="style-abstract" data-style="abstract">
           <div class="download-option-info">
             <div class="download-option-title">Abstract</div>
             <div class="download-option-desc">Flowing shapes, vibrant colors, artistic interpretation</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="style-checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <div class="download-option" onclick="window.albumArtModal.selectStyle('cyberpunk')" data-testid="style-cyberpunk">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('cyberpunk', event)" data-testid="style-cyberpunk" data-style="cyberpunk">
           <div class="download-option-info">
             <div class="download-option-title">Cyberpunk</div>
             <div class="download-option-desc">Neon lights, futuristic cityscape, dark with bright accents</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="style-checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <div class="download-option" onclick="window.albumArtModal.selectStyle('retro')" data-testid="style-retro">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('retro', event)" data-testid="style-retro" data-style="retro">
           <div class="download-option-info">
             <div class="download-option-title">Retro</div>
             <div class="download-option-desc">80s vaporwave, pink and purple gradients, nostalgic</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="style-checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <div class="download-option" onclick="window.albumArtModal.selectStyle('minimal')" data-testid="style-minimal">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('minimal', event)" data-testid="style-minimal" data-style="minimal">
           <div class="download-option-info">
             <div class="download-option-title">Minimal</div>
             <div class="download-option-desc">Clean lines, simple composition, modern aesthetic</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="style-checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
-        <div class="download-option" onclick="window.albumArtModal.selectStyle('surreal')" data-testid="style-surreal">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('surreal', event)" data-testid="style-surreal" data-style="surreal">
           <div class="download-option-info">
             <div class="download-option-title">Surreal</div>
             <div class="download-option-desc">Dreamlike imagery, unexpected elements, artistic creativity</div>
           </div>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="style-checkmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
