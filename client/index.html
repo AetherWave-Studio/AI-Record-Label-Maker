@@ -4181,6 +4181,7 @@ async function generateMedia() {
           body: JSON.stringify({
             prompt: `Animated music video for "${trackTitle}", dynamic camera movement, cinematic effects`,
             imageUrl: albumArtUrl,
+            imageMode: 'first-frame',  // Use album art as the first frame
             modelVersion: 'lite',
             resolution: '512p',
             duration: '5',
