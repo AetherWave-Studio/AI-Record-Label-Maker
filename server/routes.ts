@@ -157,12 +157,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Music generation request:', { prompt, model, instrumental, vocalGender, customMode, title, style });
 
       // Build KIE.ai API request
+      // KIE.ai requires a valid callback URL (even if we don't use it for polling)
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+        : 'https://example.com';
+      const callbackUrl = `${baseUrl}/api/music-callback`;
+      
       const sunoPayload: any = {
         prompt: prompt,
         model: model,
         instrumental: instrumental,
         customMode: customMode,
-        callBackUrl: '' // Empty callback URL - we use polling instead
+        callBackUrl: callbackUrl
       };
 
       // Add vocal gender only in custom mode (per KIE.ai API spec)
@@ -300,13 +306,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Upload-cover request:', { uploadUrl, prompt, model, instrumental, vocalGender, customMode });
 
       // Build KIE.ai upload-cover API request
+      // KIE.ai requires a valid callback URL (even if we don't use it for polling)
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}` 
+        : 'https://example.com';
+      const callbackUrl = `${baseUrl}/api/music-callback`;
+      
       const coverPayload: any = {
         uploadUrl: uploadUrl,
         prompt: prompt,
         model: model,
         instrumental: instrumental,
         customMode: customMode,
-        callBackUrl: '' // Optional - we're polling instead
+        callBackUrl: callbackUrl
       };
 
       // Add vocal gender only in custom mode (per KIE.ai API spec)
