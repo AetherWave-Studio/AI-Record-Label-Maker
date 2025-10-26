@@ -81,11 +81,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.body;
 
       // Validate music model is allowed for user's plan
-      const userPlan = user.planType as PlanType;
+      const userPlan = user.subscriptionPlan as PlanType;
       if (!validateMusicModel(userPlan, model)) {
         return res.status(403).json({
           error: 'Model not allowed',
-          message: `Your ${user.planType} plan does not include ${model} model. Upgrade to Studio or higher to unlock premium models.`,
+          message: `Your ${user.subscriptionPlan} plan does not include ${model} model. Upgrade to Studio or higher to unlock premium models.`,
           allowedModels: PLAN_FEATURES[userPlan].allowedMusicModels
         });
       }
@@ -207,11 +207,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = req.body;
 
       // Validate music model is allowed for user's plan
-      const userPlan = user.planType as PlanType;
+      const userPlan = user.subscriptionPlan as PlanType;
       if (!validateMusicModel(userPlan, model)) {
         return res.status(403).json({
           error: 'Model not allowed',
-          message: `Your ${user.planType} plan does not include ${model} model. Upgrade to Studio or higher to unlock premium models.`,
+          message: `Your ${user.subscriptionPlan} plan does not include ${model} model. Upgrade to Studio or higher to unlock premium models.`,
           allowedModels: PLAN_FEATURES[userPlan].allowedMusicModels
         });
       }
@@ -509,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         credits: user.credits,
-        planType: user.planType,
+        planType: user.subscriptionPlan,
         lastCreditReset: user.lastCreditReset
       });
     } catch (error) {
@@ -529,7 +529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Only reset for free users
-      if (user.planType !== 'free') {
+      if (user.subscriptionPlan !== 'free') {
         return res.json({ 
           credits: user.credits,
           resetOccurred: false 
@@ -638,13 +638,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { prompt, resolution = '720p' } = req.body;
-      const userPlan = user.planType as PlanType;
+      const userPlan = user.subscriptionPlan as PlanType;
       
       // Validate resolution is allowed for user's plan
       if (!validateVideoResolution(userPlan, resolution as VideoResolution)) {
         return res.status(403).json({
           error: 'Resolution not allowed',
-          message: `Your ${user.planType} plan does not include ${resolution} resolution. Upgrade to Studio or higher to unlock HD and 4K video.`,
+          message: `Your ${user.subscriptionPlan} plan does not include ${resolution} resolution. Upgrade to Studio or higher to unlock HD and 4K video.`,
           allowedResolutions: PLAN_FEATURES[userPlan].allowedVideoResolutions
         });
       }
@@ -670,7 +670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const userPlan = user.planType as PlanType;
+      const userPlan = user.subscriptionPlan as PlanType;
       
       // WAV conversion is paid-only feature
       if (!PLAN_FEATURES[userPlan].wavConversion) {
@@ -832,13 +832,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const { prompt, engine = 'dall-e-2' } = req.body;
-      const userPlan = user.planType as PlanType;
+      const userPlan = user.subscriptionPlan as PlanType;
       
       // Validate engine is allowed for user's plan
       if (!validateImageEngine(userPlan, engine as ImageEngine)) {
         return res.status(403).json({
           error: 'Engine not allowed',
-          message: `Your ${user.planType} plan does not include ${engine} engine. Upgrade to Studio or higher to unlock premium image engines.`,
+          message: `Your ${user.subscriptionPlan} plan does not include ${engine} engine. Upgrade to Studio or higher to unlock premium image engines.`,
           allowedEngines: PLAN_FEATURES[userPlan].allowedImageEngines
         });
       }

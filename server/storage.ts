@@ -1,4 +1,4 @@
-import { type User, type UpsertUser } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType } from "@shared/schema";
 
 // Storage interface for user and credit operations
 export interface IStorage {
@@ -6,7 +6,11 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   // Credit operations
-  updateUserCredits(userId: string, credits: number): Promise<User | undefined>;
+  updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
+  deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult>;
+  checkCredits(userId: string, serviceType: ServiceType): Promise<CreditCheckResult>;
+  // User preference operations
+  updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -29,8 +33,13 @@ export class MemStorage implements IStorage {
       firstName: userData.firstName || null,
       lastName: userData.lastName || null,
       profileImageUrl: userData.profileImageUrl || null,
-      subscriptionPlan: userData.subscriptionPlan || 'free',
+      username: userData.username || null,
+      vocalGenderPreference: userData.vocalGenderPreference || existingUser?.vocalGenderPreference || 'm',
+      subscriptionPlan: userData.subscriptionPlan || existingUser?.subscriptionPlan || 'free',
       credits: existingUser?.credits ?? userData.credits ?? 100,
+      lastCreditReset: userData.lastCreditReset || existingUser?.lastCreditReset || new Date(),
+      stripeCustomerId: userData.stripeCustomerId || existingUser?.stripeCustomerId || null,
+      stripeSubscriptionId: userData.stripeSubscriptionId || existingUser?.stripeSubscriptionId || null,
       createdAt: existingUser?.createdAt || new Date(),
       updatedAt: new Date(),
     };
@@ -39,11 +48,122 @@ export class MemStorage implements IStorage {
     return user;
   }
 
-  async updateUserCredits(userId: string, credits: number): Promise<User | undefined> {
+  async updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined> {
     const user = this.users.get(userId);
     if (!user) return undefined;
     
     user.credits = credits;
+    user.updatedAt = new Date();
+    if (lastCreditReset) {
+      user.lastCreditReset = lastCreditReset;
+    }
+    this.users.set(userId, user);
+    return user;
+  }
+
+  async deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult> {
+    const user = this.users.get(userId);
+    
+    if (!user) {
+      return {
+        success: false,
+        newBalance: 0,
+        amountDeducted: 0,
+        wasUnlimited: false,
+        error: 'User not found'
+      };
+    }
+    
+    // Check if user has unlimited plan for this service
+    const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
+    const userPlan = user.subscriptionPlan as PlanType;
+    
+    if (unlimitedPlans.includes(userPlan)) {
+      return {
+        success: true,
+        newBalance: user.credits,
+        amountDeducted: 0,
+        wasUnlimited: true
+      };
+    }
+    
+    // Check if user has enough credits
+    const creditCost = SERVICE_CREDIT_COSTS[serviceType];
+    if (user.credits < creditCost) {
+      return {
+        success: false,
+        newBalance: user.credits,
+        amountDeducted: 0,
+        wasUnlimited: false,
+        error: `Insufficient credits. Need ${creditCost}, have ${user.credits}`
+      };
+    }
+    
+    // Deduct credits
+    user.credits -= creditCost;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    
+    return {
+      success: true,
+      newBalance: user.credits,
+      amountDeducted: creditCost,
+      wasUnlimited: false
+    };
+  }
+
+  async checkCredits(userId: string, serviceType: ServiceType): Promise<CreditCheckResult> {
+    const user = this.users.get(userId);
+    
+    if (!user) {
+      return {
+        allowed: false,
+        reason: 'insufficient_credits',
+        currentCredits: 0,
+        requiredCredits: SERVICE_CREDIT_COSTS[serviceType]
+      };
+    }
+    
+    // Check if user has unlimited plan for this service
+    const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
+    const userPlan = user.subscriptionPlan as PlanType;
+    
+    if (unlimitedPlans.includes(userPlan)) {
+      return {
+        allowed: true,
+        reason: 'unlimited',
+        currentCredits: user.credits,
+        requiredCredits: 0,
+        planType: userPlan
+      };
+    }
+    
+    // Check if user has enough credits
+    const creditCost = SERVICE_CREDIT_COSTS[serviceType];
+    if (user.credits < creditCost) {
+      return {
+        allowed: false,
+        reason: 'insufficient_credits',
+        currentCredits: user.credits,
+        requiredCredits: creditCost,
+        planType: userPlan
+      };
+    }
+    
+    return {
+      allowed: true,
+      reason: 'success',
+      currentCredits: user.credits,
+      requiredCredits: creditCost,
+      planType: userPlan
+    };
+  }
+
+  async updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    user.vocalGenderPreference = vocalGenderPreference;
     user.updatedAt = new Date();
     this.users.set(userId, user);
     return user;
