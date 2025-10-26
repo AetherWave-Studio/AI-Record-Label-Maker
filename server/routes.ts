@@ -56,7 +56,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      console.log('Auth check for user ID:', userId);
+      let user = await storage.getUser(userId);
+      
+      // If user doesn't exist in database, create them from session claims
+      if (!user) {
+        console.log('User not found in database, creating from session claims...');
+        const claims = req.user.claims;
+        user = await storage.upsertUser({
+          id: claims.sub,
+          email: claims.email,
+          firstName: claims.first_name,
+          lastName: claims.last_name,
+          profileImageUrl: claims.profile_image_url,
+        });
+        console.log('User created successfully:', user.id, user.email, `Credits: ${user.credits}`);
+      } else {
+        console.log('User found in database:', user.id, user.email, `Credits: ${user.credits}`);
+      }
+      
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
