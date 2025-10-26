@@ -3321,6 +3321,36 @@ window.premiumPlayer = {
         
         console.log(`Poll attempt ${attempts}:`, statusData);
         
+        // Update progress bar based on status
+        const currentStatus = statusData.status || 'PENDING';
+        let progressPercent = 20;
+        let statusMessage = 'Starting generation...';
+        
+        if (currentStatus === 'TEXT_SUCCESS') {
+          progressPercent = 60;
+          statusMessage = 'Lyrics created! Generating audio...';
+        } else if (currentStatus === 'FIRST_SUCCESS') {
+          progressPercent = 85;
+          statusMessage = 'First track ready! Finishing up...';
+        } else if (currentStatus === 'SUCCESS') {
+          progressPercent = 100;
+          statusMessage = 'Complete!';
+        } else {
+          progressPercent = Math.min(20 + (attempts * 2), 50);
+          statusMessage = `Processing... (${Math.floor(attempts * 2)}s)`;
+        }
+        
+        musicResult.innerHTML = `
+          <div class="result-box">
+            <div class="result-title"><img src="/assets/icon-set/music-icon.png" style="width: 20px; height: 20px; margin-right: 0.5rem; vertical-align: middle;"> ${actionText}...</div>
+            <p style="color: var(--aetherwave-pink); font-size: 0.9rem;">${statusMessage}</p>
+            <p style="color: var(--text-muted); font-size: 0.8rem;">This usually takes 30-60 seconds</p>
+            <div style="margin-top: 1rem; width: 100%; height: 4px; background: var(--border-color); border-radius: 2px; overflow: hidden;">
+              <div style="width: ${progressPercent}%; height: 100%; background: var(--aetherwave-purple); transition: width 0.5s ease;"></div>
+            </div>
+          </div>
+        `;
+        
         if (statusData.status === 'SUCCESS' && statusData.tracks && statusData.tracks.length > 0) {
           clearInterval(pollInterval);
           
