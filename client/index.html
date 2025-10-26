@@ -1609,7 +1609,7 @@
     <div class="use-case-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 0.5rem;">
 
     <!-- Band Profile Card -->
-    <div class="use-case-card" data-use-case="band-profile">
+    <div class="use-case-card" data-use-case="band-profile" data-testid="card-use-case-band-profile">
     <div class="use-case-icon"><img src="/assets/icon-set/profile-icon.png" style="width: 40px; height: 40px;"></div>
     <div class="use-case-name">Band Profile</div>
     <div class="use-case-tooltip">
@@ -1620,7 +1620,7 @@
     </div>
 
     <!-- Live Photos Card -->
-    <div class="use-case-card" data-use-case="live-photos">
+    <div class="use-case-card" data-use-case="live-photos" data-testid="card-use-case-live-photos">
     <div class="use-case-icon"><img src="/assets/icon-set/star-icon.png" style="width: 40px; height: 40px;"></div>
     <div class="use-case-name">Live Photos</div>
     <div class="use-case-tooltip">
@@ -1794,7 +1794,8 @@
     <select id="media-resolution">
     <option value="512p" selected>512p (Fastest, Lower Quality)</option>
     <option value="720p">720p (Balanced)</option>
-    <option value="1080p">1080p (Highest Quality, Slower)</option>
+    <option value="1080p">1080p (High Quality)</option>
+    <option value="4k">4K (Ultra Quality, Premium)</option>
     </select>
     </div>
 
@@ -1818,12 +1819,12 @@
     </div>
 
     <!-- Generate Button -->
-    <button class="btn-primary" id="generate-media-btn" style="width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600;">
+    <button class="btn-primary" id="generate-media-btn" data-testid="button-generate-media" style="width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600;">
     🎨 Generate <span id="media-type-label">Image</span>
     </button>
 
     <!-- Back Button -->
-    <button class="download-btn" id="back-to-use-cases" style="width: 100%; margin-top: 0.5rem;">
+    <button class="download-btn" id="back-to-use-cases" data-testid="button-back-to-use-cases" style="width: 100%; margin-top: 0.5rem;">
     ← Back to Use Cases
     </button>
     </div>

@@ -53,18 +53,19 @@ function validateMusicModel(planType: PlanType, model: MusicModel): boolean {
 // Calculate video generation credits based on quality settings
 function calculateVideoCredits(
   modelVersion: 'lite' | 'pro',
-  resolution: '512p' | '720p' | '1080p',
+  resolution: '512p' | '720p' | '1080p' | '4k',
   duration: number
 ): number {
   // Base cost by model
   const modelMultiplier = modelVersion === 'pro' ? 2 : 1; // Pro is 2x
   
-  // Resolution multiplier
+  // Resolution multiplier (512p=1x, 720p=1.5x, 1080p=2x, 4k=3x)
   let resolutionMultiplier = 1;
   if (resolution === '720p') resolutionMultiplier = 1.5;
   if (resolution === '1080p') resolutionMultiplier = 2;
+  if (resolution === '4k') resolutionMultiplier = 3;
   
-  // Duration multiplier (3s = 1x, 5s = 1.5x, 10s = 2x)
+  // Duration multiplier (3s = 1x, 5s = 1.67x, 10s = 3.33x)
   const durationMultiplier = duration / 3;
   
   // Base cost is 3 credits for lowest settings (lite, 512p, 3s)
@@ -1198,7 +1199,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate credits based on quality settings
       const requiredCredits = calculateVideoCredits(
         modelVersion as 'lite' | 'pro',
-        resolution as '512p' | '720p' | '1080p',
+        resolution as '512p' | '720p' | '1080p' | '4k',
         parseInt(duration)
       );
 
