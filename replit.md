@@ -37,6 +37,8 @@ Preferred communication style: Simple, everyday language.
 - Custom mode toggle for advanced music controls
 - Polling-based status updates for async music generation
 - Premium audio player with download functionality
+- **Album Art Style Selection Modal**: Interactive modal for selecting art styles (Photorealistic, Abstract, Cyberpunk, Retro, Minimal, Surreal) before DALL-E 3 generation
+- **Download Format Modal**: Per-track format selection (MP3/WAV) with Free plan restrictions and visual feedback
 
 ### Backend Architecture
 

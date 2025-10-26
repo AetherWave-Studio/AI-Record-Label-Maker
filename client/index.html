@@ -3921,9 +3921,103 @@ async function generateMedia() {
     artResult.style.display = 'block';
     }
 
+    // Album Art Modal Controller
+    window.albumArtModal = {
+      trackId: null,
+      trackTitle: null,
+      selectedStyle: 'photorealistic',
+
+      open: function(trackId, trackTitle) {
+        this.trackId = trackId;
+        this.trackTitle = trackTitle;
+        this.selectedStyle = 'photorealistic';
+        document.getElementById('album-art-track-title').textContent = `Style for "${trackTitle}"`;
+        document.getElementById('album-art-modal').style.display = 'flex';
+      },
+
+      close: function() {
+        document.getElementById('album-art-modal').style.display = 'none';
+        this.trackId = null;
+        this.trackTitle = null;
+      },
+
+      selectStyle: function(style) {
+        this.selectedStyle = style;
+        // Visual feedback - highlight selected style
+        document.querySelectorAll('#album-art-modal .download-option').forEach(opt => {
+          opt.style.backgroundColor = '';
+        });
+        event.target.closest('.download-option').style.backgroundColor = 'rgba(139, 92, 246, 0.1)';
+      },
+
+      generate: async function() {
+        if (!this.trackId || !this.trackTitle) return;
+        
+        const trackId = this.trackId;
+        const trackTitle = this.trackTitle;
+        const style = this.selectedStyle;
+        
+        this.close();
+        
+        // Now call the actual generation function
+        await window.generateAlbumArtForTrack(trackId, trackTitle, style);
+      }
+    };
+
+    // Generate album art for a specific track with selected style
+    window.generateAlbumArtForTrack = async function(trackId, trackTitle, style) {
+      const resultDiv = document.getElementById(`visual-result-${trackId}`);
+      resultDiv.innerHTML = `<p style="color: var(--accent-color); font-size: 0.9rem;">🎨 Generating ${style} album art with DALL-E 3...</p>`;
+
+      try {
+        const artPrompt = `Album cover art for the song "${trackTitle}". Music-themed, artistic, vibrant, professional album artwork design`;
+
+        console.log('Generating album art with prompt:', artPrompt, 'Style:', style);
+
+        const response = await fetch('/api/generate-art', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: artPrompt,
+            style: style
+          })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          console.error('Album art generation error:', data);
+          throw new Error(data.error || data.details || 'Failed to generate album art');
+        }
+
+        const data = await response.json();
+        console.log('Album art generated successfully:', data);
+
+        // DALL-E returns image synchronously - display immediately
+        if (data.imageUrl) {
+          resultDiv.innerHTML = `
+            <p style="color: #4ade80; font-size: 0.9rem;">✅ Album art complete! (DALL-E 3 - ${style})</p>
+            <img src="${data.imageUrl}" alt="Album art" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" />
+            <button onclick="downloadFile('${data.imageUrl}', '${trackTitle}-art.png')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Image</button>
+            ${data.revisedPrompt ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">DALL-E enhanced: ${data.revisedPrompt}</p>` : ''}
+          `;
+        } else {
+          throw new Error('Album art generated but no image URL returned');
+        }
+      } catch (error) {
+        console.error('Album art generation error:', error);
+        resultDiv.innerHTML = `<p style="color: #ff6b6b; font-size: 0.9rem;">Error: ${error.message}</p>`;
+      }
+    };
+
     // Generate visual (image/video) for a specific track
     window.generateVisualForTrack = async function(musicTaskId, trackId, trackTitle, type) {
     const resultDiv = document.getElementById(`visual-result-${trackId}`);
+
+    // For album art, open style selection modal
+    if (type === 'image') {
+      window.albumArtModal.open(trackId, trackTitle);
+      return;
+    }
 
     // Only ask for prompt for video generation
     let prompt = null;
@@ -4060,47 +4154,6 @@ async function generateMedia() {
     <button onclick="downloadFile('${data.videoUrl}', '${trackTitle}-video.mp4')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Video</button>
     `;
     }
-    } else {
-    // Generate album art using OpenAI DALL-E 3 (synchronous!)
-    resultDiv.innerHTML = `<p style="color: var(--accent-color); font-size: 0.9rem;">🎨 Generating album art with DALL-E 3...</p>`;
-
-    // Get the selected album art style from the dropdown
-    const selectedStyle = document.getElementById('album-art-style').value;
-
-    // Create a prompt based on the track title
-    const artPrompt = `Album cover art for the song "${trackTitle}". Music-themed, artistic, vibrant, professional album artwork design`;
-
-    console.log('Generating album art with prompt:', artPrompt, 'Style:', selectedStyle);
-
-    const response = await fetch('/api/generate-art', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-    prompt: artPrompt,
-    style: selectedStyle // Use the selected style from dropdown
-    })
-    });
-
-    if (!response.ok) {
-    const data = await response.json();
-    console.error('Album art generation error:', data);
-    throw new Error(data.error || data.details || 'Failed to generate album art');
-    }
-
-    const data = await response.json();
-    console.log('Album art generated successfully:', data);
-
-    // DALL-E returns image synchronously - display immediately
-    if (data.imageUrl) {
-    resultDiv.innerHTML = `
-    <p style="color: #4ade80; font-size: 0.9rem;">✅ Album art complete! (DALL-E 3)</p>
-    <img src="${data.imageUrl}" alt="Album art" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" />
-    <button onclick="downloadFile('${data.imageUrl}', '${trackTitle}-art.png')" class="download-btn" style="margin-top: 0.5rem; cursor: pointer;">Download Image</button>
-    ${data.revisedPrompt ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">DALL-E enhanced: ${data.revisedPrompt}</p>` : ''}
-    `;
-    } else {
-    throw new Error('Album art generated but no image URL returned');
-    }
     }
     } catch (error) {
     console.error(`${type} generation error:`, error);
@@ -4200,6 +4253,76 @@ updateMediaInputs();
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="window.premiumPlayer.closeDownloadModal()" data-testid="button-modal-cancel">Cancel</button>
         <button class="modal-btn modal-btn-primary" onclick="window.premiumPlayer.confirmDownload()" data-testid="button-modal-download">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Album Art Style Selection Modal -->
+  <div id="album-art-modal" class="modal-overlay" style="display: none;" data-testid="modal-album-art" onclick="if(event.target === this) window.albumArtModal.close()">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Generate Album Art</div>
+        <div class="modal-subtitle" id="album-art-track-title">Select art style</div>
+      </div>
+      <div class="download-options">
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('photorealistic')" data-testid="style-photorealistic">
+          <div class="download-option-info">
+            <div class="download-option-title">Photorealistic</div>
+            <div class="download-option-desc">Highly detailed, professional photography style</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('abstract')" data-testid="style-abstract">
+          <div class="download-option-info">
+            <div class="download-option-title">Abstract</div>
+            <div class="download-option-desc">Flowing shapes, vibrant colors, artistic interpretation</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('cyberpunk')" data-testid="style-cyberpunk">
+          <div class="download-option-info">
+            <div class="download-option-title">Cyberpunk</div>
+            <div class="download-option-desc">Neon lights, futuristic cityscape, dark with bright accents</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('retro')" data-testid="style-retro">
+          <div class="download-option-info">
+            <div class="download-option-title">Retro</div>
+            <div class="download-option-desc">80s vaporwave, pink and purple gradients, nostalgic</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('minimal')" data-testid="style-minimal">
+          <div class="download-option-info">
+            <div class="download-option-title">Minimal</div>
+            <div class="download-option-desc">Clean lines, simple composition, modern aesthetic</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div class="download-option" onclick="window.albumArtModal.selectStyle('surreal')" data-testid="style-surreal">
+          <div class="download-option-info">
+            <div class="download-option-title">Surreal</div>
+            <div class="download-option-desc">Dreamlike imagery, unexpected elements, artistic creativity</div>
+          </div>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="window.albumArtModal.close()" data-testid="button-album-art-cancel">Cancel</button>
+        <button class="modal-btn modal-btn-primary" onclick="window.albumArtModal.generate()" data-testid="button-album-art-generate">Generate</button>
       </div>
     </div>
   </div>
