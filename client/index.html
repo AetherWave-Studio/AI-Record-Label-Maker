@@ -2702,19 +2702,43 @@ window.premiumPlayer = {
     }
   },
 
-  confirmDownload() {
+  async confirmDownload() {
     const { title, url } = this.downloadData;
     const filename = `${title}.${this.selectedFormat}`;
     
-    // Create a temporary download link
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    this.closeDownloadModal();
+    try {
+      // Show loading state on download button
+      const downloadBtn = document.querySelector('[data-testid="button-modal-download"]');
+      const originalText = downloadBtn ? downloadBtn.textContent : 'Download';
+      if (downloadBtn) downloadBtn.textContent = 'Downloading...';
+      
+      // Fetch the file as a blob to work around CORS restrictions
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create download link with blob URL
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+      
+      this.closeDownloadModal();
+    } catch (error) {
+      console.error('Download error:', error);
+      alert('Download failed. Please try again or right-click and "Save As".');
+      this.closeDownloadModal();
+    }
   }
 };
 
