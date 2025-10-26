@@ -2673,6 +2673,10 @@ window.premiumPlayer = {
     if (modalTitle) modalTitle.textContent = title;
     if (modal) modal.style.display = 'flex';
     
+    // Reset download button text
+    const downloadBtn = document.querySelector('[data-testid="button-modal-download"]');
+    if (downloadBtn) downloadBtn.textContent = 'Download';
+    
     // Reset selection UI
     document.querySelectorAll('.download-option').forEach(opt => {
       opt.style.background = 'rgba(139, 92, 246, 0.08)';
@@ -2753,10 +2757,10 @@ window.premiumPlayer = {
     const { title, url } = this.downloadData;
     const filename = `${title}.${this.selectedFormat}`;
     
+    const downloadBtn = document.querySelector('[data-testid="button-modal-download"]');
+    
     try {
       // Show loading state on download button
-      const downloadBtn = document.querySelector('[data-testid="button-modal-download"]');
-      const originalText = downloadBtn ? downloadBtn.textContent : 'Download';
       if (downloadBtn) downloadBtn.textContent = 'Downloading...';
       
       // Fetch the file as a blob to work around CORS restrictions
@@ -2780,9 +2784,16 @@ window.premiumPlayer = {
         window.URL.revokeObjectURL(blobUrl);
       }, 100);
       
+      // Reset button text before closing
+      if (downloadBtn) downloadBtn.textContent = 'Download';
+      
       this.closeDownloadModal();
     } catch (error) {
       console.error('Download error:', error);
+      
+      // Reset button text on error
+      if (downloadBtn) downloadBtn.textContent = 'Download';
+      
       alert('Download failed. Please try again or right-click and "Save As".');
       this.closeDownloadModal();
     }
