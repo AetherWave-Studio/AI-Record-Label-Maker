@@ -1160,6 +1160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const {
         prompt,
         imageData,
+        imageUrl,
         image_url,
         end_image_url,
         imageMode = 'first-frame',
@@ -1227,8 +1228,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine which Fal.ai model to use
-      // Support both imageData (base64) and image_url (URL)
-      const hasImage = imageData || image_url;
+      // Support both imageData (base64), imageUrl (camelCase), and image_url (snake_case)
+      const finalImageUrl = imageUrl || image_url;
+      const hasImage = imageData || finalImageUrl;
       
       let modelId;
       if (hasImage) {
@@ -1252,7 +1254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: prompt,
         hasImage: hasImage,
         imageMode: hasImage ? imageMode : 'none',
-        imageSource: imageData ? 'base64' : (image_url ? 'url' : 'none'),
+        imageSource: imageData ? 'base64' : (finalImageUrl ? 'url' : 'none'),
+        imageUrl: finalImageUrl,
         resolution: resolution,
         duration: duration
       });
@@ -1272,7 +1275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Add image if provided (support both base64 and URL)
-      const imageSource = imageData || image_url;
+      const imageSource = imageData || finalImageUrl;
       
       if (imageSource) {
         if (imageMode === 'reference') {
