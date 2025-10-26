@@ -3585,6 +3585,20 @@ window.premiumPlayer = {
     artResult.style.display = 'none';
 
     try {
+    // Get reference image if uploaded
+    let referenceImage = null;
+    const imageUpload = document.getElementById('media-image-upload');
+    if (imageUpload && imageUpload.files && imageUpload.files[0]) {
+      // Convert uploaded image to base64
+      referenceImage = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(imageUpload.files[0]);
+      });
+      console.log('Using reference image for art generation');
+    }
+
     const response = await fetch('/api/generate-art', {
     method: 'POST',
     headers: {
@@ -3592,21 +3606,24 @@ window.premiumPlayer = {
     },
     body: JSON.stringify({
     prompt: prompt,
-    style: style
+    style: style,
+    referenceImage: referenceImage
     })
     });
 
     if (!response.ok) {
-    throw new Error('Failed to generate art');
+    const errorData = await response.json();
+    throw new Error(errorData.details || errorData.error || 'Failed to generate art');
     }
 
     const data = await response.json();
 
     artResult.innerHTML = `
     <div class="result-box">
-    <div class="result-title">Generated Album Art</div>
+    <div class="result-title">Generated Album Art ${data.hasReference ? '(with Reference)' : ''}</div>
     <img src="${data.imageUrl}" alt="Generated album art" class="generated-image" />
     <a href="${data.imageUrl}" download class="download-btn">Download Image</a>
+    ${data.description ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">AI: ${data.description}</p>` : ''}
     </div>
     `;
     artResult.style.display = 'block';
@@ -3616,7 +3633,7 @@ window.premiumPlayer = {
     artResult.innerHTML = `
     <div class="result-box">
     <div class="result-title">Error</div>
-    <p style="color: var(--text-muted); font-size: 0.9rem;">Album art generation is coming soon! We're setting up the image AI integration.</p>
+    <p style="color: var(--text-muted); font-size: 0.9rem;">${error.message || 'Failed to generate album art. Please try again.'}</p>
     </div>
     `;
     artResult.style.display = 'block';

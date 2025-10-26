@@ -952,7 +952,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Album Art Generation with DALL-E 3
+  // Album Art Generation with Fal.ai Nano Banana
   app.post("/api/generate-art", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
@@ -962,7 +962,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      const { prompt, style = 'abstract' } = req.body;
+      const { prompt, style = 'abstract', referenceImage } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -973,12 +973,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
       }
       
-      // Validate OpenAI API key - prefer direct key for DALL-E 3
-      const openaiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+      // Validate Fal.ai API key
+      const falApiKey = process.env.FAL_KEY;
       
-      if (!openaiKey) {
-        return res.status(500).json({ error: 'OpenAI API key not configured. Please add OPENAI_API_KEY to your secrets.' });
+      if (!falApiKey) {
+        return res.status(500).json({ error: 'Fal.ai API key not configured. Please add FAL_KEY to your secrets.' });
       }
+      
+      // Set API key for Fal client
+      process.env.FAL_KEY = falApiKey;
       
       // Deduct credits for album art generation
       const creditResult = await storage.deductCredits(userId, 'album_art_generation');
@@ -994,53 +997,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Style descriptions for enhanced prompts
       const styleDescriptions: Record<string, string> = {
-        cyberpunk: 'cyberpunk aesthetic, neon lights, futuristic cityscape, dark background with bright neon accents',
-        abstract: 'abstract art, flowing shapes, vibrant colors, artistic interpretation',
+        cyberpunk: 'cyberpunk aesthetic with neon lights, futuristic cityscape, dark background with bright neon accents',
+        abstract: 'abstract art with flowing shapes, vibrant colors, artistic interpretation',
         retro: 'retro vaporwave aesthetic, 80s style, pink and purple gradients, nostalgic vibes',
-        minimal: 'minimalist design, clean lines, simple composition, modern aesthetic',
-        surreal: 'surrealist art, dreamlike imagery, unexpected elements, artistic creativity',
-        photorealistic: 'photorealistic, highly detailed, professional photography style'
+        minimal: 'minimalist design with clean lines, simple composition, modern aesthetic',
+        surreal: 'surrealist art with dreamlike imagery, unexpected elements, artistic creativity',
+        photorealistic: 'photorealistic with highly detailed, professional photography style'
       };
       
       const styleHint = styleDescriptions[style] || styleDescriptions.abstract;
-      const enhancedPrompt = `Album cover art: ${prompt}. Style: ${styleHint}. Square format, professional music album cover design.`;
       
-      console.log('Generating album art with DALL-E 3:', { prompt, style, enhancedPrompt });
+      // Determine which model to use based on whether reference image is provided
+      const hasReference = referenceImage && referenceImage.trim().length > 0;
+      const modelId = hasReference ? 'fal-ai/nano-banana/edit' : 'fal-ai/nano-banana';
       
-      // Initialize OpenAI client with official API endpoint (NOT Replit proxy)
-      // DALL-E 3 requires direct OpenAI API, not the Replit AI Integration proxy
-      const openai = new OpenAI({
-        apiKey: openaiKey,
-        // Don't set baseURL - use official OpenAI endpoint for DALL-E 3
-      });
-      
-      // Call DALL-E 3 API
-      const imageResponse = await openai.images.generate({
-        model: 'dall-e-3',
-        prompt: enhancedPrompt,
-        n: 1,
-        size: '1024x1024',
-        quality: 'standard'
-      });
-      
-      if (!imageResponse.data || imageResponse.data.length === 0) {
-        throw new Error('No image data returned from DALL-E API');
+      let enhancedPrompt: string;
+      if (hasReference) {
+        // For image-to-image: focus on transformation/editing instructions
+        enhancedPrompt = `Transform this into an album cover art. ${prompt}. Apply ${styleHint}. Professional music album cover design with square 1:1 aspect ratio.`;
+      } else {
+        // For text-to-image: full detailed description
+        enhancedPrompt = `Album cover art: ${prompt}. Style: ${styleHint}. Square format, professional music album cover design.`;
       }
       
-      const imageData = imageResponse.data[0];
-      
-      return res.status(200).json({
-        imageUrl: imageData.url,
-        prompt: prompt,
-        style: style,
-        revisedPrompt: imageData.revised_prompt
+      console.log('Generating album art with Fal.ai Nano Banana:', { 
+        model: modelId,
+        prompt, 
+        style, 
+        hasReference,
+        enhancedPrompt 
       });
+      
+      // Build request input
+      const input: any = {
+        prompt: enhancedPrompt,
+        num_images: 1,
+        output_format: 'jpeg',
+        aspect_ratio: '1:1'
+      };
+      
+      // Add reference image if provided (supports both data URIs and HTTP URLs)
+      if (hasReference) {
+        input.image_urls = [referenceImage];
+        console.log('Using reference image for style guidance');
+      }
+      
+      // Call Fal.ai Nano Banana API
+      const result = await fal.subscribe(modelId, {
+        input: input,
+        logs: true,
+        onQueueUpdate: (update: any) => {
+          console.log('Fal.ai Nano Banana queue update:', update.status);
+        }
+      });
+      
+      console.log('Fal.ai Nano Banana generation complete');
+      
+      // Extract image URL from response
+      const resultData = result as any;
+      const imageUrl = resultData.data?.images?.[0]?.url || 
+                       resultData.images?.[0]?.url ||
+                       resultData.data?.image_url ||
+                       resultData.image_url;
+      
+      if (imageUrl) {
+        console.log('✅ Image URL extracted:', imageUrl);
+        return res.status(200).json({
+          imageUrl: imageUrl,
+          prompt: prompt,
+          style: style,
+          description: resultData.data?.description || resultData.description,
+          hasReference: hasReference
+        });
+      } else {
+        console.error('❌ No image URL found in response');
+        return res.status(500).json({
+          error: 'Image generation completed but no image URL found in response',
+          result: result
+        });
+      }
       
     } catch (error: any) {
       console.error('Album art generation error:', error);
       res.status(500).json({
         error: 'Failed to generate album art',
-        details: error.message
+        details: error.message,
+        body: error.body
       });
     }
   });
