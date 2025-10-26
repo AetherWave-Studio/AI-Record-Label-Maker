@@ -5,6 +5,7 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { z } from "zod";
 import multer from "multer";
 import { db } from "./db";
+import OpenAI from "openai";
 import { 
   uploadedAudio, 
   PLAN_FEATURES,
@@ -48,6 +49,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Chat endpoint using OpenAI (via Replit AI Integrations)
+  // Note: Authenticated to prevent abuse of OpenAI integration credits
+  app.post("/api/chat", isAuthenticated, async (req: any, res) => {
+    try {
+      const { message } = req.body;
+
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ error: 'Message is required' });
+      }
+
+      // Initialize OpenAI client with Replit AI Integrations credentials
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      // Call OpenAI chat API
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are AetherWave AI, a helpful assistant for AetherWave Studio - an AI music and media creation platform. Help users with questions about creating music, generating album art, and using the platform's features."
+          },
+          {
+            role: "user",
+            content: message
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      });
+
+      const responseMessage = completion.choices[0]?.message?.content || "I apologize, but I couldn't generate a response. Please try again.";
+
+      res.json({ message: responseMessage });
+
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      res.status(500).json({ 
+        error: 'Failed to process chat message',
+        details: error.message 
+      });
+    }
+  });
+
   // Music generation route with vocal gender support (KIE.ai API)
   app.post("/api/generate-music", isAuthenticated, async (req: any, res) => {
     try {
@@ -56,18 +103,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Centralized credit check and deduction
-      const creditResult = await storage.deductCredits(userId, 'music_generation');
-      
-      if (!creditResult.success) {
-        return res.status(403).json({ 
-          error: 'Insufficient credits',
-          credits: creditResult.newBalance,
-          required: SERVICE_CREDIT_COSTS.music_generation,
-          message: creditResult.error || 'You need more credits to generate music. Upgrade your plan or wait for daily reset.'
-        });
       }
       
       const { 
@@ -80,7 +115,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         style
       } = req.body;
 
-      // Validate music model is allowed for user's plan
+      // Validate required inputs FIRST
+      if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Prompt is required and must be a non-empty string'
+        });
+      }
+
+      // Validate SUNO API key is configured BEFORE deducting credits
+      const sunoApiKey = process.env.SUNO_API_KEY;
+      if (!sunoApiKey) {
+        return res.status(500).json({ 
+          error: 'SUNO API key not configured',
+          details: 'Please add SUNO_API_KEY to your Replit Secrets'
+        });
+      }
+
+      // Validate music model is allowed for user's plan BEFORE deducting credits
       const userPlan = user.subscriptionPlan as PlanType;
       if (!validateMusicModel(userPlan, model)) {
         return res.status(403).json({
@@ -89,16 +141,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           allowedModels: PLAN_FEATURES[userPlan].allowedMusicModels
         });
       }
-
-      console.log('Music generation request:', { prompt, model, instrumental, vocalGender, customMode, title, style });
-
-      const sunoApiKey = process.env.SUNO_API_KEY;
-      if (!sunoApiKey) {
-        return res.status(500).json({ 
-          error: 'SUNO API key not configured',
-          details: 'Please add SUNO_API_KEY to your Replit Secrets'
+      
+      // ALL validations passed - NOW deduct credits
+      const creditResult = await storage.deductCredits(userId, 'music_generation');
+      
+      if (!creditResult.success) {
+        return res.status(403).json({ 
+          error: 'Insufficient credits',
+          credits: creditResult.newBalance,
+          required: SERVICE_CREDIT_COSTS.music_generation,
+          message: creditResult.error || 'You need more credits to generate music. Upgrade your plan or wait for daily reset.'
         });
       }
+
+      console.log('Music generation request:', { prompt, model, instrumental, vocalGender, customMode, title, style });
 
       // Build KIE.ai API request
       const sunoPayload: any = {
@@ -179,18 +235,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
       
-      // Centralized credit check and deduction
-      const creditResult = await storage.deductCredits(userId, 'music_generation');
-      
-      if (!creditResult.success) {
-        return res.status(403).json({ 
-          error: 'Insufficient credits',
-          credits: creditResult.newBalance,
-          required: SERVICE_CREDIT_COSTS.music_generation,
-          message: creditResult.error || 'You need more credits to generate music. Upgrade your plan or wait for daily reset.'
-        });
-      }
-      
       const { 
         uploadUrl,
         prompt, 
@@ -206,18 +250,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         negativeTags
       } = req.body;
 
-      // Validate music model is allowed for user's plan
-      const userPlan = user.subscriptionPlan as PlanType;
-      if (!validateMusicModel(userPlan, model)) {
-        return res.status(403).json({
-          error: 'Model not allowed',
-          message: `Your ${user.subscriptionPlan} plan does not include ${model} model. Upgrade to Studio or higher to unlock premium models.`,
-          allowedModels: PLAN_FEATURES[userPlan].allowedMusicModels
+      // Validate required inputs FIRST
+      if (!uploadUrl || typeof uploadUrl !== 'string' || uploadUrl.trim().length === 0) {
+        return res.status(400).json({
+          error: 'Upload URL required',
+          message: 'Please provide a valid audio URL to cover'
         });
       }
 
-      console.log('Upload-cover request:', { uploadUrl, prompt, model, instrumental, vocalGender, customMode });
+      if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
+        return res.status(400).json({
+          error: 'Invalid request',
+          message: 'Prompt is required and must be a non-empty string'
+        });
+      }
 
+      // Validate SUNO API key is configured BEFORE deducting credits
       const sunoApiKey = process.env.SUNO_API_KEY;
       if (!sunoApiKey) {
         return res.status(500).json({ 
@@ -226,12 +274,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      if (!uploadUrl) {
-        return res.status(400).json({
-          error: 'Upload URL required',
-          details: 'Please provide an audio URL to cover'
+      // Validate music model is allowed for user's plan BEFORE deducting credits
+      const userPlan = user.subscriptionPlan as PlanType;
+      if (!validateMusicModel(userPlan, model)) {
+        return res.status(403).json({
+          error: 'Model not allowed',
+          message: `Your ${user.subscriptionPlan} plan does not include ${model} model. Upgrade to Studio or higher to unlock premium models.`,
+          allowedModels: PLAN_FEATURES[userPlan].allowedMusicModels
         });
       }
+      
+      // ALL validations passed - NOW deduct credits
+      const creditResult = await storage.deductCredits(userId, 'music_generation');
+      
+      if (!creditResult.success) {
+        return res.status(403).json({ 
+          error: 'Insufficient credits',
+          credits: creditResult.newBalance,
+          required: SERVICE_CREDIT_COSTS.music_generation,
+          message: creditResult.error || 'You need more credits to generate music. Upgrade your plan or wait for daily reset.'
+        });
+      }
+
+      console.log('Upload-cover request:', { uploadUrl, prompt, model, instrumental, vocalGender, customMode });
 
       // Build KIE.ai upload-cover API request
       const coverPayload: any = {
