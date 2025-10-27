@@ -4744,10 +4744,13 @@ async function generateMedia() {
       const resultDiv = document.getElementById(`visual-result-${trackId}`);
       
       if (showVideo && data.videoUrl) {
+        // Get video duration from storage (default to 5s for backward compatibility)
+        const videoDuration = data.videoDuration || window.mediaStorage[trackId]?.videoDuration || '5';
+        
         // Show video view
         resultDiv.innerHTML = `
           <div style="text-align: center;">
-            <p style="color: #4ade80; font-size: 0.9rem; margin-bottom: 0.5rem;">🎬 Album Art Video (5s Seedance)</p>
+            <p style="color: #4ade80; font-size: 0.9rem; margin-bottom: 0.5rem;">🎬 Album Art Video (${videoDuration}s Seedance)</p>
             <video controls autoplay loop style="width: 100%; max-width: 100%; border-radius: 8px;" data-testid="video-album-art-${trackId}">
               <source src="${data.videoUrl}" type="video/mp4">
             </video>
@@ -4765,22 +4768,77 @@ async function generateMedia() {
             <img src="${data.albumArtUrl}" alt="Album art for ${data.trackTitle}" style="width: 100%; max-width: 100%; border-radius: 8px;" data-testid="img-album-art-${trackId}">
             <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
               <button onclick="downloadFile('${data.albumArtUrl}', '${data.trackTitle}-album-art.png')" class="download-btn" style="flex: 1; min-width: 120px; cursor: pointer;" data-testid="button-download-image-${trackId}">📥 Download Image</button>
-              ${data.videoUrl ? `<button onclick="toggleMediaView('${trackId}', true)" class="btn-primary" style="flex: 1; min-width: 120px; cursor: pointer;" data-testid="button-show-video-${trackId}">▶️ Show Video</button>` : `<button onclick="turnAlbumArtIntoVideo('${trackId}', '${data.trackTitle}', '${data.albumArtUrl}')" class="btn-primary" style="flex: 1; min-width: 120px; cursor: pointer;" data-testid="button-turn-into-video-${trackId}">🎬 Turn into Video</button>`}
+              ${data.videoUrl ? `<button onclick="toggleMediaView('${trackId}', true)" class="btn-primary" style="flex: 1; min-width: 120px; cursor: pointer;" data-testid="button-show-video-${trackId}">▶️ Show Video</button>` : `<button onclick="showAlbumArtVideoDurationPicker('${trackId}', '${data.trackTitle}', '${data.albumArtUrl}')" class="btn-primary" style="flex: 1; min-width: 120px; cursor: pointer;" data-testid="button-turn-into-video-${trackId}">🎬 Turn into Video</button>`}
             </div>
           </div>
         `;
       }
     };
 
-    // Turn album art into a 5-second video using Seedance image-to-video
-    window.turnAlbumArtIntoVideo = async function(trackId, trackTitle, albumArtUrl) {
+    // Show duration picker modal for album art to video conversion
+    window.showAlbumArtVideoDurationPicker = function(trackId, trackTitle, albumArtUrl) {
+      const isFree = userPlan === 'free';
+      
+      // Create modal HTML
+      const modalHtml = `
+        <div id="video-duration-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 1rem;">
+          <div style="background: var(--card-bg); border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+            <h3 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 1.1rem;">🎬 Animate Album Art</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Choose animation duration for "${trackTitle}"</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Duration</label>
+              <select id="album-video-duration" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 0.9rem;" ${isFree ? 'disabled' : ''}>
+                <option value="3" selected>3 seconds (3 credits)</option>
+                <option value="5">5 seconds (5 credits)</option>
+              </select>
+              ${isFree ? `<p style="color: #fbbf24; font-size: 0.75rem; margin-top: 0.5rem;">⚠️ Free accounts limited to 3 seconds</p>` : ''}
+            </div>
+            
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);">
+              <strong>Settings:</strong> Lite model, 512p resolution<br>
+              <strong>Mode:</strong> Image-to-video (album art as first frame)
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+              <button onclick="closeVideoDurationModal()" style="flex: 1; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem;" data-testid="button-cancel-video-duration">Cancel</button>
+              <button onclick="confirmAlbumArtToVideo('${trackId}', '${trackTitle}', '${albumArtUrl}')" style="flex: 1; padding: 0.75rem; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; cursor: pointer; font-weight: 600; font-size: 0.9rem;" data-testid="button-confirm-video-duration">🎬 Animate</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Add modal to page
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+    };
+    
+    // Close duration picker modal
+    window.closeVideoDurationModal = function() {
+      const modal = document.getElementById('video-duration-modal');
+      if (modal) modal.remove();
+    };
+    
+    // Confirm and start album art to video conversion
+    window.confirmAlbumArtToVideo = function(trackId, trackTitle, albumArtUrl) {
+      const durationSelect = document.getElementById('album-video-duration');
+      const duration = durationSelect ? durationSelect.value : '3';
+      
+      // Close modal
+      closeVideoDurationModal();
+      
+      // Start conversion
+      turnAlbumArtIntoVideo(trackId, trackTitle, albumArtUrl, duration);
+    };
+
+    // Turn album art into video using Seedance image-to-video
+    window.turnAlbumArtIntoVideo = async function(trackId, trackTitle, albumArtUrl, duration = '3') {
       const resultDiv = document.getElementById(`visual-result-${trackId}`);
       
       // Show loading state
       resultDiv.innerHTML = `
         <div style="text-align: center;">
           <img src="${albumArtUrl}" alt="Album art" style="width: 100%; max-width: 100%; border-radius: 8px; opacity: 0.6;">
-          <p style="color: var(--accent-color); font-size: 0.9rem; margin-top: 0.75rem;">🎬 Turning album art into 5-second video...</p>
+          <p style="color: var(--accent-color); font-size: 0.9rem; margin-top: 0.75rem;">🎬 Animating album art (${duration}s)...</p>
           <p style="color: var(--text-muted); font-size: 0.8rem;">Using Seedance image-to-video (Lite, 512p)</p>
         </div>
       `;
@@ -4795,7 +4853,7 @@ async function generateMedia() {
             imageMode: 'first-frame',  // Use album art as the first frame
             modelVersion: 'lite',
             resolution: '512p',
-            duration: '5',
+            duration: duration,
             enableSafetyChecker: true
           })
         });
@@ -4814,6 +4872,7 @@ async function generateMedia() {
             window.mediaStorage[trackId] = {};
           }
           window.mediaStorage[trackId].videoUrl = data.videoUrl;
+          window.mediaStorage[trackId].videoDuration = duration;
           
           // Show video view
           toggleMediaView(trackId, true);

@@ -10,9 +10,16 @@ The application provides a creative tool interface for generating AI-created mus
 
 ## Recent Changes (October 27, 2025)
 
+**Album Art Video Animation Feature:**
+- Added duration picker modal for "Turn into Video" feature in Panel 1 (album art animation)
+- Modal offers 3 and 5 second options only (no 10 seconds for album cover animations)
+- Free accounts locked to 3 seconds with visual indicator in modal
+- Paid accounts can choose between 3s (3 credits) and 5s (5 credits)
+- Video display dynamically shows selected duration (e.g., "3s Seedance" or "5s Seedance")
+
 **Video Duration Bug Fix:**
 - Fixed critical bug where free accounts couldn't generate videos due to missing 3-second duration option
-- Added "3 seconds" option to duration dropdown (previously only had 5 and 10)
+- Added "3 seconds" option to main video generation duration dropdown (previously only had 5 and 10)
 - Updated backend validation to accept 3 seconds for free accounts (was incorrectly set to 5)
 - Fixed frame calculation to properly support all three durations (3s=73 frames, 5s=121 frames, 10s=241 frames)
 - Free account default is now 3 seconds at 3 credits (the cheapest option)
@@ -84,7 +91,7 @@ Preferred communication style: Simple, everyday language.
 - Polling-based status updates for async music generation
 - Premium audio player with download functionality
 - **Album Art Style Selection Modal**: Interactive modal for selecting art styles (Photorealistic, Abstract, Cyberpunk, Retro, Minimal, Surreal) before DALL-E 3 generation
-- **Panel 1 Album Art to Video**: "Turn into Video" button appears after album art generation, converts art to 5-second Seedance video using image-to-video mode with toggle between art/video views
+- **Panel 1 Album Art to Video**: "Turn into Video" button appears after album art generation with duration picker modal (3s/5s options only, free accounts locked to 3s), converts art using Seedance image-to-video mode with toggle between art/video views
 - **Download Format Modal**: Per-track format selection (MP3/WAV) with Free plan restrictions and visual feedback
 - **User Profile Modal**: Click avatar to view account details, subscription plan, credits, and preferences with scrollable content
 
