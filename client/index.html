@@ -851,13 +851,15 @@
     border-top: 1px solid var(--border-color);
     }
 
-    /* Media Type Toggle Buttons */
-    .media-type-btn:hover {
+    /* Media Type Toggle Buttons & Mode Toggle Buttons */
+    .media-type-btn:hover,
+    .mode-toggle-btn:hover {
     transform: translateY(-2px);
     filter: brightness(1.2);
     }
 
-    .media-type-btn.active {
+    .media-type-btn.active,
+    .mode-toggle-btn.active {
     background: url('/assets/Pick-btn-on_1761530040819.png') no-repeat center center !important;
     background-size: 100% 100% !important;
     color: #00F5A0 !important;
@@ -1424,12 +1426,17 @@
     </div>
     </div>
     <div class="panel-content">
-    <!-- Custom Mode Toggle -->
+    <!-- Mode Toggle -->
     <div class="form-group">
-    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-    <input type="checkbox" id="custom-mode-toggle" style="width: auto; cursor: pointer;">
-    <span class="form-label" style="margin: 0;">Custom Mode</span>
-    </label>
+    <label class="form-label">Mode</label>
+    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+    <button class="mode-toggle-btn active" data-mode="simple" data-testid="button-mode-simple" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+    Simple
+    </button>
+    <button class="mode-toggle-btn" data-mode="custom" data-testid="button-mode-custom" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: var(--text-primary); font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+    Custom
+    </button>
+    </div>
     </div>
 
     <!-- Upload & Cover Audio File (Optional) -->
@@ -2408,7 +2415,8 @@
     const suggestionChips = document.querySelectorAll('.suggestion-chip');
 
     // Music generation - Elements
-    const customModeToggle = document.getElementById('custom-mode-toggle');
+    const modeToggleBtns = document.querySelectorAll('.mode-toggle-btn');
+    let isCustomMode = false; // Simple is default
     const simpleModeFields = document.getElementById('simple-mode-fields');
     const customModeFields = document.getElementById('custom-mode-fields');
     const musicPromptSimple = document.getElementById('music-prompt-simple');
@@ -2442,38 +2450,41 @@
   return null;
 }
 
-    // Custom Mode Toggle
-    if (customModeToggle && simpleModeFields && customModeFields) {
-      customModeToggle.addEventListener('change', () => {
-        if (customModeToggle.checked) {
-          simpleModeFields.style.display = 'none';
-          customModeFields.style.display = 'block';
-        } else {
-          simpleModeFields.style.display = 'block';
-          customModeFields.style.display = 'none';
-        }
+    // Mode Toggle Buttons
+    const advancedOptions = document.getElementById('advanced-options');
+    
+    if (modeToggleBtns.length > 0 && simpleModeFields && customModeFields) {
+      modeToggleBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Remove active from all buttons
+          modeToggleBtns.forEach(b => b.classList.remove('active'));
+          // Add active to clicked button
+          this.classList.add('active');
+          
+          // Update mode based on button clicked
+          const mode = this.dataset.mode;
+          isCustomMode = (mode === 'custom');
+          
+          // Toggle fields visibility
+          if (isCustomMode) {
+            simpleModeFields.style.display = 'none';
+            customModeFields.style.display = 'block';
+            if (advancedOptions) advancedOptions.style.display = 'block';
+          } else {
+            simpleModeFields.style.display = 'block';
+            customModeFields.style.display = 'none';
+            if (advancedOptions) advancedOptions.style.display = 'none';
+          }
+        });
       });
     }
-        
-const advancedOptions = document.getElementById('advanced-options');
-
-// Show/hide Advanced Options based on custom mode
-if (customModeToggle && advancedOptions) {
-  customModeToggle.addEventListener('change', function() {
-    if (customModeToggle.checked) {
-      advancedOptions.style.display = 'block';
-    } else {
-      advancedOptions.style.display = 'none';
+    
+    // Set initial visibility (Simple mode by default)
+    if (simpleModeFields && customModeFields) {
+      simpleModeFields.style.display = 'block';
+      customModeFields.style.display = 'none';
+      if (advancedOptions) advancedOptions.style.display = 'none';
     }
-  });
-
-  // Also set initial visibility at page load:
-  if (customModeToggle.checked) {
-    advancedOptions.style.display = 'block';
-  } else {
-    advancedOptions.style.display = 'none';
-  }
-}
 
 // Gender Toggle Button Logic
 const genderToggleBtns = document.querySelectorAll('.gender-toggle-btn');
@@ -2507,7 +2518,7 @@ if (genderToggleBtns.length > 0 && vocalGenderValue) {
 // Function to update required field indicators (red asterisks)
 function updateRequiredFields() {
   const uploadUrl = document.getElementById('upload-url').value.trim();
-  const isCustomMode = customModeToggle.checked;
+  // Use the global isCustomMode variable instead of checkbox
   const isInstrumental = musicInstrumental.checked;
   
   // Get label elements
@@ -2550,8 +2561,10 @@ function updateRequiredFields() {
 }
 
 // Update required fields on mode/instrumental changes
-if (customModeToggle) {
-  customModeToggle.addEventListener('change', updateRequiredFields);
+if (modeToggleBtns.length > 0) {
+  modeToggleBtns.forEach(btn => {
+    btn.addEventListener('click', updateRequiredFields);
+  });
 }
 if (musicInstrumental) {
   musicInstrumental.addEventListener('change', updateRequiredFields);
@@ -3308,7 +3321,7 @@ window.premiumPlayer = {
 
     // Generate music
     async function generateMusic() {
-    const isCustomMode = customModeToggle.checked;
+    // Use the global isCustomMode variable instead of checkbox
     const model = musicModelHeader.value;
     const instrumental = musicInstrumental.checked;
     const vocalGender = document.getElementById('vocal-gender-value')?.value || 'm';
