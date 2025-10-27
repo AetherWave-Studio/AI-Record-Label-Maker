@@ -922,89 +922,6 @@
       border-color: var(--aetherwave-purple);
     }
 
-    @media (max-width: 1200px) {
-    .panels-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    overflow-y: auto;
-    scroll-snap-type: y mandatory;
-    -webkit-overflow-scrolling: touch;
-    }
-    
-    .hero-text {
-      display: none; /* Hide hero on mobile */
-    }
-    
-    .panel-music,
-    .panel-chat,
-    .panel-media {
-      min-height: calc(100vh - 80px); /* Full viewport height minus header */
-      height: auto;
-      scroll-snap-align: start;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .panel-content {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    main {
-    padding: 0;
-    overflow: hidden;
-    }
-    
-    .hamburger-menu {
-      display: flex;
-    }
-    
-    .mobile-panel-nav {
-      display: block;
-    }
-    
-    /* Hide desktop nav links on mobile */
-    nav a:not(.nav-btn):not(#login-btn) {
-      display: none;
-    }
-    }
-
-    @media (max-width: 768px) {
-    header {
-    padding: 1rem;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    }
-
-    nav {
-    gap: 0.5rem;
-    }
-
-    h1 {
-    font-size: 1.5rem;
-    }
-
-    .subtitle {
-    font-size: 0.9rem;
-    }
-
-    .message.user .message-content {
-    margin-left: 0;
-    }
-
-    .panel-content {
-    padding: 1rem;
-    }
-    
-    .panel-music,
-    .panel-chat,
-    .panel-media {
-      min-height: calc(100vh - 70px);
-    }
-    }
-
     /* ===== PREMIUM AUDIO PLAYER (Option 2) ===== */
     
     .premium-track-card {
@@ -1341,6 +1258,412 @@
 
     .modal-btn-secondary:hover {
       background: rgba(139, 92, 246, 0.25);
+    }
+
+    /* ============================================
+       MOBILE-FIRST RESPONSIVE DESIGN
+       ============================================ */
+    
+    /* Bottom Navigation for Mobile */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(13, 11, 21, 0.98);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-color);
+      padding: 0.5rem 0;
+      z-index: 999;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    .mobile-bottom-nav-items {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .mobile-nav-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-width: 64px;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    
+    .mobile-nav-btn img {
+      width: 24px;
+      height: 24px;
+      opacity: 0.6;
+      transition: all 0.2s;
+    }
+    
+    .mobile-nav-btn.active {
+      color: var(--aetherwave-purple);
+    }
+    
+    .mobile-nav-btn.active img {
+      opacity: 1;
+      filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.6));
+    }
+    
+    /* Tablet Breakpoint (768px - 1024px) */
+    @media (max-width: 1024px) {
+      /* Convert to two-column layout on tablets */
+      .panels-container {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 1rem;
+      }
+      
+      .hero-text {
+        grid-column: 1 / 3;
+        grid-row: 1 / 2;
+        padding: 1.25rem 1.5rem;
+      }
+      
+      .panel-music {
+        grid-column: 1 / 2;
+        grid-row: 2 / 3;
+      }
+      
+      .panel-chat {
+        grid-column: 2 / 3;
+        grid-row: 2 / 3;
+      }
+      
+      .panel-media {
+        grid-column: 1 / 3;
+        grid-row: 3 / 4;
+      }
+      
+      /* Reduce padding */
+      main {
+        padding: 1rem;
+      }
+      
+      header {
+        padding: 0.5rem 1rem;
+      }
+      
+      .panel-content {
+        padding: 1rem;
+      }
+      
+      /* Hide desktop nav links on tablets */
+      nav a:not(.nav-btn) {
+        display: none;
+      }
+    }
+    
+    /* Mobile Breakpoint (≤768px) */
+    @media (max-width: 768px) {
+      /* Fix body scrolling */
+      body {
+        min-height: 100dvh;
+        overflow-x: hidden;
+        overflow-y: auto;
+      }
+      
+      /* Convert to single-column mobile layout */
+      main {
+        padding: 0.75rem 0.75rem 5rem 0.75rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .panels-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-height: auto;
+      }
+      
+      /* All panels stack vertically */
+      .hero-text,
+      .panel-music,
+      .panel-chat,
+      .panel-media {
+        grid-column: unset;
+        grid-row: unset;
+        width: 100%;
+      }
+      
+      /* Condense hero section on mobile */
+      .hero-text {
+        padding: 1rem;
+        min-height: auto;
+      }
+      
+      .hero-text h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+      
+      .subtitle {
+        font-size: 0.85rem;
+      }
+      
+      /* Hide panels by default on mobile */
+      .panel-music,
+      .panel-chat,
+      .panel-media {
+        display: none;
+      }
+      
+      /* Show active panel */
+      .panel-music.mobile-active,
+      .panel-chat.mobile-active,
+      .panel-media.mobile-active {
+        display: flex;
+      }
+      
+      /* Panel sizing for mobile */
+      .panel {
+        max-height: calc(100dvh - 200px);
+        min-height: 400px;
+      }
+      
+      .panel-content {
+        padding: 1rem;
+        overflow-y: auto;
+        overflow-x: hidden;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Show mobile bottom nav */
+      .mobile-bottom-nav {
+        display: block;
+      }
+      
+      /* Hide desktop hamburger menu */
+      .hamburger-menu {
+        display: flex;
+      }
+      
+      .mobile-panel-nav {
+        display: block;
+      }
+      
+      /* Header adjustments */
+      header {
+        padding: 0.5rem 0.75rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+      
+      .logo {
+        font-size: 1rem;
+        gap: 0.5rem;
+      }
+      
+      .logo-icon2 {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .logo-icon2 img {
+        width: 35px !important;
+        height: 35px !important;
+      }
+      
+      .logo span img {
+        height: 28px !important;
+      }
+      
+      /* Hide all nav links except auth */
+      nav {
+        gap: 0.5rem;
+      }
+      
+      nav a:not(.nav-btn) {
+        display: none;
+      }
+      
+      #user-profile img {
+        width: 32px !important;
+        height: 32px !important;
+      }
+      
+      /* Ensure minimum touch targets (44px) */
+      button,
+      .nav-btn,
+      .btn-primary,
+      .btn-secondary,
+      input[type="button"],
+      input[type="submit"],
+      .credits-indicator {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+      }
+      
+      /* Touch-friendly form elements */
+      input[type="text"],
+      input[type="number"],
+      textarea,
+      select {
+        min-height: 44px;
+        font-size: 16px; /* Prevents zoom on iOS */
+        touch-action: manipulation;
+      }
+      
+      /* Prevent overscroll on modals */
+      .modal-overlay {
+        overscroll-behavior: contain;
+      }
+      
+      .modal-content {
+        max-height: 90dvh;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      /* Profile modal mobile optimization */
+      #profile-modal .modal-content {
+        width: 95%;
+        max-width: 400px;
+        padding: 1rem;
+      }
+      
+      .profile-section {
+        padding: 0.75rem;
+      }
+      
+      /* Music generation form mobile */
+      .form-group {
+        gap: 0.5rem;
+      }
+      
+      .form-group label {
+        font-size: 0.9rem;
+      }
+      
+      /* Media type buttons */
+      .media-type-toggle {
+        gap: 0.5rem;
+      }
+      
+      .media-type-btn,
+      .mode-toggle-btn,
+      .gender-toggle-btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.85rem;
+        min-height: 44px;
+      }
+      
+      /* Use case grid mobile */
+      .use-cases-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+      
+      .use-case-card {
+        padding: 0.75rem;
+      }
+      
+      .use-case-card img {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .use-case-name {
+        font-size: 0.75rem;
+      }
+      
+      /* Disable hover tooltips on mobile (use tap instead) */
+      .use-case-tooltip {
+        display: none;
+      }
+      
+      /* Chat messages mobile */
+      .message.user .message-content {
+        margin-left: 0.5rem;
+      }
+      
+      .message-content {
+        padding: 0.875rem 1rem;
+        font-size: 0.9rem;
+      }
+      
+      /* Reduce animations on mobile for performance */
+      .orb {
+        opacity: 0.2;
+        filter: blur(60px);
+      }
+      
+      .bg-grid {
+        opacity: 0.15;
+      }
+      
+      /* Credits indicator mobile */
+      .credits-indicator {
+        min-width: 50px;
+        min-height: 50px;
+        font-size: 0.8rem;
+      }
+      
+      /* Panel headers mobile */
+      .panel-header {
+        padding: 1rem;
+      }
+      
+      .panel-title {
+        font-size: 1rem;
+      }
+      
+      .panel-description {
+        font-size: 0.8rem;
+      }
+      
+      /* Audio player mobile */
+      audio {
+        width: 100%;
+        max-width: 100%;
+      }
+      
+      /* Download buttons mobile */
+      .download-btn,
+      .btn-primary {
+        padding: 0.875rem 1rem;
+        font-size: 0.95rem;
+      }
+    }
+    
+    /* Extra small phones (≤375px) */
+    @media (max-width: 375px) {
+      .use-cases-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .mobile-nav-btn {
+        font-size: 0.65rem;
+        padding: 0.5rem 0.5rem;
+        min-width: 56px;
+      }
+      
+      .mobile-nav-btn img {
+        width: 20px;
+        height: 20px;
+      }
     }
 
   </style>
@@ -1840,6 +2163,24 @@
     </div>
   </main>
 
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav" id="mobile-bottom-nav">
+    <div class="mobile-bottom-nav-items">
+      <button class="mobile-nav-btn active" data-panel="music" data-testid="mobile-nav-music">
+        <img src="/assets/icon-set/music-icon.png" alt="Music">
+        <span>Music</span>
+      </button>
+      <button class="mobile-nav-btn" data-panel="chat" data-testid="mobile-nav-chat">
+        <img src="/assets/icon-set/mail-icon.png" alt="Chat">
+        <span>Chat</span>
+      </button>
+      <button class="mobile-nav-btn" data-panel="media" data-testid="mobile-nav-media">
+        <img src="/assets/icon-set/camera1-icon.png" alt="Media">
+        <span>Media</span>
+      </button>
+    </div>
+  </div>
+
   <script>
     // Error handling wrapper
     window.addEventListener('error', (e) => {
@@ -1919,6 +2260,69 @@
 
     // Check auth on page load
     checkAuth();
+
+    // Mobile Navigation Controller
+    function initMobileNavigation() {
+      const mobileNavBtns = document.querySelectorAll('.mobile-nav-btn');
+      const panels = {
+        music: document.querySelector('.panel-music'),
+        chat: document.querySelector('.panel-chat'),
+        media: document.querySelector('.panel-media')
+      };
+      
+      // Set initial active panel (music)
+      if (window.innerWidth <= 768) {
+        panels.music.classList.add('mobile-active');
+        panels.chat.classList.remove('mobile-active');
+        panels.media.classList.remove('mobile-active');
+      }
+      
+      // Handle mobile nav clicks
+      mobileNavBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          const targetPanel = this.getAttribute('data-panel');
+          
+          // Update button states
+          mobileNavBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Update panel visibility (only on mobile)
+          if (window.innerWidth <= 768) {
+            Object.keys(panels).forEach(key => {
+              if (key === targetPanel) {
+                panels[key].classList.add('mobile-active');
+                panels[key].scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                panels[key].classList.remove('mobile-active');
+              }
+            });
+          }
+        });
+      });
+      
+      // Handle window resize - clean up mobile classes on desktop
+      let resizeTimeout;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+          if (window.innerWidth > 768) {
+            // Desktop mode - remove mobile-active classes
+            Object.values(panels).forEach(panel => {
+              panel.classList.remove('mobile-active');
+            });
+          } else {
+            // Mobile mode - ensure one panel is active
+            const hasActive = Array.from(Object.values(panels)).some(p => p.classList.contains('mobile-active'));
+            if (!hasActive) {
+              panels.music.classList.add('mobile-active');
+            }
+          }
+        }, 250);
+      });
+    }
+    
+    // Initialize mobile navigation on page load
+    initMobileNavigation();
 
     // Credit Management
     let userPlanType = 'free';
