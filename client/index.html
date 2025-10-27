@@ -1539,7 +1539,7 @@
   </div>
 </div>
 
-    <button class="btn-primary" id="generate-music-btn"><img src="/assets/icon-set/lightning-icon.png" style="width: 18px; height: 18px; margin-right: 0.5rem; vertical-align: middle;"> Generate Music</button>
+    <img src="@assets/generate_button_100_1761523548021.gif" id="generate-music-btn" style="width: 200px; cursor: pointer; display: block; margin: 0 auto;" alt="Generate Music">
     <div id="music-result" style="display: none;"></div>
     </div>
     </div>
@@ -3390,8 +3390,8 @@ window.premiumPlayer = {
     requestBody.uploadUrl = uploadUrl;
     }
 
-    generateMusicBtn.disabled = true;
-    generateMusicBtn.textContent = 'Generating...';
+    generateMusicBtn.style.pointerEvents = 'none';
+    generateMusicBtn.style.opacity = '0.5';
     musicResult.style.display = 'none';
 
     try {
@@ -3564,8 +3564,8 @@ window.premiumPlayer = {
             window.premiumPlayer.init();
           }, 100);
           
-          generateMusicBtn.disabled = false;
-          generateMusicBtn.textContent = 'Generate Music';
+          generateMusicBtn.style.pointerEvents = 'auto';
+          generateMusicBtn.style.opacity = '1';
         } else if (attempts >= maxAttempts) {
           clearInterval(pollInterval);
           throw new Error('Generation timeout - please try again');
@@ -3579,8 +3579,8 @@ window.premiumPlayer = {
             <p style="color: var(--text-muted); font-size: 0.9rem;">Failed to retrieve music. Please try again.</p>
           </div>
         `;
-        generateMusicBtn.disabled = false;
-        generateMusicBtn.textContent = 'Generate Music';
+        generateMusicBtn.style.pointerEvents = 'auto';
+        generateMusicBtn.style.opacity = '1';
       }
     }, 2000); // Poll every 2 seconds
 
@@ -3605,8 +3605,8 @@ window.premiumPlayer = {
     `;
     musicResult.style.display = 'block';
     } finally {
-    generateMusicBtn.disabled = false;
-    generateMusicBtn.textContent = 'Generate Music';
+    generateMusicBtn.style.pointerEvents = 'auto';
+    generateMusicBtn.style.opacity = '1';
     }
     }
 
