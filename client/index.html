@@ -854,13 +854,12 @@
     /* Media Type Toggle Buttons */
     .media-type-btn:hover {
     transform: translateY(-2px);
+    filter: brightness(1.2);
     }
 
     .media-type-btn.active {
-    background: var(--aetherwave-pink) !important;
-    border-color: var(--aetherwave-pink) !important;
-    color: white !important;
-    box-shadow: 0 4px 16px rgba(255, 46, 166, 0.4);
+    filter: brightness(1.3) drop-shadow(0 0 10px var(--aetherwave-pink));
+    color: var(--aetherwave-teal) !important;
     }
 
     /* Hamburger Menu */
@@ -1592,10 +1591,10 @@
     <div class="form-group">
     <label class="form-label">What do you want to create?</label>
     <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-    <button class="media-type-btn active" data-type="image" style="flex: 1; padding: 1rem; background: var(--accent-color); border: 2px solid var(--accent-color); border-radius: 12px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s;">
+    <button class="media-type-btn active" data-type="image" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
     📸 Image
     </button>
-    <button class="media-type-btn" data-type="video" style="flex: 1; padding: 1rem; background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; color: var(--text-primary); font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s;">
+    <button class="media-type-btn" data-type="video" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: var(--text-primary); font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
     🎥 Video
     </button>
     </div>
