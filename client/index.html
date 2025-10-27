@@ -1224,8 +1224,10 @@
       display: flex;
       justify-content: space-around;
       align-items: center;
+      width: 100%;
       max-width: 600px;
       margin: 0 auto;
+      padding: 0 0.5rem;
     }
     
     .mobile-nav-btn {
@@ -1233,7 +1235,7 @@
       flex-direction: column;
       align-items: center;
       gap: 0.25rem;
-      padding: 0.5rem 1rem;
+      padding: 0.5rem 0.5rem;
       background: transparent;
       border: none;
       color: var(--text-muted);
@@ -1241,7 +1243,8 @@
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
-      min-width: 64px;
+      flex: 1;
+      max-width: 120px;
       min-height: 44px;
       touch-action: manipulation;
     }
@@ -1589,8 +1592,7 @@
       
       .mobile-nav-btn {
         font-size: 0.65rem;
-        padding: 0.5rem 0.5rem;
-        min-width: 56px;
+        padding: 0.5rem 0.25rem;
       }
       
       .mobile-nav-btn img {
