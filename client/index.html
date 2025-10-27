@@ -1846,12 +1846,27 @@
     console.error('Global error:', e.message, e.filename, e.lineno, e.colno);
     });
 
+    // Global user state
+    let currentUser = null;
+    let userCredits = 0;
+
     // Check authentication status and update UI
     async function checkAuth() {
       try {
         const response = await fetch('/api/auth/user');
         if (response.ok) {
           const user = await response.json();
+          
+          // Store user data globally for profile modal
+          currentUser = user;
+          
+          // Fetch user credits
+          const creditsResponse = await fetch('/api/user/credits');
+          if (creditsResponse.ok) {
+            const creditsData = await creditsResponse.json();
+            userCredits = creditsData.credits || 0;
+          }
+          
           // User is logged in
           document.getElementById('login-btn').style.display = 'none';
           document.getElementById('user-profile').style.display = 'flex';
