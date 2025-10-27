@@ -1840,7 +1840,12 @@
           // User is logged in
           document.getElementById('login-btn').style.display = 'none';
           document.getElementById('user-profile').style.display = 'flex';
-          document.getElementById('user-name').textContent = user.firstName || user.email || 'User';
+          
+          // Truncate username to 20 characters
+          const fullName = user.firstName || user.email || 'User';
+          const displayName = fullName.length > 20 ? fullName.substring(0, 20) + '...' : fullName;
+          document.getElementById('user-name').textContent = displayName;
+          
           // Always use the profile icon
           document.getElementById('user-avatar').src = '/assets/icon-set/profile-icon.png';
           document.getElementById('user-avatar').alt = user.firstName || user.email || 'User';
