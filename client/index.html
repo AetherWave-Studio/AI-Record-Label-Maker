@@ -1390,7 +1390,7 @@
     <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
-        <div onclick="showProfileModal()" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
+        <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
           <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
           <span id="user-name" style="color: var(--text-primary); font-size: 0.9rem;" data-testid="text-username"></span>
         </div>
@@ -1874,6 +1874,21 @@
               document.getElementById('vocal-gender-value').value = user.vocalGenderPreference;
             }
           }
+          
+          // Attach event listener to profile trigger (after profile section is shown)
+          const profileTrigger = document.getElementById('profile-trigger');
+          if (profileTrigger && !profileTrigger.hasAttribute('data-listener-attached')) {
+            profileTrigger.addEventListener('click', function() {
+              console.log('Profile trigger clicked');
+              if (window.showProfileModal) {
+                window.showProfileModal();
+              } else {
+                console.error('showProfileModal function not found');
+              }
+            });
+            profileTrigger.setAttribute('data-listener-attached', 'true');
+            console.log('Profile trigger event listener attached');
+          }
         } else {
           // User not logged in
           document.getElementById('login-btn').style.display = 'inline-block';
@@ -2288,7 +2303,8 @@
       closePaymentModal();
     }
     
-    function showProfileModal() {
+    window.showProfileModal = function showProfileModal() {
+      console.log('Profile modal function called, currentUser:', currentUser);
       if (!currentUser) {
         showNotification('Please log in to view your profile');
         return;
@@ -2435,13 +2451,19 @@
       document.body.appendChild(modal);
     }
     
-    function closeProfileModal() {
+    window.closeProfileModal = function closeProfileModal() {
       const modal = document.getElementById('profile-modal');
       if (modal) {
         modal.style.animation = 'fadeOut 0.3s ease-out';
         setTimeout(() => modal.remove(), 300);
       }
     }
+    
+    // Verify functions are set on window object
+    console.log('Profile modal functions initialized:', {
+      showProfileModal: typeof window.showProfileModal,
+      closeProfileModal: typeof window.closeProfileModal
+    });
     
     function showNotification(message, type = 'info') {
       const notification = document.createElement('div');
