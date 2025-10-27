@@ -411,34 +411,8 @@
     /* Gender Toggle Buttons */
     .gender-toggle-group {
       display: flex;
-      gap: 0.5rem;
+      gap: 1rem;
       margin-top: 0.5rem;
-    }
-    
-    .gender-toggle-btn {
-      flex: 1;
-      padding: 0.75rem 1.5rem;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      text-align: center;
-    }
-    
-    .gender-toggle-btn:hover {
-      border-color: var(--aetherwave-purple);
-      background: rgba(139, 92, 246, 0.1);
-    }
-    
-    .gender-toggle-btn.active {
-      background: linear-gradient(135deg, var(--aetherwave-purple), var(--aetherwave-pink));
-      border-color: var(--aetherwave-pink);
-      color: white;
-      font-weight: 600;
     }
     
     /* Premium Gradient Sliders */
@@ -851,15 +825,17 @@
     border-top: 1px solid var(--border-color);
     }
 
-    /* Media Type Toggle Buttons & Mode Toggle Buttons */
+    /* Media Type Toggle Buttons & Mode Toggle Buttons & Gender Toggle Buttons */
     .media-type-btn:hover,
-    .mode-toggle-btn:hover {
+    .mode-toggle-btn:hover,
+    .gender-toggle-btn:hover {
     transform: translateY(-2px);
     filter: brightness(1.2);
     }
 
     .media-type-btn.active,
-    .mode-toggle-btn.active {
+    .mode-toggle-btn.active,
+    .gender-toggle-btn.active {
     background: url('/assets/Pick-btn-on_1761530040819.png') no-repeat center center !important;
     background-size: 100% 100% !important;
     color: #00F5A0 !important;
@@ -1422,13 +1398,13 @@
     </div>
     <div style="margin-top: 0.5rem;">
       <div class="panel-title"><img src="/assets/icon-set/music-icon.png" style="width: 24px; height: 24px; margin-right: 0.5rem; vertical-align: middle;"> Music Generation</div>
-      <div class="panel-description">Create AI-generated music with SUNO</div>
+      <div class="panel-description">Create AI-generated music Powered by SUNO</div>
     </div>
     </div>
     <div class="panel-content">
     <!-- Mode Toggle -->
     <div class="form-group">
-    <label class="form-label">Mode</label>
+    <!--<label class="form-label">Mode</label>-->
     <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
     <button class="mode-toggle-btn active" data-mode="simple" data-testid="button-mode-simple" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
     Simple
@@ -1490,8 +1466,8 @@
         </svg>
       </label>
       <div class="gender-toggle-group">
-        <button type="button" class="gender-toggle-btn active" data-gender="m" data-testid="button-gender-male">Male</button>
-        <button type="button" class="gender-toggle-btn" data-gender="f" data-testid="button-gender-female">Female</button>
+        <button type="button" class="gender-toggle-btn active" data-gender="m" data-testid="button-gender-male" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Male</button>
+        <button type="button" class="gender-toggle-btn" data-gender="f" data-testid="button-gender-female" style="flex: 1; padding: 1rem; background: url('/assets/Pick-btn_1761529942548.png') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: var(--text-primary); font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Female</button>
       </div>
       <input type="hidden" id="vocal-gender-value" value="m">
     </div>
