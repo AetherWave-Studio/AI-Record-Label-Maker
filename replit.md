@@ -10,6 +10,13 @@ The application provides a creative tool interface for generating AI-created mus
 
 ## Recent Changes (October 27, 2025)
 
+**Video Duration Bug Fix:**
+- Fixed critical bug where free accounts couldn't generate videos due to missing 3-second duration option
+- Added "3 seconds" option to duration dropdown (previously only had 5 and 10)
+- Updated backend validation to accept 3 seconds for free accounts (was incorrectly set to 5)
+- Fixed frame calculation to properly support all three durations (3s=73 frames, 5s=121 frames, 10s=241 frames)
+- Free account default is now 3 seconds at 3 credits (the cheapest option)
+
 **Mobile-First Responsive Design Implementation:**
 - Implemented comprehensive mobile-responsive design with three breakpoints:
   - **Desktop (>1024px)**: Three-column grid layout (Music | Hero/Chat | Media)
@@ -164,19 +171,22 @@ Preferred communication style: Simple, everyday language.
 - **Fal.ai Seedance**: AI music video generation (requires FAL_KEY)
   - Supports text-to-video, image-to-video, and reference-to-video modes
   - Lite/Pro model variants with 512p/720p/1080p/4K resolution options
-  - 3/5/10 second duration support
+  - 3/5/10 second duration support (73/121/241 frames at ~24fps)
   - **Quality-Based Credit Pricing**:
     - Base cost: 3 credits (Lite, 512p, 3s)
     - Model multiplier: Lite=1x, Pro=2x
     - Resolution multiplier: 512p=1x, 720p=1.5x, 1080p=2x, 4K=3x
     - Duration multiplier: (seconds/3)x
-    - Example: Pro 4K 10s = 60 credits (3 × 2 × 3 × 3.33)
+    - Examples: 
+      - Free tier (Lite, 512p, 3s) = 3 credits
+      - Mid tier (Lite, 720p, 5s) = 8 credits
+      - Pro 4K 10s = 60 credits (3 × 2 × 3 × 3.33)
   - **Free Account Restrictions**:
     - Locked to default settings only (Lite, 512p, 3s = 3 credits)
     - Quality/Resolution/Duration dropdowns disabled in UI
     - Backend validation prevents API bypass attempts
   - **Paid Account Benefits**:
-    - Full access to all quality settings
+    - Full access to all quality settings (3/5/10 second durations)
     - Credits deducted based on selected quality
     - All Access plan: unlimited video generation (no credit deduction)
 - **Replit AI Integrations**: OpenAI chat via environment credentials

@@ -1189,9 +1189,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate quality settings for free accounts
       if (user.subscriptionPlan === 'free') {
-        if (modelVersion !== 'lite' || resolution !== '512p' || parseInt(duration) !== 5) {
+        if (modelVersion !== 'lite' || resolution !== '512p' || parseInt(duration) !== 3) {
           return res.status(403).json({
-            error: 'Free accounts can only use default settings (Lite model, 512p, 5 seconds)',
+            error: 'Free accounts can only use default settings (Lite model, 512p, 3 seconds)',
             message: 'Please upgrade your plan to access higher quality video generation settings.'
           });
         }
@@ -1261,9 +1261,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Build request input
+      // Frame calculation: ~24fps + 1 end frame (3s=73, 5s=121, 10s=241)
+      let numFrames = 121; // default 5 seconds
+      if (duration === '3') numFrames = 73;
+      else if (duration === '10') numFrames = 241;
+      
       const input: any = {
         prompt: prompt,
-        num_frames: duration === '10' ? 241 : 121,
+        num_frames: numFrames,
         enable_safety_checker: enableSafetyChecker
       };
 
