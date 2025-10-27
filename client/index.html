@@ -297,21 +297,25 @@
     .credits-indicator {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: rgba(255, 46, 166, 0.1);
-      border: 1px solid rgba(255, 46, 166, 0.3);
-      border-radius: 8px;
-      font-weight: 600;
-      color: var(--text-primary);
+      padding: 0;
+      background: url('/assets/Coins_badge_1761538017590.png') no-repeat center center;
+      background-size: 100% 100%;
+      border: none;
+      border-radius: 0;
+      font-weight: 700;
+      color: white;
       font-size: 0.95rem;
       cursor: pointer;
       transition: all 0.2s ease;
+      min-width: 80px;
+      min-height: 80px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
     
     .credits-indicator:hover {
-      background: rgba(255, 46, 166, 0.15);
-      border-color: rgba(255, 46, 166, 0.5);
+      filter: brightness(1.2);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(255, 46, 166, 0.3);
     }
@@ -1392,7 +1396,6 @@
     <div class="panel-header">
     <div class="music-panel-header">
       <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade">
-        <img src="/assets/icon-set/star-icon.png" style="width: 16px; height: 16px;">
         <span id="credits-count">9.2k</span>
       </div>
       <select id="music-model-header" class="version-dropdown" data-testid="select-version">
