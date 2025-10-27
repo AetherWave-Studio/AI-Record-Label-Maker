@@ -8,6 +8,29 @@ AetherWave Studio is an AI-powered music and media creation application featurin
 
 The application provides a creative tool interface for generating AI-created music and media content, inspired by professional creative tools like Runway ML, Midjourney, and ElevenLabs.
 
+## Recent Changes (October 27, 2025)
+
+**Profile Modal Implementation:**
+- Created user profile modal accessible via avatar click in header
+- Displays account details (username, email, user ID)
+- Shows subscription plan with upgrade/manage button
+- Displays credits balance with cost breakdown
+- Shows user preferences (vocal gender)
+- Includes logout link and close button
+- Modal uses scrollable layout with fixed header/footer (max-height: 90vh)
+
+**Bug Fixes:**
+- Fixed JavaScript syntax errors (escaped backticks in template literals)
+- Fixed `currentUser is not defined` error by adding global state variables
+- Fixed duplicate `userCredits` variable declaration
+- Added proper event listener attachment for profile trigger after authentication
+- Profile modal now properly accesses user data from global scope
+
+**Global State Management:**
+- Added `currentUser` global variable populated during authentication
+- Added `userCredits` global variable fetched from `/api/user/credits`
+- Variables populated in `checkAuth()` function after successful login
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -40,6 +63,7 @@ Preferred communication style: Simple, everyday language.
 - **Album Art Style Selection Modal**: Interactive modal for selecting art styles (Photorealistic, Abstract, Cyberpunk, Retro, Minimal, Surreal) before DALL-E 3 generation
 - **Panel 1 Album Art to Video**: "Turn into Video" button appears after album art generation, converts art to 5-second Seedance video using image-to-video mode with toggle between art/video views
 - **Download Format Modal**: Per-track format selection (MP3/WAV) with Free plan restrictions and visual feedback
+- **User Profile Modal**: Click avatar to view account details, subscription plan, credits, and preferences with scrollable content
 
 ### Backend Architecture
 
