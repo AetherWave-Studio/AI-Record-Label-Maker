@@ -2032,12 +2032,29 @@
     <details>
     <summary style="cursor: pointer; font-weight: 600; color: var(--accent-color); margin-bottom: 1rem;">⚙️ Advanced Settings</summary>
 
-    <div class="form-group" id="video-settings-group" style="display: none;">
-    <label class="form-label">Quality</label>
-    <select id="media-quality">
-    <option value="lite" selected>Fast (Lite Model)</option>
-    <option value="pro">High Quality (Pro Model)</option>
+    <div class="form-group" id="video-model-group" style="display: none;">
+    <label class="form-label">Video Model</label>
+    <select id="media-video-model">
+    <option value="seedance-lite" selected>Seedance Lite (Free - Fastest)</option>
+    <option value="seedance-pro" data-plan="studio">Seedance Pro (Studio+)</option>
+    <option value="sora2" data-plan="starter">SORA 2 (Starter+ - OpenAI)</option>
+    <option value="sora2_pro" data-plan="creator">SORA 2 Pro (Creator+)</option>
+    <option value="sora2_pro_hd" data-plan="all_access">SORA 2 Pro HD (All Access - 1080p)</option>
+    <option value="veo3_fast" data-plan="creator">VEO 3 Fast (Creator+ - Google)</option>
     </select>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Choose AI model for video generation</div>
+    </div>
+
+    <div class="form-group" id="video-aspect-ratio-group" style="display: none;">
+    <label class="form-label">Aspect Ratio</label>
+    <select id="media-aspect-ratio">
+    <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
+    <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
+    <option value="1:1">1:1 (Square - Instagram)</option>
+    <option value="4:3">4:3 (Classic)</option>
+    <option value="21:9">21:9 (Cinematic)</option>
+    </select>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Note: Aspect ratio applies to VEO 3 and SORA 2 models</div>
     </div>
 
     <div class="form-group" id="video-resolution-group" style="display: none;">
@@ -2046,17 +2063,19 @@
     <option value="512p" selected>512p (Fastest, Lower Quality)</option>
     <option value="720p">720p (Balanced)</option>
     <option value="1080p">1080p (High Quality)</option>
-    <option value="4k">4K (Ultra Quality, Premium)</option>
+    <option value="4k" data-plan="studio">4K (Ultra Quality, Studio+)</option>
     </select>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Note: Resolution applies to Seedance models only</div>
     </div>
 
     <div class="form-group" id="video-duration-group" style="display: none;">
     <label class="form-label">Duration</label>
     <select id="media-duration">
-    <option value="3" selected>3 seconds (Free - 3 credits)</option>
-    <option value="5">5 seconds (5 credits)</option>
-    <option value="10">10 seconds (10 credits)</option>
+    <option value="3" selected>3 seconds</option>
+    <option value="5">5 seconds</option>
+    <option value="10">10 seconds</option>
     </select>
+    <div id="credit-cost-preview" style="font-size: 0.85rem; color: var(--accent-color); margin-top: 0.5rem; font-weight: 600;"></div>
     </div>
 
     <div class="form-group">
@@ -4303,17 +4322,22 @@ async function generateMedia() {
 
     try {
         if (selectedMediaType === 'video') {
-            // Video generation with Fal.ai Seedance 1.0
+            // Video generation with selected model (Seedance, VEO 3, or SORA 2)
+            const videoModel = document.getElementById('media-video-model')?.value || 'seedance-lite';
+            const aspectRatio = document.getElementById('media-aspect-ratio')?.value || '16:9';
+            const resolution = document.getElementById('media-resolution')?.value || '512p';
+            const duration = parseInt(document.getElementById('media-duration')?.value || '3');
+
             const requestBody = {
                 prompt: prompt,
-                modelVersion: mediaQuality.value,
-                resolution: mediaResolution.value,
-                duration: mediaDuration.value,
-                cameraFixed: false,
-                enableSafetyChecker: mediaSafetyChecker.checked
+                model: videoModel,
+                aspectRatio: aspectRatio,
+                resolution: resolution,
+                duration: duration,
+                enableSafetyChecker: document.getElementById('media-safety-checker')?.checked ?? true
             };
 
-            // *** ADD THIS BLOCK HERE ***
+            // Handle image inputs for first frame / last frame
             const startImageVal = await handleImageInput(
                 document.getElementById('start-image-file'),
                 document.getElementById('start-image-url')
@@ -4322,17 +4346,19 @@ async function generateMedia() {
                 document.getElementById('end-image-file'),
                 document.getElementById('end-image-url')
             );
-            if (startImageVal) requestBody.image_url = startImageVal;
-            if (endImageVal) requestBody.end_image_url = endImageVal;
+            if (startImageVal) requestBody.imageUrl = startImageVal;
+            if (endImageVal) requestBody.endImageUrl = endImageVal;
 
             // Add uploaded image data if provided
             if (uploadedImageData) {
                 requestBody.imageData = uploadedImageData;
-                requestBody.imageMode = imageMode.value; // 'first-frame' or 'reference'
+                requestBody.imageMode = document.getElementById('image-mode')?.value || 'first-frame';
             }
 
-            console.log('Generating video with Fal.ai Seedance 1.0...');
-            const response = await fetch('/api/generate-video-fal', {
+            const modelName = videoModel.replace('_', ' ').toUpperCase();
+            console.log(`Generating video with ${modelName}...`);
+
+            const response = await fetch('/api/generate-media', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -4346,7 +4372,7 @@ async function generateMedia() {
                 throw new Error(data.error || data.details || 'Failed to generate video');
             }
 
-            // Fal.ai returns video synchronously - display immediately
+            // Display video result
             if (data.status === 'complete' && data.videoUrl) {
                 displayMediaResult(data, 'video');
                 return;
@@ -4945,7 +4971,25 @@ async function generateMedia() {
  
 
 function updateMediaInputs() {
-  if (selectedMediaType === "video") {
+  const isVideo = selectedMediaType === "video";
+
+  // Show/hide video-specific controls
+  const videoModelGroup = document.getElementById('video-model-group');
+  const aspectRatioGroup = document.getElementById('video-aspect-ratio-group');
+  const resolutionGroup = document.getElementById('video-resolution-group');
+  const durationGroup = document.getElementById('video-duration-group');
+  const imageStyleGroup = document.getElementById('image-style-group');
+  const videoSettingsGroup = document.getElementById('video-settings-group');
+
+  if (videoModelGroup) videoModelGroup.style.display = isVideo ? 'block' : 'none';
+  if (aspectRatioGroup) aspectRatioGroup.style.display = isVideo ? 'block' : 'none';
+  if (resolutionGroup) resolutionGroup.style.display = isVideo ? 'block' : 'none';
+  if (durationGroup) durationGroup.style.display = isVideo ? 'block' : 'none';
+  if (imageStyleGroup) imageStyleGroup.style.display = isVideo ? 'none' : 'block';
+  if (videoSettingsGroup) videoSettingsGroup.style.display = 'none'; // Hide old quality selector
+
+  // Show/hide image upload fields
+  if (isVideo) {
     document.getElementById('start-image-group').style.display = 'block';
     document.getElementById('end-image-group').style.display = 'block';
     document.getElementById('image-upload-group').style.display = 'none';
@@ -4954,6 +4998,55 @@ function updateMediaInputs() {
     document.getElementById('end-image-group').style.display = 'none';
     document.getElementById('image-upload-group').style.display = 'block';
   }
+
+  // Update credit cost preview when inputs change
+  if (isVideo) {
+    updateCreditCostPreview();
+  }
+}
+
+// Calculate and display credit cost for video generation
+function updateCreditCostPreview() {
+  const model = document.getElementById('media-video-model')?.value || 'seedance-lite';
+  const resolution = document.getElementById('media-resolution')?.value || '512p';
+  const duration = parseInt(document.getElementById('media-duration')?.value || '3');
+  const previewEl = document.getElementById('credit-cost-preview');
+
+  if (!previewEl) return;
+
+  // Calculate cost per second based on model (same logic as server/routes.ts)
+  let costPerSecond = 0;
+
+  // Premium KIE.ai models (resolution-independent)
+  if (model === 'veo3_fast') {
+    costPerSecond = 0.0375; // $0.30/8s
+  } else if (model === 'sora2') {
+    costPerSecond = 0.015; // $0.15/10s
+  } else if (model === 'sora2_pro') {
+    costPerSecond = 0.045; // $0.45/10s
+  } else if (model === 'sora2_pro_hd') {
+    costPerSecond = 0.10; // $1/10s
+  }
+  // Seedance models (resolution-dependent)
+  else if (model === 'seedance-lite') {
+    if (resolution === '512p') costPerSecond = 0.010;
+    else if (resolution === '720p') costPerSecond = 0.0225;
+    else if (resolution === '1080p') costPerSecond = 0.050;
+    else if (resolution === '4k') costPerSecond = 0.100;
+  } else if (model === 'seedance-pro') {
+    if (resolution === '512p') costPerSecond = 0.020;
+    else if (resolution === '720p') costPerSecond = 0.045;
+    else if (resolution === '1080p') costPerSecond = 0.100;
+    else if (resolution === '4k') costPerSecond = 0.200;
+  }
+
+  // Calculate total cost with 50% margin
+  const apiCost = costPerSecond * duration;
+  const totalCost = apiCost * 1.5;
+  const credits = Math.ceil(totalCost / 0.01);
+
+  // Display cost
+  previewEl.innerHTML = `💳 Estimated cost: <strong>${credits} credits</strong> ($${totalCost.toFixed(2)})`;
 }
 
 mediaTypeBtns.forEach(btn => {
@@ -4962,13 +5055,39 @@ mediaTypeBtns.forEach(btn => {
     btn.classList.add('active');
     selectedMediaType = btn.dataset.type;
     updateMediaInputs();
-    
+
     // Apply video quality restrictions for free accounts
     if (selectedMediaType === 'video') {
       applyVideoQualityRestrictions();
     }
   });
 });
+
+// Add event listeners for credit cost preview updates
+const videoModelSelect = document.getElementById('media-video-model');
+const resolutionSelect = document.getElementById('media-resolution');
+const durationSelect = document.getElementById('media-duration');
+
+if (videoModelSelect) {
+  videoModelSelect.addEventListener('change', () => {
+    updateCreditCostPreview();
+    // Hide/show resolution based on model (Seedance uses resolution, VEO/SORA use aspect ratio)
+    const model = videoModelSelect.value;
+    const isSeedance = model.startsWith('seedance');
+    const resolutionGroup = document.getElementById('video-resolution-group');
+    if (resolutionGroup) {
+      resolutionGroup.style.display = isSeedance ? 'block' : 'none';
+    }
+  });
+}
+
+if (resolutionSelect) {
+  resolutionSelect.addEventListener('change', updateCreditCostPreview);
+}
+
+if (durationSelect) {
+  durationSelect.addEventListener('change', updateCreditCostPreview);
+}
 
 // **Force correct UI and variable state immediately after setup**
 updateMediaInputs();
