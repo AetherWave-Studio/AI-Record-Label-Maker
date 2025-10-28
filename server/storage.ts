@@ -1,7 +1,7 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import ws from "ws";
 
 // Configure Neon for WebSocket
@@ -16,6 +16,10 @@ export interface IStorage {
   updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
   deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult>;
   checkCredits(userId: string, serviceType: ServiceType): Promise<CreditCheckResult>;
+  resetDailyCredits(userId: string): Promise<void>; // Reset credits for free tier users (with 50 cap)
+  // Quest operations
+  getUserQuests(userId: string): Promise<Quest[]>;
+  completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }>;
   // User preference operations
   updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined>;
 }
@@ -33,7 +37,7 @@ export class MemStorage implements IStorage {
 
   async upsertUser(userData: UpsertUser): Promise<User> {
     const existingUser = this.users.get(userData.id!);
-    
+
     const user: User = {
       id: userData.id || '',
       email: userData.email || null,
@@ -43,14 +47,15 @@ export class MemStorage implements IStorage {
       username: userData.username || null,
       vocalGenderPreference: userData.vocalGenderPreference || existingUser?.vocalGenderPreference || 'm',
       subscriptionPlan: userData.subscriptionPlan || existingUser?.subscriptionPlan || 'free',
-      credits: existingUser?.credits ?? userData.credits ?? 100,
+      credits: existingUser?.credits ?? userData.credits ?? FREE_TIER_WELCOME_BONUS,
+      welcomeBonusClaimed: existingUser?.welcomeBonusClaimed ?? 1, // Automatically claim for new users
       lastCreditReset: userData.lastCreditReset || existingUser?.lastCreditReset || new Date(),
       stripeCustomerId: userData.stripeCustomerId || existingUser?.stripeCustomerId || null,
       stripeSubscriptionId: userData.stripeSubscriptionId || existingUser?.stripeSubscriptionId || null,
       createdAt: existingUser?.createdAt || new Date(),
       updatedAt: new Date(),
     };
-    
+
     this.users.set(user.id, user);
     return user;
   }
@@ -169,11 +174,34 @@ export class MemStorage implements IStorage {
   async updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined> {
     const user = this.users.get(userId);
     if (!user) return undefined;
-    
+
     user.vocalGenderPreference = vocalGenderPreference;
     user.updatedAt = new Date();
     this.users.set(userId, user);
     return user;
+  }
+
+  async resetDailyCredits(userId: string): Promise<void> {
+    // Stub implementation for MemStorage
+    const user = this.users.get(userId);
+    if (!user || user.subscriptionPlan !== 'free') return;
+
+    // Free tier: add 10 credits/day, but cap at 50
+    if (user.credits < FREE_TIER_CREDIT_CAP) {
+      user.credits = Math.min(user.credits + FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP);
+      user.lastCreditReset = new Date();
+      this.users.set(userId, user);
+    }
+  }
+
+  async getUserQuests(userId: string): Promise<Quest[]> {
+    // Stub implementation for MemStorage
+    return [];
+  }
+
+  async completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }> {
+    // Stub implementation for MemStorage
+    return { success: false, creditsAwarded: 0, error: 'Quest system not available in memory storage' };
   }
 }
 
@@ -204,7 +232,8 @@ export class DbStorage implements IStorage {
         username: userData.username || null,
         vocalGenderPreference: userData.vocalGenderPreference || 'm',
         subscriptionPlan: userData.subscriptionPlan || 'free',
-        credits: userData.credits ?? 100,
+        credits: userData.credits ?? FREE_TIER_WELCOME_BONUS, // New users get 50 welcome bonus
+        welcomeBonusClaimed: 1, // Auto-claim for new users
         lastCreditReset: userData.lastCreditReset || new Date(),
         stripeCustomerId: userData.stripeCustomerId || null,
         stripeSubscriptionId: userData.stripeSubscriptionId || null,
@@ -226,7 +255,7 @@ export class DbStorage implements IStorage {
         },
       })
       .returning();
-    
+
     return result[0];
   }
 
@@ -355,8 +384,93 @@ export class DbStorage implements IStorage {
       })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return result[0];
+  }
+
+  async resetDailyCredits(userId: string): Promise<void> {
+    const user = await this.getUser(userId);
+    if (!user || user.subscriptionPlan !== 'free') return;
+
+    // Free tier: add 10 credits/day, but cap at 50
+    // If user is at or above 50 credits, don't add daily credits
+    if (user.credits < FREE_TIER_CREDIT_CAP) {
+      const newCredits = Math.min(user.credits + FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP);
+      await this.updateUserCredits(userId, newCredits, new Date());
+    } else {
+      // Just update the reset timestamp
+      await this.updateUserCredits(userId, user.credits, new Date());
+    }
+  }
+
+  async getUserQuests(userId: string): Promise<Quest[]> {
+    const result = await this.db
+      .select()
+      .from(quests)
+      .where(eq(quests.userId, userId));
+
+    return result;
+  }
+
+  async completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }> {
+    // Check if quest already completed
+    const existingQuest = await this.db
+      .select()
+      .from(quests)
+      .where(and(eq(quests.userId, userId), eq(quests.questType, questType)))
+      .limit(1);
+
+    if (existingQuest.length > 0 && existingQuest[0].completed === 1) {
+      return {
+        success: false,
+        creditsAwarded: 0,
+        error: 'Quest already completed'
+      };
+    }
+
+    // Get user
+    const user = await this.getUser(userId);
+    if (!user) {
+      return {
+        success: false,
+        creditsAwarded: 0,
+        error: 'User not found'
+      };
+    }
+
+    // Award credits
+    const creditsToAward = QUEST_REWARDS[questType];
+    const newBalance = user.credits + creditsToAward;
+
+    // Update user credits
+    await this.updateUserCredits(userId, newBalance);
+
+    // Create or update quest record
+    if (existingQuest.length > 0) {
+      await this.db
+        .update(quests)
+        .set({
+          completed: 1,
+          creditsAwarded: creditsToAward,
+          completedAt: new Date()
+        })
+        .where(and(eq(quests.userId, userId), eq(quests.questType, questType)));
+    } else {
+      await this.db
+        .insert(quests)
+        .values({
+          userId,
+          questType,
+          completed: 1,
+          creditsAwarded: creditsToAward,
+          completedAt: new Date()
+        });
+    }
+
+    return {
+      success: true,
+      creditsAwarded: creditsToAward
+    };
   }
 }
 

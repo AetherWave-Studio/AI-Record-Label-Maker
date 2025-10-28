@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs ls -la)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Bash(test -f .env)",
+      "Bash(set NODE_ENV=development)",
+      "Bash(tsx server/index.ts)",
+      "Bash(npm install)",
+      "Bash(npm run db:push)",
+      "Bash(npx cross-env NODE_ENV=development tsx server/index.ts)",
+      "Bash(taskkill /PID 51088 /F)",
+      "Bash(cmd.exe //C taskkill //PID 51088 //F)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5000)",
+      "WebSearch",
+      "WebFetch(domain:docs.kie.ai)",
+      "Bash(taskkill /PID 57112 /F)",
+      "Bash(cmd.exe //C taskkill //PID 57112 //F)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

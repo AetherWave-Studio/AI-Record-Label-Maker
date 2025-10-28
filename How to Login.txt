@@ -1,0 +1,16 @@
+How to Login:
+
+  1. Open your browser to: http://localhost:5000
+  2. To login, visit: http://localhost:5000/api/dev/login
+    - This will automatically log you in as the dev superuser
+    - You'll be redirected back to the homepage, now logged in
+  3. To logout: http://localhost:5000/api/logout
+
+  Dev Superuser Details:
+
+  - ID: dev-user-123
+  - Email: dev@localhost
+  - Name: Dev User
+  - Username: devuser
+  - Subscription Plan: all_access (unlimited everything!)
+  - Credits: 10,000 (so you never run out)

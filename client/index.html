@@ -1630,6 +1630,15 @@
     <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
+        <!-- Credits Badge -->
+        <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
+          <span id="credits-count">0</span>
+        </div>
+        <!-- Quest Gift Box Icon -->
+        <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
+          <span style="font-size: 1.3rem;">🎁</span>
+          <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
+        </div>
         <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
           <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
           <span id="user-name" style="color: var(--text-primary); font-size: 0.9rem;" data-testid="text-username"></span>
@@ -1646,9 +1655,6 @@
     <div class="panel panel-music">
     <div class="panel-header">
     <div class="music-panel-header">
-      <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade">
-        <span id="credits-count">9.2k</span>
-      </div>
       <select id="music-model-header" class="version-dropdown" data-testid="select-version">
         <option value="V5">v5 (Premium) ▼</option>
         <option value="V4_5PLUS">v4.5+ (Premium) ▼</option>
@@ -2297,21 +2303,164 @@
     function updateCreditsDisplay() {
       const creditsElement = document.getElementById('credits-count');
       const creditsIndicator = document.querySelector('.credits-indicator');
-      
+      const questGiftIcon = document.getElementById('quest-gift-icon');
+
       if (creditsElement && creditsIndicator) {
         // Show the indicator
         creditsIndicator.style.display = 'flex';
-        
+
         if (userPlanType === 'studio' || userPlanType === 'creator' || userPlanType === 'all_access') {
           creditsElement.textContent = '∞';
           creditsIndicator.title = 'Unlimited music credits - Click to view plans';
+          // Hide quest icon for paid users
+          if (questGiftIcon) questGiftIcon.style.display = 'none';
         } else {
           creditsElement.textContent = userCredits;
           creditsIndicator.title = `${userCredits} credits remaining - Click to upgrade`;
+          // Show quest icon for free users
+          if (questGiftIcon) questGiftIcon.style.display = 'flex';
+          // Load and check for uncompleted quests
+          loadQuests();
         }
       }
     }
-    
+
+    // ===== QUEST SYSTEM FUNCTIONS =====
+
+    let userQuests = [];
+
+    async function loadQuests() {
+      try {
+        const response = await fetch('/api/quests');
+        if (!response.ok) throw new Error('Failed to load quests');
+
+        const data = await response.json();
+        userQuests = data.quests;
+
+        // Update notification badge
+        const uncompletedCount = userQuests.filter(q => !q.completed).length;
+        const badge = document.getElementById('quest-notification-badge');
+        if (badge) {
+          if (uncompletedCount > 0) {
+            badge.textContent = uncompletedCount;
+            badge.style.display = 'flex';
+          } else {
+            badge.style.display = 'none';
+          }
+        }
+
+        return data;
+      } catch (error) {
+        console.error('Error loading quests:', error);
+        return null;
+      }
+    }
+
+    async function showQuestModal() {
+      const modal = document.getElementById('quest-modal');
+      const questList = document.getElementById('quest-list');
+
+      modal.style.display = 'flex';
+
+      // Load quests
+      const data = await loadQuests();
+      if (!data) {
+        questList.innerHTML = `
+          <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+            Failed to load quests. Please try again later.
+          </div>
+        `;
+        return;
+      }
+
+      // Render quests
+      questList.innerHTML = userQuests.map(quest => {
+        const completed = quest.completed;
+        const icon = getQuestIcon(quest.type);
+        const buttonText = completed ? '✓ Completed' : `Complete (+${quest.reward} credits)`;
+        const buttonDisabled = completed ? 'disabled' : '';
+        const questUrl = getQuestUrl(quest.type);
+
+        return `
+          <div style="background: ${completed ? 'rgba(46, 213, 115, 0.1)' : 'rgba(139, 92, 246, 0.1)'}; border: 2px solid ${completed ? 'rgba(46, 213, 115, 0.3)' : 'rgba(139, 92, 246, 0.3)'}; border-radius: 12px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 2rem; flex-shrink: 0;">${icon}</div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 1rem; color: var(--text-primary); margin-bottom: 0.25rem;">
+                ${quest.name}
+              </div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">
+                ${quest.description}
+              </div>
+            </div>
+            <div style="text-align: right; flex-shrink: 0;">
+              <div style="font-size: 1.1rem; font-weight: 700; color: var(--aetherwave-pink); margin-bottom: 0.5rem;">
+                +${quest.reward}
+              </div>
+              ${completed ?
+                `<button style="padding: 0.5rem 1rem; background: rgba(46, 213, 115, 0.2); border: 1px solid rgba(46, 213, 115, 0.5); border-radius: 8px; color: #2ed573; font-weight: 600; font-size: 0.85rem; cursor: not-allowed;" disabled>${buttonText}</button>` :
+                `<a href="${questUrl}" target="_blank" onclick="setTimeout(() => completeQuest('${quest.type}'), 2000)" style="display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border: none; border-radius: 8px; color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255, 46, 166, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">${buttonText}</a>`
+              }
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function closeQuestModal() {
+      const modal = document.getElementById('quest-modal');
+      modal.style.display = 'none';
+    }
+
+    function getQuestIcon(type) {
+      const icons = {
+        twitter_follow: '🐦',
+        discord_join: '💬',
+        facebook_follow: '👍',
+        tiktok_follow: '🎵'
+      };
+      return icons[type] || '⭐';
+    }
+
+    function getQuestUrl(type) {
+      const urls = {
+        twitter_follow: 'https://twitter.com/AetherWaveStudio',
+        discord_join: 'https://discord.gg/aetherwave',
+        facebook_follow: 'https://facebook.com/AetherWaveStudio',
+        tiktok_follow: 'https://tiktok.com/@AetherWaveStudio'
+      };
+      return urls[type] || '#';
+    }
+
+    async function completeQuest(questType) {
+      try {
+        const response = await fetch('/api/quests/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questType })
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          showNotification(data.error || 'Failed to complete quest', 'error');
+          return;
+        }
+
+        const data = await response.json();
+        userCredits = data.newBalance;
+        updateCreditsDisplay();
+        showNotification(data.message, 'success');
+
+        // Reload quest modal
+        showQuestModal();
+
+      } catch (error) {
+        console.error('Error completing quest:', error);
+        showNotification('Failed to complete quest', 'error');
+      }
+    }
+
+    // ===== END QUEST SYSTEM =====
+
     function applyVideoQualityRestrictions() {
       const quality = document.getElementById('media-quality');
       const resolution = document.getElementById('media-resolution');
@@ -2440,25 +2589,29 @@
               </div>
             </div>
             
-            <!-- Studio Member -->
+            <!-- Studio Plan -->
             <div style="background: rgba(255, 255, 255, 0.02); border: 2px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
               <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/microphone-icon.png" style="width: 48px; height: 48px;"></div>
                 <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Studio</h3>
-                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$20<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$19<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span><strong style="color: var(--text-primary);">Unlimited</strong> music</span>
+                  <span><strong style="color: var(--text-primary);">Unlimited</strong> music (all models)</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span>HD audio quality</span>
+                  <span><strong style="color: var(--text-primary);">Unlimited</strong> WAV conversion</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span>Priority generation</span>
+                  <span>500 media credits/mo</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-purple);">✓</span>
+                  <span>Lite videos (all resolutions)</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
@@ -2470,34 +2623,38 @@
               </button>
             </div>
             
-            <!-- Creator Plan (NEW) -->
+            <!-- Creator Plan -->
             <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(255, 46, 166, 0.05)); border: 2px solid var(--aetherwave-purple); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; position: relative; overflow: hidden;">
               <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--aetherwave-purple); color: white; font-size: 0.65rem; font-weight: 600; padding: 0.3rem 0.65rem; border-radius: 12px;">POPULAR</div>
               <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/camera1-icon.png" style="width: 48px; height: 48px;"></div>
                 <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Creator</h3>
-                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$35<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$49<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span><strong style="color: var(--text-primary);">Unlimited</strong> music</span>
+                  <span><strong style="color: var(--text-primary);">Unlimited</strong> music (all models)</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span>HD audio quality</span>
+                  <span><strong style="color: var(--text-primary);">Unlimited</strong> WAV conversion</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="color: var(--aetherwave-purple);">✓</span>
+                  <span style="color: var(--aetherwave-pink);">✓</span>
+                  <span><strong style="color: var(--text-primary);">2000</strong> media credits/mo</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-pink);">✓</span>
+                  <span>Lite & Pro videos (all resolutions)</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-pink);">✓</span>
+                  <span>All image engines</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>Commercial license</span>
-                </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span><strong style="color: var(--text-primary);">100</strong> media credits/mo</span>
-                </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span>Video & image gen</span>
                 </li>
               </ul>
               <button onclick="contactSupport('Creator')" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(255, 46, 166, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
@@ -2510,24 +2667,36 @@
               <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/lightning-icon.png" style="width: 48px; height: 48px;"></div>
                 <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">All Access</h3>
-                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$50<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$99<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span><strong style="color: var(--text-primary);">Everything</strong> in Creator</span>
+                  <span><strong style="color: var(--text-primary);">Unlimited</strong> music (all models)</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span><strong style="color: var(--text-primary);">Unlimited</strong> media</span>
+                  <span><strong style="color: var(--text-primary);">Unlimited</strong> WAV conversion</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span>4K video generation</span>
+                  <span><strong style="color: var(--text-primary);">5000</strong> media credits/mo (rate-limited)</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span>API access</span>
+                  <span>Lite & Pro videos (all resolutions including 4K)</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-pink);">✓</span>
+                  <span>All image engines</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-pink);">✓</span>
+                  <span>Commercial license</span>
+                </li>
+                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="color: var(--aetherwave-pink);">✓</span>
+                  <span><strong style="color: var(--text-primary);">API access</strong> & priority support</span>
                 </li>
               </ul>
               <button onclick="contactSupport('All Access')" style="width: 100%; padding: 0.75rem; background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
@@ -4923,6 +5092,32 @@ updateMediaInputs();
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="window.albumArtModal.close()" data-testid="button-album-art-cancel">Cancel</button>
         <button class="modal-btn modal-btn-primary" onclick="window.albumArtModal.generate()" data-testid="button-album-art-generate">Generate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quest Modal -->
+  <div id="quest-modal" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeQuestModal()">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <div class="modal-title">🎁 Earn Free Credits!</div>
+        <div class="modal-subtitle">Complete quests to earn bonus credits</div>
+      </div>
+
+      <div id="quest-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">
+        <!-- Quests will be loaded here dynamically -->
+        <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+          Loading quests...
+        </div>
+      </div>
+
+      <div style="text-align: center; font-size: 0.85rem; color: var(--text-muted); padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px;">
+        <strong style="color: var(--text-primary);">Free Tier Credits:</strong> 50 welcome bonus + 10 credits/day (cap: 50)<br>
+        Quest rewards can push you over the cap!
+      </div>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeQuestModal()">Close</button>
       </div>
     </div>
   </div>

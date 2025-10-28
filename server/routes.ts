@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { setupDevAuth, isDevAuthenticated } from "./devAuth";
 import { z } from "zod";
 import multer from "multer";
 import { db } from "./db";
@@ -9,16 +10,19 @@ import OpenAI from "openai";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
-import { 
-  uploadedAudio, 
+import { kieSubscribe, KIE_MODELS } from "./kieClient";
+import {
+  uploadedAudio,
   PLAN_FEATURES,
   SERVICE_CREDIT_COSTS,
   type PlanType,
   type VideoResolution,
   type ImageEngine,
-  type MusicModel
+  type MusicModel,
+  type QuestType,
+  QUEST_REWARDS
 } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, lt } from "drizzle-orm";
 
 // Create proxy agent for KIE.ai API calls
 function createProxyAgent() {
@@ -50,39 +54,71 @@ function validateMusicModel(planType: PlanType, model: MusicModel): boolean {
   return allowedModels.includes(model);
 }
 
-// Calculate video generation credits based on quality settings
+// Calculate video generation credits based on model and quality settings
+// Updated 2025-01 with KIE.ai premium models (Veo 3, Sora 2)
+// All pricing includes 50% margin for infrastructure and profit
 function calculateVideoCredits(
-  modelVersion: 'lite' | 'pro',
-  resolution: '512p' | '720p' | '1080p' | '4k',
-  duration: number
+  model: 'seedance-lite' | 'seedance-pro' | 'veo3_fast' | 'sora2' | 'sora2_pro' | 'sora2_pro_hd',
+  resolution?: '512p' | '720p' | '1080p' | '4k',
+  duration?: number
 ): number {
-  // Base cost by model
-  const modelMultiplier = modelVersion === 'pro' ? 2 : 1; // Pro is 2x
-  
-  // Resolution multiplier (512p=1x, 720p=1.5x, 1080p=2x, 4k=3x)
-  let resolutionMultiplier = 1;
-  if (resolution === '720p') resolutionMultiplier = 1.5;
-  if (resolution === '1080p') resolutionMultiplier = 2;
-  if (resolution === '4k') resolutionMultiplier = 3;
-  
-  // Duration multiplier (3s = 1x, 5s = 1.67x, 10s = 3.33x)
-  const durationMultiplier = duration / 3;
-  
-  // Base cost is 3 credits for lowest settings (lite, 512p, 3s)
-  const baseCredits = 3;
-  const totalCredits = Math.ceil(baseCredits * modelMultiplier * resolutionMultiplier * durationMultiplier);
-  
-  console.log(`Video credits calculation: ${modelVersion} ${resolution} ${duration}s = ${totalCredits} credits (base: ${baseCredits}, model: ${modelMultiplier}x, res: ${resolutionMultiplier}x, duration: ${durationMultiplier}x)`);
-  
+  let costPerSecond = 0;
+
+  // Premium KIE.ai models (fixed per-second cost, resolution-independent)
+  if (model === 'veo3_fast') {
+    costPerSecond = 0.0375; // $0.30/8s via KIE.ai
+  } else if (model === 'sora2') {
+    costPerSecond = 0.015; // $0.15/10s via KIE.ai (60% cheaper than OpenAI!)
+  } else if (model === 'sora2_pro') {
+    costPerSecond = 0.045; // $0.45/10s via KIE.ai
+  } else if (model === 'sora2_pro_hd') {
+    costPerSecond = 0.10; // $1/10s (1080p) via KIE.ai
+  }
+  // Seedance models (fal.ai) - resolution-dependent pricing
+  else if (model === 'seedance-lite') {
+    if (resolution === '512p') costPerSecond = 0.010;        // 480p pricing
+    else if (resolution === '720p') costPerSecond = 0.0225;  // 720p pricing
+    else if (resolution === '1080p') costPerSecond = 0.050;  // 1080p pricing
+    else if (resolution === '4k') costPerSecond = 0.100;     // 4k estimate
+  } else if (model === 'seedance-pro') {
+    if (resolution === '512p') costPerSecond = 0.020;
+    else if (resolution === '720p') costPerSecond = 0.045;
+    else if (resolution === '1080p') costPerSecond = 0.100;
+    else if (resolution === '4k') costPerSecond = 0.200;
+  }
+
+  // Calculate total API cost
+  const apiCost = costPerSecond * (duration || 5);
+
+  // Add 50% margin for infrastructure, storage, and profit
+  const totalCost = apiCost * 1.5;
+
+  // Convert to credits (1 credit = $0.01)
+  const totalCredits = Math.ceil(totalCost / 0.01);
+
+  console.log(`Video credits: ${model}${resolution ? ` ${resolution}` : ''} ${duration || 5}s = ${totalCredits} credits ($${totalCost.toFixed(3)} with margin, API: $${apiCost.toFixed(3)})`);
+
   return totalCredits;
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup Replit Auth
-  await setupAuth(app);
+  // Determine if we're in development mode
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
+  // Setup authentication based on environment
+  if (isDevelopment) {
+    console.log('🔧 Using development authentication');
+    await setupDevAuth(app);
+  } else {
+    console.log('🔒 Using Replit authentication');
+    await setupAuth(app);
+  }
+
+  // Use appropriate auth middleware based on environment
+  const authMiddleware = isDevelopment ? isDevAuthenticated : isAuthenticated;
 
   // Auth user route
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       console.log('Auth check for user ID:', userId);
@@ -113,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Chat endpoint using OpenAI (via Replit AI Integrations)
   // Note: Authenticated to prevent abuse of OpenAI integration credits
-  app.post("/api/chat", isAuthenticated, async (req: any, res) => {
+  app.post("/api/chat", authMiddleware, async (req: any, res) => {
     try {
       const { message } = req.body;
 
@@ -158,7 +194,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Music generation route with vocal gender support (KIE.ai API)
-  app.post("/api/generate-music", isAuthenticated, async (req: any, res) => {
+  app.post("/api/generate-music", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -292,7 +328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload & Cover Audio route (KIE.ai API)
-  app.post("/api/upload-cover-music", isAuthenticated, async (req: any, res) => {
+  app.post("/api/upload-cover-music", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -516,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User preferences route
-  app.get("/api/user/preferences", isAuthenticated, async (req, res) => {
+  app.get("/api/user/preferences", authMiddleware, async (req, res) => {
     try {
       const userId = (req as any).user?.claims?.sub;
       if (!userId) {
@@ -535,7 +571,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update user vocal preference
-  app.post("/api/user/preferences", isAuthenticated, async (req, res) => {
+  app.post("/api/user/preferences", authMiddleware, async (req, res) => {
     try {
       const userId = (req as any).user?.claims?.sub;
       if (!userId) {
@@ -559,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-      fileSize: 10 * 1024 * 1024, // 10MB max
+      fileSize: 100 * 1024 * 1024, // 100MB max (supports 8-min WAV files)
     },
     fileFilter: (req, file, cb) => {
       const allowedMimeTypes = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/m4a', 'audio/ogg', 'audio/flac', 'audio/x-m4a'];
@@ -572,7 +608,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload audio file endpoint
-  app.post("/api/upload-audio", upload.single('audio'), async (req, res) => {
+  app.post("/api/upload-audio", authMiddleware, upload.single('audio'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({
@@ -581,7 +617,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const userId = (req as any).user?.claims?.sub || null;
+      const userId = req.user?.claims?.sub;
+
+      // Get user to check their plan
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check file size against plan limit
+      const userPlan = user.subscriptionPlan as PlanType;
+      const maxSizeMB = PLAN_FEATURES[userPlan].maxAudioUploadSizeMB;
+      const maxSizeBytes = maxSizeMB * 1024 * 1024;
+      const fileSizeMB = (req.file.size / 1024 / 1024).toFixed(2);
+
+      if (req.file.size > maxSizeBytes) {
+        return res.status(413).json({
+          error: 'File too large',
+          message: `Your ${user.subscriptionPlan} plan has a ${maxSizeMB}MB upload limit. Your file is ${fileSizeMB}MB. Upgrade to a paid plan for 100MB uploads.`,
+          yourPlan: user.subscriptionPlan,
+          maxSizeMB: maxSizeMB,
+          fileSizeMB: parseFloat(fileSizeMB)
+        });
+      }
 
       // Convert buffer to base64
       const base64Audio = req.file.buffer.toString('base64');
@@ -650,10 +708,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Cleanup old uploaded audio files (older than 1 hour)
+  // This runs every 10 minutes to keep the database clean
+  const cleanupOldAudioFiles = async () => {
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const deletedFiles = await db
+        .delete(uploadedAudio)
+        .where(lt(uploadedAudio.createdAt, oneHourAgo))
+        .returning();
+
+      if (deletedFiles.length > 0) {
+        console.log(`🧹 Cleaned up ${deletedFiles.length} old uploaded audio file(s)`);
+      }
+    } catch (error) {
+      console.error('Audio cleanup error:', error);
+    }
+  };
+
+  // Run cleanup every 10 minutes
+  setInterval(cleanupOldAudioFiles, 10 * 60 * 1000);
+
+  // Run cleanup on startup
+  cleanupOldAudioFiles();
+
   // Credit Management Routes
   
   // Get user's current credits
-  app.get('/api/user/credits', isAuthenticated, async (req: any, res) => {
+  app.get('/api/user/credits', authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -674,7 +756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Check and reset daily credits if needed
-  app.post('/api/user/credits/check-reset', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/credits/check-reset', authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -718,7 +800,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Check if user has sufficient credits for a service (pre-validation)
-  app.post('/api/user/credits/check', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/credits/check', authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { serviceType } = req.body;
@@ -747,7 +829,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Deduct credits for a specific service (used internally by generation endpoints)
-  app.post('/api/user/credits/deduct', isAuthenticated, async (req: any, res) => {
+  app.post('/api/user/credits/deduct', authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { serviceType } = req.body;
@@ -783,7 +865,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Example: Video generation endpoint stub (for future implementation)
   // This demonstrates server-side plan validation for video resolution
-  app.post("/api/generate-video", isAuthenticated, async (req: any, res) => {
+  app.post("/api/generate-video", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -816,7 +898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Convert audio to WAV format (paid users only)
-  app.post("/api/convert-to-wav", isAuthenticated, async (req: any, res) => {
+  app.post("/api/convert-to-wav", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -945,7 +1027,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get WAV conversion status (polling alternative to callback)
-  app.get("/api/wav-status/:taskId", isAuthenticated, async (req: any, res) => {
+  app.get("/api/wav-status/:taskId", authMiddleware, async (req: any, res) => {
     try {
       const { taskId } = req.params;
       const sunoApiKey = process.env.SUNO_API_KEY;
@@ -980,7 +1062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Album Art Generation with Fal.ai Nano Banana
-  app.post("/api/generate-art", isAuthenticated, async (req: any, res) => {
+  app.post("/api/generate-art", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -1115,7 +1197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Proxy endpoint for downloading external images (bypasses CORS)
-  app.get("/api/download-image", isAuthenticated, async (req: any, res) => {
+  app.get("/api/download-image", authMiddleware, async (req: any, res) => {
     try {
       const { url, filename } = req.query;
 
@@ -1148,7 +1230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Music Video Generation with Fal.ai Seedance
-  app.post("/api/generate-video-fal", isAuthenticated, async (req: any, res) => {
+  app.post("/api/generate-video-fal", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
@@ -1199,7 +1281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Calculate credits based on quality settings
       const requiredCredits = calculateVideoCredits(
-        modelVersion as 'lite' | 'pro',
+        `seedance-${modelVersion}` as 'seedance-lite' | 'seedance-pro',
         resolution as '512p' | '720p' | '1080p' | '4k',
         parseInt(duration)
       );
@@ -1341,6 +1423,340 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: error.message,
         body: error.body
       });
+    }
+  });
+
+  // Unified Video Generation with Premium Models (Veo 3, Sora 2, Seedance)
+  app.post("/api/generate-video-premium", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const {
+        prompt,
+        model = 'seedance-lite', // 'seedance-lite', 'seedance-pro', 'veo3_fast', 'sora2', 'sora2_pro', 'sora2_pro_hd'
+        imageData, // Base64 or URL
+        imageUrl,
+        endImageUrl, // For first+last frame (Seedance only)
+        imageMode = 'first-frame', // 'first-frame', 'last-frame', 'reference'
+        resolution = '720p', // Only applies to Seedance models
+        duration = 5, // Duration in seconds
+        aspectRatio = '16:9', // For Veo/Sora: '16:9', '9:16', '1:1', '4:3', '21:9'
+        seed,
+        enableSafetyChecker = true
+      } = req.body;
+
+      if (!prompt) {
+        return res.status(400).json({
+          error: 'Invalid request. Prompt is required for video generation.'
+        });
+      }
+
+      // Validate plan restrictions for free accounts
+      if (user.subscriptionPlan === 'free') {
+        // Free users can only use Seedance Lite 512p 3s
+        if (model !== 'seedance-lite' || resolution !== '512p' || duration !== 3) {
+          return res.status(403).json({
+            error: 'Free accounts can only use Seedance Lite (512p, 3 seconds)',
+            message: 'Please upgrade your plan to access premium models like Veo 3 or Sora 2.'
+          });
+        }
+      }
+
+      // Calculate credits based on model and settings
+      const requiredCredits = calculateVideoCredits(
+        model as 'seedance-lite' | 'seedance-pro' | 'veo3_fast' | 'sora2' | 'sora2_pro' | 'sora2_pro_hd',
+        resolution as '512p' | '720p' | '1080p' | '4k',
+        duration
+      );
+
+      // Check if plan has unlimited video generation
+      const hasUnlimitedVideo = ['all_access'].includes(user.subscriptionPlan);
+
+      // Deduct credits for video generation (skip for unlimited plans)
+      if (!hasUnlimitedVideo) {
+        const currentCredits = user.credits || 0;
+        if (currentCredits < requiredCredits) {
+          return res.status(403).json({
+            error: 'Insufficient credits',
+            credits: currentCredits,
+            required: requiredCredits,
+            message: `You need ${requiredCredits} credits to generate this video. Upgrade your plan or wait for daily reset.`
+          });
+        }
+
+        // Deduct the calculated amount
+        const newCredits = currentCredits - requiredCredits;
+        await storage.updateUserCredits(userId, newCredits);
+        console.log(`Deducted ${requiredCredits} credits for ${model} video. New balance: ${newCredits}`);
+      } else {
+        console.log('Unlimited plan - skipping credit deduction');
+      }
+
+      // Determine which provider to use and generate video
+      let result;
+
+      // KIE.ai models (Veo 3, Sora 2)
+      if (model.startsWith('veo') || model.startsWith('sora')) {
+        const kieApiKey = process.env.KIE_API_KEY;
+        if (!kieApiKey) {
+          return res.status(500).json({ error: 'KIE.ai API key not configured. Please add KIE_API_KEY to your secrets.' });
+        }
+
+        console.log(`Generating video with KIE.ai ${model}:`, {
+          prompt,
+          duration,
+          aspectRatio,
+          hasImage: !!(imageData || imageUrl)
+        });
+
+        // Build KIE.ai input
+        const kieInput: any = {
+          prompt: prompt,
+          duration: duration,
+          aspect_ratio: aspectRatio,
+          enable_safety_checker: enableSafetyChecker
+        };
+
+        // Add image if provided (Veo 3 and Sora 2 support image conditioning)
+        if (imageData || imageUrl) {
+          kieInput.image_url = imageData || imageUrl;
+        }
+
+        if (seed) {
+          kieInput.seed = seed;
+        }
+
+        // Call KIE.ai via our wrapper
+        result = await kieSubscribe({
+          model: model,
+          input: kieInput,
+          apiKey: kieApiKey,
+          logs: true,
+          onQueueUpdate: (update) => {
+            console.log(`KIE.ai ${model} queue update:`, update.status, update.progress ? `${update.progress}%` : '');
+          }
+        });
+
+        if (result.status === 'failed') {
+          return res.status(500).json({
+            error: 'Video generation failed',
+            details: result.error
+          });
+        }
+
+        return res.status(200).json({
+          status: 'complete',
+          videoUrl: result.videoUrl,
+          model: model,
+          provider: 'kie.ai',
+          credits: requiredCredits
+        });
+      }
+
+      // Fal.ai Seedance models
+      else if (model.startsWith('seedance')) {
+        const falApiKey = process.env.FAL_KEY;
+        if (!falApiKey) {
+          return res.status(500).json({ error: 'Fal.ai API key not configured. Please add FAL_KEY to your secrets.' });
+        }
+
+        process.env.FAL_KEY = falApiKey;
+
+        const modelVersion = model === 'seedance-pro' ? 'pro' : 'lite';
+        const finalImageUrl = imageUrl || imageData;
+        const hasImage = !!finalImageUrl;
+
+        // Determine Fal.ai model ID
+        let modelId;
+        if (hasImage) {
+          if (imageMode === 'reference') {
+            modelId = modelVersion === 'pro'
+              ? 'fal-ai/bytedance/seedance/v1/pro/reference-to-video'
+              : 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
+          } else {
+            modelId = modelVersion === 'pro'
+              ? 'fal-ai/bytedance/seedance/v1/pro/image-to-video'
+              : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
+          }
+        } else {
+          modelId = modelVersion === 'pro'
+            ? 'fal-ai/bytedance/seedance/v1/pro/text-to-video'
+            : 'fal-ai/bytedance/seedance/v1/lite/text-to-video';
+        }
+
+        console.log(`Generating video with Fal.ai ${model}:`, {
+          modelId,
+          prompt,
+          resolution,
+          duration,
+          hasImage
+        });
+
+        // Build Fal.ai input
+        const numFrames = duration === 3 ? 73 : duration === 10 ? 241 : 121;
+        const falInput: any = {
+          prompt: prompt,
+          num_frames: numFrames,
+          resolution: resolution === '512p' ? '480p' : resolution,
+          enable_safety_checker: enableSafetyChecker
+        };
+
+        // Add image support
+        if (finalImageUrl) {
+          if (imageMode === 'reference') {
+            falInput.image_urls = [finalImageUrl];
+          } else {
+            falInput.image_url = finalImageUrl;
+            if (endImageUrl) {
+              falInput.end_image_url = endImageUrl;
+            }
+          }
+        }
+
+        // Generate with Fal.ai
+        const falResult = await fal.subscribe(modelId, {
+          input: falInput,
+          logs: true,
+          onQueueUpdate: (update: any) => {
+            console.log('Fal.ai queue update:', update.status);
+          }
+        });
+
+        const resultData = falResult as any;
+        const videoUrl = resultData.data?.video?.url ||
+          resultData.video?.url ||
+          resultData.video_url ||
+          resultData.data?.video_url ||
+          resultData.url;
+
+        if (!videoUrl) {
+          return res.status(500).json({
+            error: 'Video generation completed but no video URL found in response'
+          });
+        }
+
+        return res.status(200).json({
+          status: 'complete',
+          videoUrl: videoUrl,
+          model: model,
+          provider: 'fal.ai',
+          credits: requiredCredits,
+          seed: resultData.data?.seed || resultData.seed
+        });
+      }
+
+      // Unknown model
+      else {
+        return res.status(400).json({
+          error: 'Invalid model specified',
+          validModels: ['seedance-lite', 'seedance-pro', 'veo3_fast', 'sora2', 'sora2_pro', 'sora2_pro_hd']
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Premium Video Generation Error:', error);
+      res.status(500).json({
+        error: 'Failed to generate video',
+        details: error.message
+      });
+    }
+  });
+
+  // ===== QUEST SYSTEM ENDPOINTS =====
+
+  // Get user's quests (completed and available)
+  app.get('/api/quests', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Get user's completed quests
+      const userQuests = await storage.getUserQuests(userId);
+
+      // Define all available quests
+      const allQuests: Array<{ type: QuestType; name: string; description: string; reward: number; completed: boolean }> = [
+        {
+          type: 'twitter_follow',
+          name: 'Follow us on X',
+          description: 'Follow @AetherWaveStudio on X.com',
+          reward: QUEST_REWARDS.twitter_follow,
+          completed: userQuests.some(q => q.questType === 'twitter_follow' && q.completed === 1)
+        },
+        {
+          type: 'discord_join',
+          name: 'Join our Discord',
+          description: 'Join the AetherWave Studio Discord community',
+          reward: QUEST_REWARDS.discord_join,
+          completed: userQuests.some(q => q.questType === 'discord_join' && q.completed === 1)
+        },
+        {
+          type: 'facebook_follow',
+          name: 'Follow us on Facebook',
+          description: 'Follow AetherWave Studio on Facebook',
+          reward: QUEST_REWARDS.facebook_follow,
+          completed: userQuests.some(q => q.questType === 'facebook_follow' && q.completed === 1)
+        },
+        {
+          type: 'tiktok_follow',
+          name: 'Follow us on TikTok',
+          description: 'Follow @AetherWaveStudio on TikTok',
+          reward: QUEST_REWARDS.tiktok_follow,
+          completed: userQuests.some(q => q.questType === 'tiktok_follow' && q.completed === 1)
+        }
+      ];
+
+      res.status(200).json({
+        quests: allQuests,
+        totalCompleted: userQuests.filter(q => q.completed === 1).length,
+        totalAvailable: Object.keys(QUEST_REWARDS).length
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching quests:', error);
+      res.status(500).json({ error: 'Failed to fetch quests' });
+    }
+  });
+
+  // Complete a quest and award credits
+  app.post('/api/quests/complete', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { questType } = req.body;
+
+      if (!questType) {
+        return res.status(400).json({ error: 'Quest type is required' });
+      }
+
+      // Validate quest type
+      const validQuestTypes: QuestType[] = ['twitter_follow', 'discord_join', 'facebook_follow', 'tiktok_follow'];
+      if (!validQuestTypes.includes(questType)) {
+        return res.status(400).json({ error: 'Invalid quest type' });
+      }
+
+      // Complete the quest and award credits
+      const result = await storage.completeQuest(userId, questType);
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Get updated user info
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(200).json({
+        success: true,
+        creditsAwarded: result.creditsAwarded,
+        newBalance: updatedUser?.credits || 0,
+        message: `Quest completed! You earned ${result.creditsAwarded} credits.`
+      });
+
+    } catch (error: any) {
+      console.error('Error completing quest:', error);
+      res.status(500).json({ error: 'Failed to complete quest' });
     }
   });
 
