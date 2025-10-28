@@ -17,7 +17,14 @@
       "WebSearch",
       "WebFetch(domain:docs.kie.ai)",
       "Bash(taskkill /PID 57112 /F)",
-      "Bash(cmd.exe //C taskkill //PID 57112 //F)"
+      "Bash(cmd.exe //C taskkill //PID 57112 //F)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nAdd quest system and free tier credit improvements\n\nImplemented a quest system allowing users to earn bonus credits by following social media accounts, and improved the free tier credit system with a welcome bonus and daily credits.\n\nKey changes:\n- Quest system: Users can earn 10 credits each for following on Twitter, Discord, Facebook, and TikTok\n- Free tier improvements: 50 credit welcome bonus + 10 credits/day (capped at 50)\n- New database tables: quests table with completion tracking\n- New API endpoints: GET /api/quests and POST /api/quests/complete\n- UI improvements: Credits badge moved to header with gift icon for quest access\n- Quest modal with social media follow buttons\n- Schema updates: Added welcomeBonusClaimed field and quests table\n- New starter plan tier ($9.99/month) with 200 credits and SORA 2 access\n- Development authentication system for local testing\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git push origin main)",
+      "Bash(git add client/index.html)",
+      "Bash(git commit -m \"Update social media quest links\n\n- Twitter/X: @aetherwave_ai\n- Discord: Real server invite link\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
+      "Bash(cmd.exe //C taskkill //PID 33828 //F)",
+      "WebFetch(domain:www.technology.org)",
+      "Bash(cmd.exe //C taskkill //PID 13892 //F)"
     ],
     "deny": [],
     "ask": []

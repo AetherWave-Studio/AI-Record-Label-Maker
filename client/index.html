@@ -755,6 +755,8 @@
     }
 
     .use-case-card.selected {
+	background: url('/assets/use-case-panel-1.gif') no-repeat;
+	background-size: 100% 100%;
     border-color: var(--aetherwave-pink);
     filter: brightness(1.3) drop-shadow(0 0 10px rgba(255, 46, 166, 0.5));
     box-shadow: 0 4px 16px rgba(255, 46, 166, 0.3);
@@ -1967,43 +1969,43 @@
     <textarea id="user-vision" rows="2" placeholder="e.g., wearing leather jacket, vintage 80s aesthetic, purple color scheme..."></textarea>
     </div>
 
-    <!-- Image Upload (Optional) -->
-<div class="form-group" id="image-upload-group">
-  <label class="form-label">
+    <!-- Video Model Selection (SHOWN FIRST for video, BEFORE image uploaders) -->
+    <div class="form-group" id="video-model-group" style="display: none;">
+    <label class="form-label">🎬 Video Model</label>
+    <select id="media-video-model">
+    <option value="seedance-lite" selected>Seedance Lite (Free - Fastest)</option>
+    <option value="seedance-pro" data-plan="studio">Seedance Pro (Studio+)</option>
+    <option value="sora2" data-plan="starter">SORA 2 Standard (Starter+ - OpenAI)</option>
+    <option value="sora2_pro" data-plan="creator">SORA 2 Pro (Creator+)</option>
+    <option value="sora2_pro_hd" data-plan="all_access">SORA 2 Pro HD (All Access - 1080p)</option>
+    <option value="veo3_fast" data-plan="creator">VEO 3 Fast (Creator+ - Google)</option>
+    </select>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+    ⚠️ <strong>Important:</strong> Choose your model first - this determines which image options are available below
+    </div>
+    </div>
+
+    <!-- Image Upload (Optional - shown for images OR for video reference) -->
+    <div class="form-group" id="image-upload-group">
+    <label class="form-label">
     <span>Upload Image (Optional)</span>
-    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- Upload reference image here</span>
-  </label>
-  <input type="file" id="media-image-upload" accept="image/*" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; cursor: pointer;">
-</div>
-
-<!-- Start Image (First Frame) Uploader -->
-<div class="form-group" id="start-image-group" style="display:none;">
-  <label class="form-label">Start Frame (Image or URL)</label>
-  <input type="file" id="start-image-file" accept="image/*" style="margin-bottom:0.5rem;">
-  <input type="text" id="start-image-url" placeholder="or paste image URL" style="width:100%;">
-</div>
-
-<!-- End Image (Last Frame) Uploader -->
-<div class="form-group" id="end-image-group" style="display:none;">
-  <label class="form-label">End Frame (Image or URL)</label>
-  <input type="file" id="end-image-file" accept="image/*" style="margin-bottom:0.5rem;">
-  <input type="text" id="end-image-url" placeholder="or paste image URL" style="width:100%;">
-</div>
-
-
+    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- For style reference or first/last frame</span>
+    </label>
+    <input type="file" id="media-image-upload" accept="image/*" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; cursor: pointer;">
+    </div>
 
     <!-- Image Mode Selection (shown only for video when image uploaded) -->
     <div id="image-mode-selection" style="display: none; margin-top: 0.75rem;">
     <label class="form-label">How should the image be used?</label>
     <select id="image-mode" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem;">
-    <option value="first-frame">First Frame - Start video with this image</option>
-    <option value="reference">Style Reference - Use as visual inspiration (1-4 images)</option>
+    <option value="reference">Style Reference - Use as visual inspiration (All models)</option>
+    <option value="first-frame">First Frame - Start video with this image (Seedance only)</option>
+    <option value="last-frame">Last Frame - End video with this image (Seedance only)</option>
     </select>
     <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-    <strong>First Frame:</strong> Image becomes the opening frame, AI animates from there<br>
-    <strong>Reference:</strong> AI uses image(s) as style guide but creates new content
+    <strong>Style Reference (All models):</strong> AI uses image as style guide but creates new content<br>
+    <strong>First/Last Frame (Seedance only):</strong> Image becomes opening/closing frame, AI animates in between
     </div>
-    
 
     <div id="media-image-preview" style="display: none; margin-top: 0.5rem;">
     <img id="media-preview-img" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border-color);" />
@@ -2027,26 +2029,20 @@
     <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Choose the visual style for your generated image</div>
     </div>
 
-    <!-- Advanced Settings (collapsible) -->
-    <div class="form-group">
-    <details>
-    <summary style="cursor: pointer; font-weight: 600; color: var(--accent-color); margin-bottom: 1rem;">⚙️ Advanced Settings</summary>
-
-    <div class="form-group" id="video-model-group" style="display: none;">
-    <label class="form-label">Video Model</label>
-    <select id="media-video-model">
-    <option value="seedance-lite" selected>Seedance Lite (Free - Fastest)</option>
-    <option value="seedance-pro" data-plan="studio">Seedance Pro (Studio+)</option>
-    <option value="sora2" data-plan="starter">SORA 2 (Starter+ - OpenAI)</option>
-    <option value="sora2_pro" data-plan="creator">SORA 2 Pro (Creator+)</option>
-    <option value="sora2_pro_hd" data-plan="all_access">SORA 2 Pro HD (All Access - 1080p)</option>
-    <option value="veo3_fast" data-plan="creator">VEO 3 Fast (Creator+ - Google)</option>
+    <!-- Seedance: Resolution -->
+    <div class="form-group" id="video-resolution-group" style="display: none;">
+    <label class="form-label">Resolution (Seedance only)</label>
+    <select id="media-resolution">
+    <option value="512p" selected>512p (Fastest)</option>
+    <option value="720p">720p (Balanced)</option>
+    <option value="1080p">1080p (High Quality)</option>
+    <option value="4k" data-plan="studio">4K (Ultra Quality, Studio+)</option>
     </select>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Choose AI model for video generation</div>
     </div>
 
+    <!-- VEO/SORA: Aspect Ratio -->
     <div class="form-group" id="video-aspect-ratio-group" style="display: none;">
-    <label class="form-label">Aspect Ratio</label>
+    <label class="form-label">Aspect Ratio (VEO 3 & SORA 2 only)</label>
     <select id="media-aspect-ratio">
     <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
     <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
@@ -2054,29 +2050,24 @@
     <option value="4:3">4:3 (Classic)</option>
     <option value="21:9">21:9 (Cinematic)</option>
     </select>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Note: Aspect ratio applies to VEO 3 and SORA 2 models</div>
     </div>
 
-    <div class="form-group" id="video-resolution-group" style="display: none;">
-    <label class="form-label">Resolution</label>
-    <select id="media-resolution">
-    <option value="512p" selected>512p (Fastest, Lower Quality)</option>
-    <option value="720p">720p (Balanced)</option>
-    <option value="1080p">1080p (High Quality)</option>
-    <option value="4k" data-plan="studio">4K (Ultra Quality, Studio+)</option>
-    </select>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Note: Resolution applies to Seedance models only</div>
-    </div>
-
+    <!-- Duration -->
     <div class="form-group" id="video-duration-group" style="display: none;">
     <label class="form-label">Duration</label>
     <select id="media-duration">
     <option value="3" selected>3 seconds</option>
     <option value="5">5 seconds</option>
+    <option value="8">8 seconds</option>
     <option value="10">10 seconds</option>
     </select>
     <div id="credit-cost-preview" style="font-size: 0.85rem; color: var(--accent-color); margin-top: 0.5rem; font-weight: 600;"></div>
     </div>
+
+    <!-- Advanced Settings (collapsible) -->
+    <div class="form-group">
+    <details>
+    <summary style="cursor: pointer; font-weight: 600; color: var(--accent-color); margin-bottom: 1rem;">⚙️ Advanced Settings</summary>
 
     <div class="form-group">
     <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
@@ -2481,41 +2472,47 @@
     // ===== END QUEST SYSTEM =====
 
     function applyVideoQualityRestrictions() {
-      const quality = document.getElementById('media-quality');
+      const videoModel = document.getElementById('media-video-model');
       const resolution = document.getElementById('media-resolution');
       const duration = document.getElementById('media-duration');
-      
+
+      // Check if elements exist before accessing them
+      if (!videoModel || !resolution || !duration) {
+        console.warn('Video quality restriction elements not found');
+        return;
+      }
+
       if (userPlanType === 'free') {
         // Free accounts can only use lowest settings
-        quality.value = 'lite';
+        videoModel.value = 'seedance-lite';
         resolution.value = '512p';
         duration.value = '3';
-        
+
         // Disable all dropdowns
-        quality.disabled = true;
+        videoModel.disabled = true;
         resolution.disabled = true;
         duration.disabled = true;
-        
+
         // Add visual indicator
-        quality.style.opacity = '0.6';
+        videoModel.style.opacity = '0.6';
         resolution.style.opacity = '0.6';
         duration.style.opacity = '0.6';
-        
+
         // Add tooltips
-        quality.title = 'Upgrade to access higher quality models';
+        videoModel.title = 'Upgrade to access higher quality models';
         resolution.title = 'Upgrade to access higher resolutions';
         duration.title = 'Upgrade to access longer durations';
       } else {
         // Paid accounts can use all settings
-        quality.disabled = false;
+        videoModel.disabled = false;
         resolution.disabled = false;
         duration.disabled = false;
-        
-        quality.style.opacity = '1';
+
+        videoModel.style.opacity = '1';
         resolution.style.opacity = '1';
         duration.style.opacity = '1';
-        
-        quality.title = '';
+
+        videoModel.title = '';
         resolution.title = '';
         duration.title = '';
       }
@@ -3510,7 +3507,7 @@ window.premiumPlayer = {
     const mediaClearImage = document.getElementById('media-clear-image');
     const imageModeSelection = document.getElementById('image-mode-selection');
     const imageMode = document.getElementById('image-mode');
-    const mediaQuality = document.getElementById('media-quality');
+    const mediaVideoModel = document.getElementById('media-video-model');
     const mediaResolution = document.getElementById('media-resolution');
     const mediaDuration = document.getElementById('media-duration');
     const mediaSafetyChecker = document.getElementById('media-safety-checker');
@@ -3600,16 +3597,30 @@ window.premiumPlayer = {
         
 
     // Show/hide video-specific settings and image-specific settings
+    const videoModelGroup = document.getElementById('video-model-group');
+    const videoResolutionGroup = document.getElementById('video-resolution-group');
+    const videoAspectRatioGroup = document.getElementById('video-aspect-ratio-group');
+    const videoDurationGroup = document.getElementById('video-duration-group');
+    const imageStyleGroup = document.getElementById('image-style-group');
+
     if (selectedMediaType === 'video') {
-    videoSettingsGroup.style.display = 'block';
-    videoResolutionGroup.style.display = 'block';
-    videoDurationGroup.style.display = 'block';
-    imageStyleGroup.style.display = 'none'; // Hide image style for video
+    // Show video model selector FIRST
+    if (videoModelGroup) videoModelGroup.style.display = 'block';
+    // Hide resolution/aspect/duration until model is selected (handled by model change event)
+    if (imageStyleGroup) imageStyleGroup.style.display = 'none';
+
+    // Trigger model change to show appropriate fields
+    const videoModelSelect = document.getElementById('media-video-model');
+    if (videoModelSelect) {
+      videoModelSelect.dispatchEvent(new Event('change'));
+    }
     } else {
-    videoSettingsGroup.style.display = 'none';
-    videoResolutionGroup.style.display = 'none';
-    videoDurationGroup.style.display = 'none';
-    imageStyleGroup.style.display = 'block'; // Show image style for image
+    // Image mode: hide all video fields, show image style
+    if (videoModelGroup) videoModelGroup.style.display = 'none';
+    if (videoResolutionGroup) videoResolutionGroup.style.display = 'none';
+    if (videoAspectRatioGroup) videoAspectRatioGroup.style.display = 'none';
+    if (videoDurationGroup) videoDurationGroup.style.display = 'none';
+    if (imageStyleGroup) imageStyleGroup.style.display = 'block';
     }
         // Call updateMediaInputs whenever media type is toggled
         mediaTypeBtns.forEach(btn => {
@@ -3984,16 +3995,13 @@ window.premiumPlayer = {
     return;
     }
 
-    // If NOT instrumental, lyrics (prompt) are required
-    if (!instrumental && !lyrics) {
-    alert('Please provide Lyrics for Custom Mode (or enable "Make Instrumental")');
-    return;
-    }
+    // Lyrics are optional in custom mode (even for non-instrumental tracks)
+    // SUNO will generate lyrics automatically if not provided
 
     requestBody.customMode = true;
     requestBody.title = title;
     requestBody.style = style;
-    requestBody.prompt = lyrics || ''; // Lyrics required if NOT instrumental
+    requestBody.prompt = lyrics || ''; // Lyrics are optional, empty string if not provided
     
     // vocalGender is only effective when customMode is true
     requestBody.vocalGender = vocalGender;
@@ -4337,28 +4345,20 @@ async function generateMedia() {
                 enableSafetyChecker: document.getElementById('media-safety-checker')?.checked ?? true
             };
 
-            // Handle image inputs for first frame / last frame
-            const startImageVal = await handleImageInput(
-                document.getElementById('start-image-file'),
-                document.getElementById('start-image-url')
-            );
-            const endImageVal = await handleImageInput(
-                document.getElementById('end-image-file'),
-                document.getElementById('end-image-url')
-            );
-            if (startImageVal) requestBody.imageUrl = startImageVal;
-            if (endImageVal) requestBody.endImageUrl = endImageVal;
-
             // Add uploaded image data if provided
             if (uploadedImageData) {
                 requestBody.imageData = uploadedImageData;
-                requestBody.imageMode = document.getElementById('image-mode')?.value || 'first-frame';
+                requestBody.imageMode = document.getElementById('image-mode')?.value || 'reference';
             }
 
             const modelName = videoModel.replace('_', ' ').toUpperCase();
             console.log(`Generating video with ${modelName}...`);
 
-            const response = await fetch('/api/generate-media', {
+            // Use the correct endpoint based on the video provider
+            const isSeedance = videoModel.startsWith('seedance');
+            const endpoint = isSeedance ? '/api/generate-video-fal' : '/api/generate-video';
+
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -4729,7 +4729,8 @@ async function generateMedia() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: artPrompt,
-            style: style
+            style: style,
+            useDallE: true  // Panel 1 uses DALL-E 3 for professional album art
           })
         });
 
@@ -4979,25 +4980,18 @@ function updateMediaInputs() {
   const resolutionGroup = document.getElementById('video-resolution-group');
   const durationGroup = document.getElementById('video-duration-group');
   const imageStyleGroup = document.getElementById('image-style-group');
-  const videoSettingsGroup = document.getElementById('video-settings-group');
+  const imageUploadGroup = document.getElementById('image-upload-group');
 
+  // For video mode: show model selector, hide image style
+  // For image mode: hide video fields, show image style
   if (videoModelGroup) videoModelGroup.style.display = isVideo ? 'block' : 'none';
-  if (aspectRatioGroup) aspectRatioGroup.style.display = isVideo ? 'block' : 'none';
-  if (resolutionGroup) resolutionGroup.style.display = isVideo ? 'block' : 'none';
-  if (durationGroup) durationGroup.style.display = isVideo ? 'block' : 'none';
   if (imageStyleGroup) imageStyleGroup.style.display = isVideo ? 'none' : 'block';
-  if (videoSettingsGroup) videoSettingsGroup.style.display = 'none'; // Hide old quality selector
 
-  // Show/hide image upload fields
-  if (isVideo) {
-    document.getElementById('start-image-group').style.display = 'block';
-    document.getElementById('end-image-group').style.display = 'block';
-    document.getElementById('image-upload-group').style.display = 'none';
-  } else {
-    document.getElementById('start-image-group').style.display = 'none';
-    document.getElementById('end-image-group').style.display = 'none';
-    document.getElementById('image-upload-group').style.display = 'block';
-  }
+  // Image upload is always visible (used for both images and video reference)
+  if (imageUploadGroup) imageUploadGroup.style.display = 'block';
+
+  // Resolution/aspect/duration are shown/hidden by video model change handler
+  // So we don't need to touch them here
 
   // Update credit cost preview when inputs change
   if (isVideo) {
@@ -5070,14 +5064,91 @@ const durationSelect = document.getElementById('media-duration');
 
 if (videoModelSelect) {
   videoModelSelect.addEventListener('change', () => {
-    updateCreditCostPreview();
-    // Hide/show resolution based on model (Seedance uses resolution, VEO/SORA use aspect ratio)
     const model = videoModelSelect.value;
     const isSeedance = model.startsWith('seedance');
+    const isVEO = model.startsWith('veo');
+    const isSORA = model.startsWith('sora');
+
     const resolutionGroup = document.getElementById('video-resolution-group');
-    if (resolutionGroup) {
-      resolutionGroup.style.display = isSeedance ? 'block' : 'none';
+    const aspectRatioGroup = document.getElementById('video-aspect-ratio-group');
+    const durationGroup = document.getElementById('video-duration-group');
+    const durationSelect = document.getElementById('media-duration');
+    const imageModeSelect = document.getElementById('image-mode');
+
+    // Seedance models: Show resolution, hide aspect ratio
+    if (isSeedance) {
+      if (resolutionGroup) resolutionGroup.style.display = 'block';
+      if (aspectRatioGroup) aspectRatioGroup.style.display = 'none';
+      if (durationGroup) durationGroup.style.display = 'block';
+      // Seedance: 3s, 5s, 10s durations
+      if (durationSelect) {
+        durationSelect.innerHTML = `
+          <option value="3" selected>3 seconds</option>
+          <option value="5">5 seconds</option>
+          <option value="10">10 seconds</option>
+        `;
+      }
+      // Enable first/last frame options for Seedance
+      if (imageModeSelect) {
+        Array.from(imageModeSelect.options).forEach(opt => {
+          opt.disabled = false;
+        });
+      }
     }
+    // VEO 3: Show aspect ratio, hide resolution, fixed 8s duration
+    else if (isVEO) {
+      if (resolutionGroup) resolutionGroup.style.display = 'none';
+      if (aspectRatioGroup) aspectRatioGroup.style.display = 'block';
+      if (durationGroup) durationGroup.style.display = 'block';
+      // VEO 3: Fixed 8s duration
+      if (durationSelect) {
+        durationSelect.innerHTML = `<option value="8" selected>8 seconds (VEO 3 fixed duration)</option>`;
+      }
+      // Disable first/last frame options for VEO (only reference allowed)
+      if (imageModeSelect) {
+        Array.from(imageModeSelect.options).forEach(opt => {
+          if (opt.value === 'first-frame' || opt.value === 'last-frame') {
+            opt.disabled = true;
+          } else {
+            opt.disabled = false;
+          }
+        });
+        // Switch to reference if first/last frame was selected
+        if (imageModeSelect.value !== 'reference') {
+          imageModeSelect.value = 'reference';
+        }
+      }
+    }
+    // SORA 2: Show aspect ratio, hide resolution
+    else if (isSORA) {
+      if (resolutionGroup) resolutionGroup.style.display = 'none';
+      if (aspectRatioGroup) aspectRatioGroup.style.display = 'block';
+      if (durationGroup) durationGroup.style.display = 'block';
+      // SORA 2: 3s, 5s, 10s durations
+      if (durationSelect) {
+        durationSelect.innerHTML = `
+          <option value="3" selected>3 seconds</option>
+          <option value="5">5 seconds</option>
+          <option value="10">10 seconds</option>
+        `;
+      }
+      // Disable first/last frame options for SORA (only reference allowed)
+      if (imageModeSelect) {
+        Array.from(imageModeSelect.options).forEach(opt => {
+          if (opt.value === 'first-frame' || opt.value === 'last-frame') {
+            opt.disabled = true;
+          } else {
+            opt.disabled = false;
+          }
+        });
+        // Switch to reference if first/last frame was selected
+        if (imageModeSelect.value !== 'reference') {
+          imageModeSelect.value = 'reference';
+        }
+      }
+    }
+
+    updateCreditCostPreview();
   });
 }
 

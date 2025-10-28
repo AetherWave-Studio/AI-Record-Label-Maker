@@ -44,6 +44,11 @@ function validateVideoResolution(planType: PlanType, resolution: VideoResolution
   return allowedResolutions.includes(resolution);
 }
 
+function validateVideoModel(planType: PlanType, model: VideoModel): boolean {
+  const allowedModels = PLAN_FEATURES[planType].allowedVideoModels;
+  return allowedModels.includes(model);
+}
+
 function validateImageEngine(planType: PlanType, engine: ImageEngine): boolean {
   const allowedEngines = PLAN_FEATURES[planType].allowedImageEngines;
   return allowedEngines.includes(engine);
@@ -869,27 +874,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      const { prompt, resolution = '720p' } = req.body;
+
+      const { prompt, model, aspectRatio = '16:9', duration = 5, imageData, imageMode = 'reference' } = req.body;
       const userPlan = user.subscriptionPlan as PlanType;
-      
-      // Validate resolution is allowed for user's plan
-      if (!validateVideoResolution(userPlan, resolution as VideoResolution)) {
+
+      // Validate model is allowed for user's plan
+      if (!validateVideoModel(userPlan, model as VideoModel)) {
         return res.status(403).json({
-          error: 'Resolution not allowed',
-          message: `Your ${user.subscriptionPlan} plan does not include ${resolution} resolution. Upgrade to Studio or higher to unlock HD and 4K video.`,
-          allowedResolutions: PLAN_FEATURES[userPlan].allowedVideoResolutions
+          error: 'Model not allowed',
+          message: `Your ${user.subscriptionPlan} plan does not include ${model}. Upgrade to access premium AI models.`,
+          allowedModels: PLAN_FEATURES[userPlan].allowedVideoModels
         });
       }
-      
-      // TODO: Call video generation API (e.g., Fal.ai Seedance)
-      return res.status(501).json({
-        message: 'Video generation not yet implemented',
-        validatedResolution: resolution
+
+      // Calculate credit cost for this video
+      const creditCost = calculateVideoCredits(model, '1080p', duration); // KIE models are resolution-independent
+
+      // Check if user has enough credits (or unlimited access)
+      const creditCheck = await storage.checkCredits(userId, 'video_generation');
+      if (!creditCheck.allowed) {
+        return res.status(403).json({
+          error: 'Insufficient credits',
+          message: `You need ${creditCost} credits to generate this video. You currently have ${creditCheck.currentCredits} credits.`,
+          requiredCredits: creditCost,
+          currentCredits: creditCheck.currentCredits
+        });
+      }
+
+      // Prepare KIE.ai input
+      const kieInput: any = {
+        prompt,
+        aspect_ratio: aspectRatio,
+        duration
+      };
+
+      // Add image if provided
+      if (imageData) {
+        kieInput.image_url = imageData; // KIE.ai accepts base64 data URLs
+        if (imageMode === 'first-frame') {
+          kieInput.image_end = false; // Image at start
+        } else if (imageMode === 'last-frame') {
+          kieInput.image_end = true; // Image at end
+        }
+        // For 'reference' mode, just include the image_url
+      }
+
+      // Call KIE.ai API
+      console.log(`Generating video with KIE.ai model: ${model}`);
+      const result = await kieSubscribe({
+        model,
+        input: kieInput,
+        apiKey: process.env.KIE_API_KEY!,
+        logs: true
+      });
+
+      if (result.status === 'failed') {
+        throw new Error(result.error || 'Video generation failed');
+      }
+
+      // Deduct credits (unless unlimited)
+      if (!creditCheck.reason || creditCheck.reason !== 'unlimited') {
+        await storage.deductCredits(userId, 'video_generation');
+      }
+
+      return res.json({
+        status: 'complete',
+        videoUrl: result.videoUrl,
+        creditsUsed: creditCheck.reason === 'unlimited' ? 0 : creditCost
       });
     } catch (error: any) {
       console.error('Video generation error:', error);
@@ -1061,17 +1116,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Album Art Generation with Fal.ai Nano Banana
+  // Album Art Generation with DALL-E 3 (Panel 1) or Fal.ai Nano Banana (Panel 3)
   app.post("/api/generate-art", authMiddleware, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
-      
-      const { prompt, style = 'abstract', referenceImage } = req.body;
+
+      const { prompt, style = 'abstract', referenceImage, useDallE = false } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -1081,29 +1136,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (prompt.length > 1000) {
         return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
       }
-      
-      // Validate Fal.ai API key
-      const falApiKey = process.env.FAL_KEY;
-      
-      if (!falApiKey) {
-        return res.status(500).json({ error: 'Fal.ai API key not configured. Please add FAL_KEY to your secrets.' });
-      }
-      
-      // Set API key for Fal client
-      process.env.FAL_KEY = falApiKey;
-      
+
       // Deduct credits for album art generation
       const creditResult = await storage.deductCredits(userId, 'album_art_generation');
       
       if (!creditResult.success) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: 'Insufficient credits',
           credits: creditResult.newBalance,
           required: SERVICE_CREDIT_COSTS.album_art_generation,
           message: creditResult.error || 'You need more credits to generate album art. Upgrade your plan or wait for daily reset.'
         });
       }
-      
+
+      // DALL-E 3 path (Panel 1 - Professional album art)
+      if (useDallE) {
+        const openaiApiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+
+        if (!openaiApiKey) {
+          return res.status(500).json({ error: 'OpenAI API key not configured' });
+        }
+
+        const openai = new OpenAI({
+          apiKey: openaiApiKey,
+          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        });
+
+        // Style descriptions for DALL-E prompts
+        const styleDescriptions: Record<string, string> = {
+          cyberpunk: 'Cyberpunk aesthetic with neon lights, futuristic cityscape, dark background with bright neon accents',
+          abstract: 'Abstract art with flowing shapes, vibrant colors, artistic interpretation',
+          retro: 'Retro vaporwave aesthetic, 80s style, pink and purple gradients, nostalgic vibes',
+          minimal: 'Minimalist design with clean lines, simple composition, modern aesthetic',
+          surreal: 'Surrealist art with dreamlike imagery, unexpected elements, artistic creativity',
+          photorealistic: 'Photorealistic with highly detailed, professional photography style'
+        };
+
+        const styleHint = styleDescriptions[style] || styleDescriptions.abstract;
+        const enhancedPrompt = `Professional album cover art: ${prompt}. Style: ${styleHint}. Square format, high quality, artistic composition.`;
+
+        console.log('Generating album art with DALL-E 3:', { prompt, style, enhancedPrompt });
+
+        try {
+          const response = await openai.images.generate({
+            model: "dall-e-3",
+            prompt: enhancedPrompt,
+            n: 1,
+            size: "1024x1024",
+            quality: "standard",
+            style: "vivid"
+          });
+
+          const imageUrl = response.data[0]?.url;
+          const revisedPrompt = response.data[0]?.revised_prompt;
+
+          if (imageUrl) {
+            console.log('✅ DALL-E 3 image generated:', imageUrl);
+            return res.status(200).json({
+              imageUrl: imageUrl,
+              prompt: prompt,
+              style: style,
+              revisedPrompt: revisedPrompt,
+              model: 'dall-e-3'
+            });
+          } else {
+            throw new Error('No image URL in DALL-E response');
+          }
+        } catch (error: any) {
+          console.error('DALL-E 3 generation error:', error);
+          return res.status(500).json({
+            error: 'Failed to generate album art with DALL-E 3',
+            details: error.message
+          });
+        }
+      }
+
+      // Fal.ai Nano Banana path (Panel 3 - Quick media generation)
+      const falApiKey = process.env.FAL_KEY;
+
+      if (!falApiKey) {
+        return res.status(500).json({ error: 'Fal.ai API key not configured. Please add FAL_KEY to your secrets.' });
+      }
+
+      // Set API key for Fal client
+      process.env.FAL_KEY = falApiKey;
+
       // Style descriptions for enhanced prompts
       const styleDescriptions: Record<string, string> = {
         cyberpunk: 'cyberpunk aesthetic with neon lights, futuristic cityscape, dark background with bright neon accents',

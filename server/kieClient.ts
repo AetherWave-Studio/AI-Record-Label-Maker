@@ -3,11 +3,17 @@
 // Handles internal polling so clients get a clean async/await experience
 
 import nodeFetch from "node-fetch";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 // KIE.ai API configuration
 const KIE_API_BASE = "https://api.kie.ai/api/v1";
 const POLL_INTERVAL_MS = 3000; // Poll every 3 seconds
 const MAX_POLL_ATTEMPTS = 200; // ~10 minutes max (200 * 3s = 600s)
+
+// Proxy configuration (optional)
+// Set WEBSHARE_PROXY env var to: http://username:password@proxy.webshare.io:80
+const PROXY_URL = process.env.WEBSHARE_PROXY;
+const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
 
 export interface KieTaskResponse {
   code: number;
@@ -76,7 +82,8 @@ async function pollTaskStatus(
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({ taskId })
+        body: JSON.stringify({ taskId }),
+        agent: proxyAgent as any
       });
 
       if (!statusResponse.ok) {
@@ -202,32 +209,36 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
     throw new Error('KIE.ai API key is required');
   }
 
-  // Determine which endpoint to use based on model
-  let createEndpoint: string;
-  let statusEndpoint: string;
+  // All KIE.ai models use the same /jobs endpoints
+  // The model parameter in the request body determines which model is used
+  const createEndpoint = '/jobs/createTask';
+  const statusEndpoint = '/jobs/query';
 
-  if (model.startsWith('veo3') || model.includes('veo')) {
-    // Veo 3 models use /veo endpoints
-    createEndpoint = '/veo/generate';
-    statusEndpoint = '/veo/query';
-  } else if (model.startsWith('sora2') || model.includes('sora')) {
-    // Sora 2 models use /sora endpoints
-    createEndpoint = '/sora/generate';
-    statusEndpoint = '/sora/query';
-  } else if (model.includes('seedance')) {
-    // Seedance models use /jobs endpoints
-    createEndpoint = '/jobs/createTask';
-    statusEndpoint = '/jobs/query';
-  } else {
-    // Default to jobs endpoint for other models
-    createEndpoint = '/jobs/createTask';
-    statusEndpoint = '/jobs/query';
-  }
+  // Map our internal model names to KIE.ai's expected format
+  const kieModelMap: Record<string, string> = {
+    'sora2': 'sora-2-text-to-video',
+    'sora2_pro': 'sora-2-pro-text-to-video',
+    'sora2_pro_hd': 'sora-2-pro-hd-text-to-video',
+    'veo3_fast': 'veo-3-fast-text-to-video',
+  };
+
+  const kieModelName = kieModelMap[model] || model;
 
   try {
     if (logs) {
-      console.log(`KIE.ai: Creating task for model ${model}`);
+      console.log(`KIE.ai: Creating task for model ${model} (mapped to ${kieModelName})`);
     }
+
+    // Prepare request body with callback URL
+    // KIE.ai requires a callback URL - we use a dummy one since we're polling instead
+    const requestBody = {
+      model: kieModelName,
+      input,
+      callBackUrl: 'https://example.com/callback', // Required by KIE.ai API
+    };
+
+    console.log('KIE.ai request body:', JSON.stringify(requestBody, null, 2));
+    console.log('KIE.ai endpoint:', `${KIE_API_BASE}${createEndpoint}`);
 
     // Create the generation task
     const createResponse = await nodeFetch(`${KIE_API_BASE}${createEndpoint}`, {
@@ -236,11 +247,8 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model,
-        input,
-        // Optionally add callBackUrl here if you want webhook support
-      })
+      body: JSON.stringify(requestBody),
+      agent: proxyAgent as any
     });
 
     if (!createResponse.ok) {
