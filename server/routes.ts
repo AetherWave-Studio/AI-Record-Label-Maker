@@ -23,7 +23,7 @@ import {
   QUEST_REWARDS
 } from "@shared/schema";
 import { eq, lt } from "drizzle-orm";
-import virtualArtistsRouter from './virtualArtistsRoutes.js';
+import virtualArtistsRouter from './VirtualArtistsRoutes.js';
 
 
 
@@ -124,7 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Use appropriate auth middleware based on environment
   const authMiddleware = isDevelopment ? isDevAuthenticated : isAuthenticated;
-	app.use(virtualArtistsRouter);
+        app.use(virtualArtistsRouter);
   // Auth user route
   app.get('/api/auth/user', authMiddleware, async (req: any, res) => {
     try {
@@ -143,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           lastName: claims.last_name,
           profileImageUrl: claims.profile_image_url,
         });
-		
+                
         console.log('User created successfully:', user.id, user.email, `Credits: ${user.credits}`);
       } else {
         console.log('User found in database:', user.id, user.email, `Credits: ${user.credits}`);
@@ -154,10 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
     }
-	
+        
   });
 
-	
+        
   // Chat endpoint using OpenAI (via Replit AI Integrations)
   // Note: Authenticated to prevent abuse of OpenAI integration credits
   app.post("/api/chat", authMiddleware, async (req: any, res) => {
