@@ -59,6 +59,9 @@ app.use((req, res, next) => {
     throw err;
   });
 
+  // Serve static virtual artists pages before the SPA catch-all
+  app.use('/virtual-artists', express.static('virtual-artists'));
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
