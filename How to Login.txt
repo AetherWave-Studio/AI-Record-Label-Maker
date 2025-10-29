@@ -13,4 +13,6 @@ How to Login:
   - Name: Dev User
   - Username: devuser
   - Subscription Plan: all_access (unlimited everything!)
-  - Credits: 10,000 (so you never run out)
+  - Credits: 10,000 (so you never run out)ipconfig
+  
+  

@@ -1,60 +1,275 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel - AetherWave Studio</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - AetherWave Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
     :root {
-      --bg1: #0a0a0a; --bg2: #1a1a2e; --bg3: #16213e;
-      --cyan: #00d4ff; --violet: #7b2ff7; --magenta: #f72585;
-      --text: #ffffff; --muted: #a0a0a0; --card: #1a1a2e; --line: #333355;
+    --bg1: #0a0a0a;
+    --bg2: #1a1a2e;
+    --bg3: #16213e;
+    --cyan: #00d4ff;
+    --violet: #7b2ff7;
+    --magenta: #f72585;
+    --text: #ffff;
+    --muted: #a0a0a0;
+    --card: #1a1a2e;
+    --line: #333355;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', sans-serif; color: var(--text); background: linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3)); min-height: 100vh; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; }
-    .logo { font-family: 'Orbitron', sans-serif; font-weight: 900; letter-spacing: 2px; font-size: 1.5rem; background: linear-gradient(135deg, var(--cyan), var(--violet), var(--magenta)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 10px; }
-    .tagline { text-align: center; font-size: .75rem; color: var(--muted); letter-spacing: 2px; margin-bottom: 30px; }
-    h1 { font-family: 'Orbitron', sans-serif; text-align: center; margin-bottom: 30px; color: var(--cyan); }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-    .tab { padding: 12px 20px; cursor: pointer; border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; background: var(--card); transition: all 0.3s ease; color: var(--text); }
-    .tab:hover { background: #252540; border-color: var(--cyan); }
-    .tab.active { background: linear-gradient(135deg, #00d4ff22, #7b2ff722); border-color: var(--cyan); }
-    .tab-content { display: none; background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 25px; }
-    .tab-content.active { display: block; }
-    .section { margin-bottom: 30px; }
-    .section-title { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; color: var(--cyan); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
-    input[type="text"], input[type="url"], input[type="number"], textarea, select {
-      width: 100%; padding: 12px; background: #0a0a0a; border: 1px solid var(--line); border-radius: 8px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.95rem;
+
+    * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
     }
-    input:focus, textarea:focus, select:focus { outline: none; border-color: var(--cyan); background: #111111; }
-    textarea { min-height: 80px; resize: vertical; }
-    .btn { padding: 12px 24px; background: linear-gradient(135deg, var(--cyan), var(--violet)); border: none; border-radius: 8px; color: var(--text); font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; font-size: 0.9rem; }
-    .btn:hover { background: linear-gradient(135deg, var(--violet), var(--magenta)); box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3); }
-    .btn-secondary { background: #252540; margin-left: 10px; }
-    .btn-secondary:hover { background: #333355; }
-    .btn-danger { background: linear-gradient(135deg, #ff4444, #cc0000); }
-    .btn-danger:hover { background: linear-gradient(135deg, #cc0000, #990000); }
-    .item-list { margin-top: 20px; }
-    .item { background: #0a0a0a; border: 1px solid var(--line); border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-    .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .item-title { font-weight: 600; color: var(--cyan); }
-    .item-actions { display: flex; gap: 10px; }
-    .btn-small { padding: 6px 12px; font-size: 0.8rem; }
-    .success-message { background: #00ff0022; border: 1px solid #00ff00; color: #00ff00; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: none; }
-    .code-block { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; margin-top: 10px; font-family: monospace; font-size: 0.85rem; color: #00ff00; }
-    small { color: var(--muted); }
+
+    body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    background: linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3));
+    min-height: 100vh;
+    padding: 20px;
+    }
+
+    .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    }
+
+    .logo {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    letter-spacing: 2px;
+    font-size: 1.5rem;
+    background: linear-gradient(135deg, var(--cyan), var(--violet), var(--magenta));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    margin-bottom: 10px;
+    }
+
+    .tagline {
+    text-align: center;
+    font-size: .75rem;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    }
+
+    h1 {
+    font-family: 'Orbitron', sans-serif;
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--cyan);
+    }
+
+    .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    flex-wrap: wrap;
+    }
+
+    .tab {
+    padding: 12px 20px;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    background: var(--card);
+    transition: all 0.3s ease;
+    color: var(--text);
+    }
+
+    .tab:hover {
+    background: #252540;
+    border-color: var(--cyan);
+    }
+
+    .tab.active {
+    background: linear-gradient(135deg, #00d4ff22, #7b2ff722);
+    border-color: var(--cyan);
+    }
+
+    .tab-content {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 25px;
+    }
+
+    .tab-content.active {
+    display: block;
+    }
+
+    .section {
+    margin-bottom: 30px;
+    }
+
+    .section-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.2rem;
+    color: var(--cyan);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    }
+
+    .form-group {
+    margin-bottom: 20px;
+    }
+
+    label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    }
+
+    input[type="text"],
+    input[type="url"],
+    input[type="number"],
+    textarea,
+    select {
+    width: 100%;
+    padding: 12px;
+    background: #0a0a0a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+    outline: none;
+    border-color: var(--cyan);
+    background: #1111;
+    }
+
+    textarea {
+    min-height: 80px;
+    resize: vertical;
+    }
+
+    .btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    border: none;
+    border-radius: 8px;
+    color: var(--text);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    }
+
+    .btn:hover {
+    background: linear-gradient(135deg, var(--violet), var(--magenta));
+    box-shadow: 0 5px 15px rgba(247, 37, 133, 0.3);
+    }
+
+    .btn-secondary {
+    background: #252540;
+    margin-left: 10px;
+    }
+
+    .btn-secondary:hover {
+    background: #333355;
+    }
+
+    .btn-danger {
+    background: linear-gradient(135deg, #ff4444, #cc0000);
+    }
+
+    .btn-danger:hover {
+    background: linear-gradient(135deg, #cc0000, #990000);
+    }
+
+    .item-list {
+    margin-top: 20px;
+    }
+
+    .item {
+    background: #0a0a0a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    }
+
+    .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    }
+
+    .item-title {
+    font-weight: 600;
+    color: var(--cyan);
+    }
+
+    .item-actions {
+    display: flex;
+    gap: 10px;
+    }
+
+    .btn-small {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    }
+
+    .success-message {
+    background: #00ff0022;
+    border: 1px solid #00ff00;
+    color: #00ff00;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: none;
+    }
+
+    .code-block {
+    background: #000;
+    padding: 15px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: #00ff00;
+    }
+
+    small {
+    color: var(--muted);
+    }
+
     @media (max-width: 768px) {
-      .tabs { flex-direction: column; }
-      .tab { border-radius: 8px; border: 1px solid var(--line); }
+    .tabs {
+    flex-direction: column;
     }
-  </style>
+
+    .tab {
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    }
+    }
+    </style>
 </head>
 <body>
-  <div class="container">
+    <div class="container">
     <div class="logo">AETHERWAVE STUDIO</div>
     <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
     <h1>Admin Panel</h1>
@@ -62,151 +277,185 @@
     <div id="successMessage" class="success-message">Changes saved successfully!</div>
 
     <div class="tabs">
-      <div class="tab active" data-tab="artists">Artists</div>
-      <div class="tab" data-tab="gallery">Gallery</div>
-      <div class="tab" data-tab="merch">Merch</div>
-      <div class="tab" data-tab="export">Export/Import</div>
+    <div class="tab active" data-tab="artists">Artists</div>
+    <div class="tab" data-tab="gallery">Gallery</div>
+    <div class="tab" data-tab="merch">Merch</div>
+    <div class="tab" data-tab="export">Export/Import</div>
     </div>
 
     <!-- Artists Tab -->
     <div class="tab-content active" id="artists">
-      <div class="section">
-        <div class="section-title">Manage Artists</div>
-        <div class="form-group">
-          <label>Artist Name</label>
-          <input type="text" id="artistName" placeholder="e.g., Helena">
-        </div>
-        <div class="form-group">
-          <label>Genre</label>
-          <input type="text" id="artistGenre" placeholder="e.g., Electronic Pop">
-        </div>
-        <div class="form-group">
-          <label>Bio</label>
-          <textarea id="artistBio" placeholder="Artist biography..."></textarea>
-        </div>
-        <div class="form-group">
-          <label>Hero Image URL</label>
-          <input type="url" id="artistHeroImage" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>Profile Image URL</label>
-          <input type="url" id="artistProfileImage" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>Tracks Count</label>
-          <input type="number" id="artistTracks" placeholder="24">
-        </div>
-        <div class="form-group">
-          <label>Followers</label>
-          <input type="text" id="artistFollowers" placeholder="12.5K">
-        </div>
-        <div class="form-group">
-          <label>URL Slug</label>
-          <input type="text" id="artistSlug" placeholder="helena">
-        </div>
-        <button class="btn" onclick="addArtist()">Add Artist</button>
-        <button class="btn btn-secondary" onclick="clearArtistForm()">Clear</button>
-      </div>
-      <div class="item-list" id="artistList"></div>
+    <div class="section">
+    <div class="section-title">Manage Artists</div>
+    <div class="form-group">
+    <label>Artist Name</label>
+    <input type="text" id="artistName" placeholder="e.g., Helena">
+    </div>
+    <div class="form-group">
+    <label>Genre</label>
+    <input type="text" id="artistGenre" placeholder="e.g., Electronic Pop">
+    </div>
+    <div class="form-group">
+    <label>Bio</label>
+    <textarea id="artistBio" placeholder="Artist biography..."></textarea>
+    </div>
+    <div class="form-group">
+    <label>Hero Image URL</label>
+    <input type="url" id="artistHeroImage" placeholder="https://...">
+    </div>
+    <div class="form-group">
+    <label>Profile Image URL</label>
+    <input type="url" id="artistProfileImage" placeholder="https://...">
+    </div>
+    <div class="form-group">
+    <label>Tracks Count</label>
+    <input type="number" id="artistTracks" placeholder="24">
+    </div>
+    <div class="form-group">
+    <label>Followers</label>
+    <input type="text" id="artistFollowers" placeholder="12.5K">
+    </div>
+    <div class="form-group">
+    <label>URL Slug</label>
+    <input type="text" id="artistSlug" placeholder="helena">
+    </div>
+    <button class="btn" onclick="addArtist()">Add Artist</button>
+    <button class="btn btn-secondary" onclick="clearArtistForm()">Clear</button>
+    </div>
+
+    <div class="item-list" id="artistList"></div>
     </div>
 
     <!-- Gallery Tab -->
     <div class="tab-content" id="gallery">
-      <div class="section">
-        <div class="section-title">Manage Gallery Items</div>
-        <div class="form-group">
-          <label>Title</label>
-          <input type="text" id="galleryTitle" placeholder="e.g., Helena Live Performance">
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="galleryDescription" placeholder="Description of the image..."></textarea>
-        </div>
-        <div class="form-group">
-          <label>Thumbnail Image URL</label>
-          <input type="url" id="galleryThumb" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>Full Image URL</label>
-          <input type="url" id="galleryFull" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>Artist</label>
-          <select id="galleryArtistSelect">
-            <option value="">— Select artist —</option>
-          </select>
-          <small style="display:block; margin-top:6px;">Stores the selected artist's slug with this item.</small>
-        </div>
-        <button class="btn" onclick="addGalleryItem()">Add Gallery Item</button>
-        <button class="btn btn-secondary" onclick="clearGalleryForm()">Clear</button>
-      </div>
-      <div class="item-list" id="galleryList"></div>
+    <div class="section">
+    <div class="section-title">Manage Gallery Items</div>
+    <div class="form-group">
+    <label>Title</label>
+    <input type="text" id="galleryTitle" placeholder="e.g., Helena Live Performance">
+    </div>
+    <div class="form-group">
+    <label>Description</label>
+    <textarea id="galleryDescription" placeholder="Description of the image..."></textarea>
+    </div>
+    <div class="form-group">
+    <label>Thumbnail Image URL</label>
+    <input type="url" id="galleryThumb" placeholder="https://...">
+    </div>
+    <div class="form-group">
+    <label>Full Image URL</label>
+    <input type="url" id="galleryFull" placeholder="https://...">
+    </div>
+    <div class="form-group">
+    <label>Artist</label>
+    <select id="galleryArtistSelect">
+    <option value="">— Select artist —</option>
+    </select>
+    <small style="display:block; margin-top:6px;">Stores the selected artist's slug with this item.</small>
+    </div>
+    <button class="btn" onclick="addGalleryItem()">Add Gallery Item</button>
+    <button class="btn btn-secondary" onclick="clearGalleryForm()">Clear</button>
+    </div>
+
+    <div class="item-list" id="galleryList"></div>
     </div>
 
     <!-- Merch Tab -->
     <div class="tab-content" id="merch">
-      <div class="section">
-        <div class="section-title">Manage Merch Products</div>
-        <div class="form-group">
-          <label>Product Name</label>
-          <input type="text" id="merchName" placeholder="e.g., Helena Signature Tee">
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="merchDescription" placeholder="Product description..."></textarea>
-        </div>
-        <div class="form-group">
-          <label>Price</label>
-          <input type="text" id="merchPrice" placeholder="$29.99">
-        </div>
-        <div class="form-group">
-          <label>Product Image URL</label>
-          <input type="url" id="merchImage" placeholder="https://...">
-        </div>
-        <div class="form-group">
-          <label>Stripe Payment Link</label>
-          <input type="url" id="merchStripeLink" placeholder="https://buy.stripe.com/...">
-        </div>
-        <div class="form-group">
-          <label>Artist</label>
-          <select id="merchArtistSelect">
-            <option value="">— Select artist —</option>
-          </select>
-          <small style="display:block; margin-top:6px;">Stores the selected artist's slug with this product.</small>
-        </div>
-        <button class="btn" onclick="addMerchItem()">Add Product</button>
-        <button class="btn btn-secondary" onclick="clearMerchForm()">Clear</button>
-      </div>
-      <div class="item-list" id="merchList"></div>
+    <div class="section">
+    <div class="section-title">Manage Merch Products</div>
+    <div class="form-group">
+    <label>Product Name</label>
+    <input type="text" id="merchName" placeholder="e.g., Helena Signature Tee">
+    </div>
+    <div class="form-group">
+    <label>Description</label>
+    <textarea id="merchDescription" placeholder="Product description..."></textarea>
+    </div>
+    <div class="form-group">
+    <label>Price</label>
+    <input type="text" id="merchPrice" placeholder="$29.99">
+    </div>
+    <div class="form-group">
+    <label>Product Image URL</label>
+    <input type="url" id="merchImage" placeholder="https://...">
+    </div>
+    <div class="form-group">
+    <label>Stripe Payment Link</label>
+    <input type="url" id="merchStripeLink" placeholder="https://buy.stripe.com/...">
+    </div>
+    <div class="form-group">
+    <label>Artist</label>
+    <select id="merchArtistSelect">
+    <option value="">— Select artist —</option>
+    </select>
+    <small style="display:block; margin-top:6px;">Stores the selected artist's slug with this product.</small>
+    </div>
+    <button class="btn" onclick="addMerchItem()">Add Product</button>
+    <button class="btn btn-secondary" onclick="clearMerchForm()">Clear</button>
+    </div>
+
+    <div class="item-list" id="merchList"></div>
     </div>
 
     <!-- Export/Import Tab -->
     <div class="tab-content" id="export">
       <div class="section">
-        <div class="section-title">Export Data</div>
-        <p style="color: var(--muted); margin-bottom: 15px;">Copy this JSON data to back up your content or transfer it to another browser.</p>
-        <button class="btn" onclick="exportData()">Generate Export</button>
+        <div class="section-title">Export / Publish</div>
+        <p style="color: var(--muted); margin-bottom: 15px;">
+          Export a JSON backup or publish directly to the site’s content.json via the secure API.
+        </p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+          <button class="btn" onclick="exportData()">Generate Export</button>
+          <button class="btn" onclick="publishData()">Publish</button>
+        </div>
+		<small id="lastPublished" style="display:block; margin-bottom:8px; color: var(--muted);">
+  Last published: — 
+</small>
         <div class="code-block" id="exportData" style="display:none;"></div>
+        <small>Tip: Your API key is stored locally after first use for faster publishing.</small>
       </div>
+
       <div class="section">
         <div class="section-title">Import Data</div>
-        <p style="color: var(--muted); margin-bottom: 15px;">Paste your exported JSON data below to restore your content.</p>
+        <p style="color: var(--muted); margin-bottom: 15px;">
+          Paste your exported JSON data below to restore your content.
+        </p>
         <textarea id="importData" placeholder="Paste JSON data here..." style="min-height: 150px;"></textarea>
         <button class="btn" onclick="importData()">Import Data</button>
         <button class="btn btn-danger" onclick="clearAllData()">Clear All Data</button>
       </div>
     </div>
-  </div>
+    </div>
 
-  <script>
+    <script>
     // Initialize data structure
     function initData() {
-      if (!localStorage.getItem('aetherwave_artists')) localStorage.setItem('aetherwave_artists', JSON.stringify([]));
-      if (!localStorage.getItem('aetherwave_gallery')) localStorage.setItem('aetherwave_gallery', JSON.stringify([]));
-      if (!localStorage.getItem('aetherwave_merch')) localStorage.setItem('aetherwave_merch', JSON.stringify([]));
+      if (!localStorage.getItem('aetherwave_artists')) {
+        localStorage.setItem('aetherwave_artists', JSON.stringify([]));
+      }
+      if (!localStorage.getItem('aetherwave_gallery')) {
+        localStorage.setItem('aetherwave_gallery', JSON.stringify([]));
+      }
+      if (!localStorage.getItem('aetherwave_merch')) {
+        localStorage.setItem('aetherwave_merch', JSON.stringify([]));
+      }
     }
 
-    // Tabs
+    // Populate artist dropdowns
+    function populateArtistDropdowns() {
+      const artists = JSON.parse(localStorage.getItem('aetherwave_artists') || '[]');
+      const options = ['<option value="">— Select artist —</option>']
+        .concat(artists.map(a => `<option value="${(a.slug||'').trim()}">${(a.name||'Untitled')} (${(a.slug||'')})</option>`))
+        .join('');
+
+      const gSel = document.getElementById('galleryArtistSelect');
+      const mSel = document.getElementById('merchArtistSelect');
+      if (gSel) gSel.innerHTML = options;
+      if (mSel) mSel.innerHTML = options;
+    }
+
+    // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', function() {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -216,22 +465,7 @@
       });
     });
 
-    // Helpers
-    function getArtistsSafe() {
-      try { return JSON.parse(localStorage.getItem('aetherwave_artists') || '[]'); } catch { return []; }
-    }
-    function populateArtistDropdowns() {
-      const artists = getArtistsSafe();
-      const options = ['<option value="">— Select artist —</option>']
-        .concat(artists.map(a => `<option value="${(a.slug||'').trim()}">${(a.name||'Untitled')} (${(a.slug||'')})</option>`))
-        .join('');
-      const gSel = document.getElementById('galleryArtistSelect');
-      const mSel = document.getElementById('merchArtistSelect');
-      if (gSel) gSel.innerHTML = options;
-      if (mSel) mSel.innerHTML = options;
-    }
-
-    // Artists
+    // Artists Management
     function addArtist() {
       const artist = {
         id: Date.now(),
@@ -244,14 +478,16 @@
         followers: document.getElementById('artistFollowers').value,
         slug: document.getElementById('artistSlug').value
       };
+
       const artists = JSON.parse(localStorage.getItem('aetherwave_artists'));
       artists.push(artist);
       localStorage.setItem('aetherwave_artists', JSON.stringify(artists));
+
       clearArtistForm();
       loadArtists();
-      populateArtistDropdowns();
       showSuccess();
     }
+
     function clearArtistForm() {
       document.getElementById('artistName').value = '';
       document.getElementById('artistGenre').value = '';
@@ -262,56 +498,64 @@
       document.getElementById('artistFollowers').value = '';
       document.getElementById('artistSlug').value = '';
     }
+
     function deleteArtist(id) {
       if (confirm('Are you sure you want to delete this artist?')) {
         let artists = JSON.parse(localStorage.getItem('aetherwave_artists'));
         artists = artists.filter(a => a.id !== id);
         localStorage.setItem('aetherwave_artists', JSON.stringify(artists));
         loadArtists();
-        populateArtistDropdowns();
         showSuccess();
       }
     }
-   function loadArtists() {
-  const artists = JSON.parse(localStorage.getItem('aetherwave_artists'));
-  const list = document.getElementById('artistList');
-  list.innerHTML = '';
-  artists.forEach(artist => {
-    list.innerHTML += `
-      <div class="item">
-        <div class="item-header">
-          <div class="item-title">${artist.name} (${artist.genre})</div>
-          <div class="item-actions">
-            <button class="btn btn-small btn-danger" onclick="deleteArtist(${artist.id})">Delete</button>
-          </div>
-        </div>
-        <div style="color: var(--muted); font-size: 0.9rem;">
-          Slug: /${artist.slug}/ | Tracks: ${artist.tracks} | Followers: ${artist.followers}
+
+    function loadArtists() {
+      const artists = JSON.parse(localStorage.getItem('aetherwave_artists'));
+      const list = document.getElementById('artistList');
+      list.innerHTML = '';
+
+      artists.forEach(artist => {
+        list.innerHTML += `
+    <div class="item">
+      <div class="item-header">
+        <div class="item-title">${artist.name} (${artist.genre})</div>
+        <div class="item-actions">
+          <button class="btn btn-small btn-danger" onclick="deleteArtist(${artist.id})">Delete</button>
         </div>
       </div>
+      <div style="color: var(--muted); font-size: 0.9rem;">
+        Slug: /${artist.slug}/ | Tracks: ${artist.tracks} | Followers: ${artist.followers}
+      </div>
+    </div>
     `;
-  });
-  populateArtistDropdowns();
-}
+      });
 
-    // Gallery
+      // Refresh dropdowns whenever artists change
+      populateArtistDropdowns();
+    }
+
+    // Gallery Management
     function addGalleryItem() {
       const artistSlug = (document.getElementById('galleryArtistSelect')?.value || '').trim();
+
       const item = {
         id: Date.now(),
         title: document.getElementById('galleryTitle').value,
         description: document.getElementById('galleryDescription').value,
         thumb: document.getElementById('galleryThumb').value,
         full: document.getElementById('galleryFull').value,
-        artistSlug
+        artistSlug: artistSlug
       };
+
       const gallery = JSON.parse(localStorage.getItem('aetherwave_gallery'));
       gallery.push(item);
       localStorage.setItem('aetherwave_gallery', JSON.stringify(gallery));
+
       clearGalleryForm();
       loadGallery();
       showSuccess();
     }
+
     function clearGalleryForm() {
       document.getElementById('galleryTitle').value = '';
       document.getElementById('galleryDescription').value = '';
@@ -320,6 +564,7 @@
       const gSel = document.getElementById('galleryArtistSelect');
       if (gSel) gSel.value = '';
     }
+
     function deleteGalleryItem(id) {
       if (confirm('Are you sure you want to delete this gallery item?')) {
         let gallery = JSON.parse(localStorage.getItem('aetherwave_gallery'));
@@ -329,31 +574,34 @@
         showSuccess();
       }
     }
+
     function loadGallery() {
       const gallery = JSON.parse(localStorage.getItem('aetherwave_gallery'));
       const list = document.getElementById('galleryList');
       list.innerHTML = '';
+
       gallery.forEach(item => {
         list.innerHTML += `
-          <div class="item">
-            <div class="item-header">
-              <div class="item-title">${item.title}</div>
-              <div class="item-actions">
-                <button class="btn btn-small btn-danger" onclick="deleteGalleryItem(${item.id})">Delete</button>
-              </div>
-            </div>
-            <div style="color: var(--muted); font-size: 0.9rem;">
-              ${item.description}
-              ${item.artistSlug ? `<div style="margin-top:6px;">Artist: <strong>${item.artistSlug}</strong></div>` : ''}
-            </div>
-          </div>
-        `;
+    <div class="item">
+      <div class="item-header">
+        <div class="item-title">${item.title}</div>
+        <div class="item-actions">
+          <button class="btn btn-small btn-danger" onclick="deleteGalleryItem(${item.id})">Delete</button>
+        </div>
+      </div>
+      <div style="color: var(--muted); font-size: 0.9rem;">
+        ${item.description}
+        ${item.artistSlug ? `<div style="margin-top:6px;">Artist: <strong>${item.artistSlug}</strong></div>` : ''}
+      </div>
+    </div>
+    `;
       });
     }
 
-    // Merch
+    // Merch Management
     function addMerchItem() {
       const artistSlug = (document.getElementById('merchArtistSelect')?.value || '').trim();
+
       const item = {
         id: Date.now(),
         name: document.getElementById('merchName').value,
@@ -361,15 +609,18 @@
         price: document.getElementById('merchPrice').value,
         image: document.getElementById('merchImage').value,
         stripeLink: document.getElementById('merchStripeLink').value,
-        artistSlug
+        artistSlug: artistSlug
       };
+
       const merch = JSON.parse(localStorage.getItem('aetherwave_merch'));
       merch.push(item);
       localStorage.setItem('aetherwave_merch', JSON.stringify(merch));
+
       clearMerchForm();
       loadMerch();
       showSuccess();
     }
+
     function clearMerchForm() {
       document.getElementById('merchName').value = '';
       document.getElementById('merchDescription').value = '';
@@ -379,6 +630,7 @@
       const mSel = document.getElementById('merchArtistSelect');
       if (mSel) mSel.value = '';
     }
+
     function deleteMerchItem(id) {
       if (confirm('Are you sure you want to delete this product?')) {
         let merch = JSON.parse(localStorage.getItem('aetherwave_merch'));
@@ -388,25 +640,27 @@
         showSuccess();
       }
     }
+
     function loadMerch() {
       const merch = JSON.parse(localStorage.getItem('aetherwave_merch'));
       const list = document.getElementById('merchList');
       list.innerHTML = '';
+
       merch.forEach(item => {
         list.innerHTML += `
-          <div class="item">
-            <div class="item-header">
-              <div class="item-title">${item.name} - ${item.price}</div>
-              <div class="item-actions">
-                <button class="btn btn-small btn-danger" onclick="deleteMerchItem(${item.id})">Delete</button>
-              </div>
-            </div>
-            <div style="color: var(--muted); font-size: 0.9rem;">
-              ${item.description}
-              ${item.artistSlug ? `<div style="margin-top:6px;">Artist: <strong>${item.artistSlug}</strong></div>` : ''}
-            </div>
-          </div>
-        `;
+    <div class="item">
+      <div class="item-header">
+        <div class="item-title">${item.name} - ${item.price}</div>
+        <div class="item-actions">
+          <button class="btn btn-small btn-danger" onclick="deleteMerchItem(${item.id})">Delete</button>
+        </div>
+      </div>
+      <div style="color: var(--muted); font-size: 0.9rem;">
+        ${item.description}
+        ${item.artistSlug ? `<div style="margin-top:6px;">Artist: <strong>${item.artistSlug}</strong></div>` : ''}
+      </div>
+    </div>
+    `;
       });
     }
 
@@ -421,13 +675,16 @@
       exportBlock.textContent = JSON.stringify(data, null, 2);
       exportBlock.style.display = 'block';
     }
+
     function importData() {
       try {
         const data = JSON.parse(document.getElementById('importData').value);
         localStorage.setItem('aetherwave_artists', JSON.stringify(data.artists || []));
         localStorage.setItem('aetherwave_gallery', JSON.stringify(data.gallery || []));
         localStorage.setItem('aetherwave_merch', JSON.stringify(data.merch || []));
-        loadArtists(); loadGallery(); loadMerch();
+        loadArtists();
+        loadGallery();
+        loadMerch();
         populateArtistDropdowns();
         document.getElementById('importData').value = '';
         showSuccess();
@@ -435,29 +692,97 @@
         alert('Invalid JSON data. Please check your input.');
       }
     }
+
     function clearAllData() {
       if (confirm('Are you sure you want to delete ALL data? This cannot be undone!')) {
         localStorage.removeItem('aetherwave_artists');
         localStorage.removeItem('aetherwave_gallery');
         localStorage.removeItem('aetherwave_merch');
         initData();
-        loadArtists(); loadGallery(); loadMerch();
+        loadArtists();
+        loadGallery();
+        loadMerch();
         populateArtistDropdowns();
         showSuccess();
       }
     }
+
     function showSuccess() {
       const msg = document.getElementById('successMessage');
       msg.style.display = 'block';
-      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+      setTimeout(() => {
+        msg.style.display = 'none';
+      }, 3000);
     }
 
-    // Initialize
+    // NEW: Publish function
+    async function publishData() {
+      const existing = localStorage.getItem('publish_api_key');
+      const apiKey = existing || prompt('Enter your Publish API Key:');
+      if (!apiKey) {
+        alert('Missing API key.');
+        return;
+      }
+
+      const artists = JSON.parse(localStorage.getItem('aetherwave_artists') || '[]');
+      const gallery = JSON.parse(localStorage.getItem('aetherwave_gallery') || '[]');
+      const merch  = JSON.parse(localStorage.getItem('aetherwave_merch')  || '[]');
+
+      if (!Array.isArray(artists)) {
+        alert('Artists data invalid. Please check your admin editor.');
+        return;
+      }
+      const invalid = artists.find(a => !a || typeof a.slug !== 'string' || !a.slug.trim());
+      if (invalid) {
+        alert('Each artist must include a non-empty slug.');
+        return;
+      }
+
+      try {
+        const res = await fetch(window.location.origin + '/api/virtual-artists/content', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+          },
+          body: JSON.stringify({
+            artists,
+            gallery,
+            merch,
+            meta: { source: 'admin-panel', publishedBy: 'admin' }
+          })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
+
+        localStorage.setItem('publish_api_key', apiKey);
+        alert('Published successfully!');
+        console.log('Published to:', data.path);
+
+        // Optional: surface a small status in export block
+        const exportBlock = document.getElementById('exportData');
+        if (exportBlock) {
+          exportBlock.textContent = JSON.stringify(
+            { updatedAt: new Date().toISOString(), artistsCount: artists.length },
+            null,
+            2
+          );
+          exportBlock.style.display = 'block';
+        }
+      } catch (e) {
+        console.error(e);
+        alert(`Publish failed: ${e.message}`);
+      }
+    }
+
+    // Initialize on load
     initData();
     loadArtists();
     loadGallery();
     loadMerch();
     populateArtistDropdowns();
-  </script>
+    </script>
 </body>
 </html>

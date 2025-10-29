@@ -6,7 +6,7 @@
   <title>Artist - AetherWave Studio</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
-    :root { --bg1:#0a0a0a; --bg2:#1a1a2e; --bg3:#16213e; --cyan:#00d4ff; --violet:#7b2ff7; --magenta:#f72585; --text:#ffff; --muted:#a0a0a0; --card:#ffff0d; --line:#ffff1a; }
+    :root { --bg1:#0a0a0a; --bg2:#1a1a2e; --bg3:#16213e; --cyan:#00d4ff; --violet:#7b2ff7; --magenta:#f72585; --text:#ffffff; --muted:#a0a0a0; --card:#1a1a2e; --line:#333355; }
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',sans-serif;color:var(--text);background:radial-gradient(1200px 800px at 80% -10%,#7b2ff722 0%,transparent 60%),radial-gradient(1000px 600px at -10% 20%,#00d4ff22 0%,transparent 60%),linear-gradient(135deg,var(--bg1),var(--bg2) 50%,var(--bg3));min-height:100vh;overflow-x:hidden}
     a{color:inherit;text-decoration:none}
@@ -48,7 +48,7 @@
         <div class="logo">AETHERWAVE STUDIO</div>
         <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
       </div>
-      <a class="back-link" href="/"><span aria-hidden="true">←</span> Back to Home</a>
+      <a class="back-link" href="/virtual-artists/"><span aria-hidden="true">←</span> Back</a>
     </header>
 
     <div id="artistContent"></div>
@@ -61,30 +61,41 @@
 
     function escapeHtml(str){ return String(str ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
     function getSlugFromQuery(){ return new URLSearchParams(location.search).get('slug')?.trim().toLowerCase() || ''; }
-    function getDirSlug(){ const parts = location.pathname.split('/').filter(Boolean); return parts.length>=1 ? parts[parts.length-1]==='index.html' && parts.length>=2 ? parts[parts.length-2].toLowerCase() : parts[parts.length-1].toLowerCase() : ''; }
+    function getDirSlug(){ const parts = location.pathname.split('/').filter(Boolean); return parts.length>=1 ? (parts[parts.length-1]==='index.html' && parts.length>=2 ? parts[parts.length-2].toLowerCase() : parts[parts.length-1].toLowerCase()) : ''; }
     function currentSlug(){ const q=getSlugFromQuery(); if(q && !q.endsWith('.html')) return q; return getDirSlug(); }
 
-    function getArtists(){ try{ return JSON.parse(localStorage.getItem('aetherwave_artists')||'[]'); } catch { return []; } }
+    async function loadData() {
+      try {
+        const res = await fetch('/virtual-artists/data/content.json', { cache: 'no-cache' });
+        if (!res.ok) throw new Error('no content.json');
+        return await res.json();
+      } catch {
+        return {
+          artists: JSON.parse(localStorage.getItem('aetherwave_artists') || '[]'),
+          gallery: JSON.parse(localStorage.getItem('aetherwave_gallery') || '[]'),
+          merch: JSON.parse(localStorage.getItem('aetherwave_merch') || '[]')
+        };
+      }
+    }
 
-    function renderArtist(slug){
-      const artists=getArtists();
-      const artist=artists.find(a => (a.slug||'').toLowerCase()===slug);
-      const content=document.getElementById('artistContent');
+    function renderArtistFromData(data, slug){
+      const artists = Array.isArray(data?.artists) ? data.artists : [];
+      const artist = artists.find(a => (a.slug||'').toLowerCase() === slug);
+      const content = document.getElementById('artistContent');
       if(!content) return;
 
       if(!artist){
-        content.innerHTML = `<div class="empty-state"><h2>Artist Not Found</h2><p>No artist with slug "<strong>${escapeHtml(slug)}</strong>" exists. <a href="/admin/">Add one in the admin panel</a>.</p></div>`;
+        content.innerHTML = `<div class="empty-state"><h2>Artist Not Found</h2><p>No artist with slug "<strong>${escapeHtml(slug)}</strong>" exists.</p></div>`;
         document.title = `Artist Not Found – AetherWave Studio`;
         return;
       }
 
-      const name=escapeHtml(artist.name || 'Untitled Artist');
-      const genre=escapeHtml(artist.genre || 'Unknown Genre');
-      const bio=escapeHtml(artist.bio || 'No bio available.');
-      const heroImage=(artist.heroImage||'').trim() || 'https://placehold.co/1200x400/667eea/ffff/png?text=Hero+Image';
-      const profileImage=(artist.profileImage||'').trim() || 'https://placehold.co/400x400/667eea/ffff/png?text=Profile';
-      const tracks=escapeHtml((artist.tracks||'0').toString());
-      const followers=escapeHtml((artist.followers||'0').toString());
+      const name = escapeHtml(artist.name || 'Untitled Artist');
+      const genre = escapeHtml(artist.genre || 'Unknown Genre');
+      const bio = escapeHtml(artist.bio || 'No bio available.');
+      const heroImage = (artist.heroImage||'').trim() || 'https://placehold.co/1200x400/667eea/ffff/png?text=Hero+Image';
+      const tracks = escapeHtml((artist.tracks||'0').toString());
+      const followers = escapeHtml((artist.followers||'0').toString());
 
       document.title = `${name} – AetherWave Studio`;
 
@@ -123,17 +134,11 @@
       `;
     }
 
-    (function init(){
+    (async function init(){
       const slug = currentSlug();
-      renderArtist(slug);
+      const data = await loadData();
+      renderArtistFromData(data, slug);
     })();
-
-    window.addEventListener('storage', (e)=>{
-      if(e.key==='aetherwave_artists'){
-        const slug=currentSlug();
-        renderArtist(slug);
-      }
-    });
   </script>
 </body>
 </html>
