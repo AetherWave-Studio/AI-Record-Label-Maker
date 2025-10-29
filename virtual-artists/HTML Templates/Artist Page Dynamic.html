@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title id="pageTitle">Artist — AetherWave Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#0a0a0a; --bg2:#1a1a2e; --bg3:#16213e;
+      --cyan:#00d4ff; --violet:#7b2ff7; --magenta:#f72585;
+      --text:#ffffff; --muted:#a0a0a0; --card:#ffffff0d; --line:#ffffff1a;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family:'Inter',sans-serif;color:var(--text);
+      background: radial-gradient(1200px 800px at 80% -10%, #7b2ff722 0%, transparent 60%), 
+                  radial-gradient(1000px 600px at -10% 20%, #00d4ff22 0%, transparent 60%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3));
+      overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0 8px;
+      border-bottom:1px solid var(--line);
+    }
+    .brand{display:flex;flex-direction:column}
+    .logo{
+      font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:1.2rem;
+      background:linear-gradient(135deg,var(--cyan),var(--violet),var(--magenta));
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .tagline{font-size:.75rem;color:var(--muted);letter-spacing:2px}
+    .back-link{font-size:.85rem;opacity:.9;padding:10px 14px;border-radius:10px;border:1px solid var(--line)}
+    .back-link:hover{border-color:#00d4ff80}
+    .hero{
+      display:grid;grid-template-columns:1.1fr .9fr;gap:28px;align-items:stretch;margin:28px 0 18px;
+    }
+    .hero-card{
+      position:relative;overflow:hidden;border-radius:20px;border:1px solid var(--line);
+      background:linear-gradient(145deg, #ffffff0d, #ffffff05);
+      min-height:360px;
+    }
+    .hero-card::before{
+      content:'';position:absolute;inset:-20% -20% auto -20%;height:60%;
+      background:radial-gradient(closest-side, #00d4ff33, transparent);
+      transform:translateY(-10%);filter:blur(20px);
+    }
+    .hero-media{
+      position:absolute;inset:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);opacity:.35;
+    }
+    .hero-media img{
+      width:100%;height:100%;object-fit:cover;
+    }
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%, #000000aa)}
+    .hero-content{
+      position:absolute;left:24px;right:24px;bottom:24px;z-index:2;
+    }
+    .artist-name{
+      font-family:'Orbitron',sans-serif;font-size:2.2rem;margin-bottom:6px;color:var(--cyan);letter-spacing:1px
+    }
+    .artist-genre{color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-size:.85rem}
+    .cta-row{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap}
+    .btn{
+      padding:10px 16px;border-radius:999px;font-weight:600;font-size:.9rem;border:1px solid var(--line);
+      background:linear-gradient(135deg,#00d4ff33,#7b2ff733)
+    }
+    .btn:hover{border-color:#00d4ff80;background:linear-gradient(135deg,#7b2ff755,#f7258555)}
+    .secondary{background:#ffffff08}
+    .panel{
+      border-radius:20px;border:1px solid var(--line);background:linear-gradient(145deg, #ffffff0d, #ffffff05);
+      padding:20px;height:100%;
+    }
+    .section-title{
+      font-family:'Orbitron',sans-serif;font-size:1rem;color:#fff;margin-bottom:12px;letter-spacing:1px
+    }
+    .bio{color:#d0d0d0;line-height:1.7;font-size:.98rem}
+    .stats{display:flex;gap:18px;margin-top:14px;border-top:1px solid var(--line);padding-top:14px;flex-wrap:wrap}
+    .stat{display:flex;flex-direction:column}
+    .stat .label{color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-size:.72rem}
+    .stat .value{color:var(--magenta);font-weight:700;font-size:1.05rem}
+    .player{
+      margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:12px;background:#ffffff05
+    }
+    .track{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px dashed #ffffff1a}
+    .track:last-child{border-bottom:none}
+    .track-left{display:flex;align-items:center;gap:10px}
+    .play{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line);cursor:pointer}
+    .play:hover{border-color:#00d4ff80}
+    .track-meta{display:flex;flex-direction:column}
+    .t-title{font-weight:600}
+    .t-sub{font-size:.8rem;color:var(--muted)}
+    .track-time{font-size:.85rem;color:#ccc}
+    .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .thumb{aspect-ratio:1.4/1;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#ffffff10}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .empty-state{
+      text-align:center;padding:40px 20px;color:var(--muted);
+    }
+    .empty-state h2{
+      font-family:'Orbitron',sans-serif;color:var(--cyan);margin-bottom:10px;
+    }
+    .empty-state a{color:var(--cyan);text-decoration:underline}
+    footer{margin:28px 0 12px;color:var(--muted);font-size:.85rem;text-align:center}
+    @media (max-width: 900px){
+      .hero{grid-template-columns:1fr}
+      .hero-card{min-height:320px}
+      .gallery{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width: 560px){
+      .artist-name{font-size:1.8rem}
+      .gallery{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">AETHERWAVE STUDIO</div>
+        <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
+      </div>
+      <a class="back-link" href="/"><span aria-hidden="true">←</span> Back to Artists</a>
+    </header>
+
+    <main class="hero" id="artistContent">
+      <!-- Content will be loaded dynamically -->
+    </main>
+
+    <footer>
+      © <span id="year"></span> AetherWave Studio
+    </footer>
+  </div>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Get artist slug from URL path
+    function getArtistSlug() {
+      const path = window.location.pathname;
+      const parts = path.split('/').filter(p => p);
+      return parts[parts.length - 1] || parts[parts.length - 2] || '';
+    }
+
+    // Load artist data
+    function loadArtist() {
+      const slug = getArtistSlug();
+      const artists = JSON.parse(localStorage.getItem('aetherwave_artists') || '[]');
+      const artist = artists.find(a => a.slug === slug);
+
+      const content = document.getElementById('artistContent');
+
+      if (!artist) {
+        content.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <h2>Artist Not Found</h2>
+            <p>This artist doesn't exist yet. Add them through the <a href="/admin/">admin panel</a>.</p>
+            <p style="margin-top:10px;"><a href="/" style="color:var(--cyan);">← Back to Artists</a></p>
+          </div>
+        `;
+        return;
+      }
+
+      // Update page title
+      document.getElementById('pageTitle').textContent = `${artist.name} — Virtual Artist | AetherWave Studio`;
+
+      // Build hero image
+      const heroImageContent = artist.heroImage 
+        ? `<img src="${artist.heroImage}" alt="${artist.name}" onerror="this.style.display='none';">`
+        : '';
+
+      content.innerHTML = `
+        <!-- Hero card -->
+        <section class="hero-card" aria-label="${artist.name} hero">
+          <div class="hero-media" aria-hidden="true">${heroImageContent}</div>
+          <div class="hero-overlay" aria-hidden="true"></div>
+          <div class="hero-content">
+            <h1 class="artist-name">${artist.name}</h1>
+            <div class="artist-genre">${artist.genre}</div>
+            <div class="cta-row">
+              <a class="btn" href="#tracks">Listen</a>
+              <a class="btn secondary" href="#bio">About</a>
+              <a class="btn secondary" href="#gallery">Visuals</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- Right-side panel -->
+        <aside class="panel">
+          <h2 id="bio" class="section-title">About ${artist.name}</h2>
+          <p class="bio">${artist.bio}</p>
+          <div class="stats">
+            <div class="stat"><span class="label">Tracks</span><span class="value">${artist.tracks}</span></div>
+            <div class="stat"><span class="label">Followers</span><span class="value">${artist.followers}</span></div>
+          </div>
+
+          <div id="tracks" class="player" aria-label="Highlighted tracks">
+            <div class="track">
+              <div class="track-left">
+                <button class="play" aria-label="Play track">▶</button>
+                <div class="track-meta">
+                  <span class="t-title">Featured Track 1</span>
+                  <span class="t-sub">Single • 3:28</span>
+                </div>
+              </div>
+              <span class="track-time">3:28</span>
+            </div>
+            <div class="track">
+              <div class="track-left">
+                <button class="play" aria-label="Play track">▶</button>
+                <div class="track-meta">
+                  <span class="t-title">Featured Track 2</span>
+                  <span class="t-sub">EP • 4:02</span>
+                </div>
+              </div>
+              <span class="track-time">4:02</span>
+            </div>
+            <div class="track">
+              <div class="track-left">
+                <button class="play" aria-label="Play track">▶</button>
+                <div class="track-meta">
+                  <span class="t-title">Featured Track 3</span>
+                  <span class="t-sub">Single • 3:51</span>
+                </div>
+              </div>
+              <span class="track-time">3:51</span>
+            </div>
+          </div>
+
+          <div id="gallery" class="gallery" aria-label="Visual Gallery">
+            <div class="thumb" style="background:linear-gradient(135deg,#4facfe 0%, #00f2fe 100%)" title="${artist.name} Visual 1"></div>
+            <div class="thumb" style="background:linear-gradient(135deg,#fa709a 0%, #fee140 100%)" title="${artist.name} Visual 2"></div>
+            <div class="thumb" style="background:linear-gradient(135deg,#f093fb 0%, #f5576c 100%)" title="${artist.name} Visual 3"></div>
+          </div>
+        </aside>
+      `;
+
+      // Optional: wire up basic HTML5 audio if you later add files
+      let currentAudio;
+      document.querySelectorAll('.play').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const src = btn.dataset.audio;
+          if(!src){ 
+            alert('Audio file not configured yet. Add audio URLs via data-audio attribute.');
+            return; 
+          }
+          if(currentAudio){ currentAudio.pause(); currentAudio = null; }
+          const audio = new Audio(src);
+          currentAudio = audio;
+          audio.play();
+        });
+      });
+    }
+
+    // Load artist on page load
+    loadArtist();
+  </script>
+</body>
+</html>

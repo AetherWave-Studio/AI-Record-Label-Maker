@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Artist – AetherWave Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg1:#0a0a0a; --bg2:#1a1a2e; --bg3:#16213e;
+      --cyan:#00d4ff; --violet:#7b2ff7; --magenta:#f72585;
+      --text:#fff; --muted:#a0a0a0;
+      --card: rgba(255,255,255,0.08);
+      --border: rgba(255,255,255,0.15);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'Inter',sans-serif;color:var(--text);
+      background: radial-gradient(1200px 800px at 80% -10%, #7b2ff722 0%, transparent 60%),
+                  radial-gradient(1000px 600px at -10% 20%, #00d4ff22 0%, transparent 60%),
+                  linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3));
+      min-height:100vh; overflow-x:hidden;
+    }
+    a{color:inherit;text-decoration:none}
+
+    .container{max-width:1100px;margin:0 auto;padding:22px}
+
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      padding:14px 0;border-bottom:1px solid var(--border); margin-bottom:18px;
+    }
+    .brand{display:flex;flex-direction:column}
+    .logo{
+      font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:1.2rem;
+      background:linear-gradient(135deg,var(--cyan),var(--violet),var(--magenta));
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    }
+    .tagline{font-size:.75rem;color:var(--muted);letter-spacing:2px}
+    .back-link{
+      font-size:.85rem;opacity:.95;padding:10px 14px;border-radius:10px;border:1px solid var(--border);
+    }
+    .back-link:hover{border-color:#00d4ff80}
+
+    /* Hero */
+    .hero{
+      position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--border);
+      background:var(--card); min-height:280px; display:flex; align-items:flex-end;
+    }
+    .hero::before{
+      content:""; position:absolute; inset:0;
+      background-size:cover; background-position:center;
+      filter:brightness(.55) saturate(1.2);
+    }
+    .hero-overlay{
+      position:relative; z-index:1; width:100%;
+      padding:26px; display:flex; gap:18px; align-items:flex-end;
+      background: linear-gradient(0deg, rgba(0,0,0,.55), transparent 60%);
+    }
+    .pfp{
+      width:120px;height:120px;border-radius:14px;border:1px solid var(--border);
+      background:#222; background-size:cover;background-position:center; flex-shrink:0;
+      box-shadow:0 10px 30px rgba(0,212,255,.15);
+    }
+    .title-wrap{display:flex;flex-direction:column;gap:8px}
+    .artist-name{
+      font-family:'Orbitron',sans-serif; font-size:1.8rem; color:var(--cyan);
+      text-shadow:0 0 18px rgba(0,212,255,.25);
+    }
+    .genre{color:var(--muted); text-transform:uppercase; letter-spacing:2px; font-size:.85rem}
+
+    /* Content sections */
+    .grid{
+      display:grid; grid-template-columns: 2fr 1fr; gap:20px; margin-top:20px;
+    }
+    .card{
+      background: linear-gradient(145deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border:1px solid var(--border); border-radius:14px; padding:18px;
+    }
+    .section-title{
+      font-family:'Orbitron',sans-serif; color:var(--cyan); margin-bottom:12px; font-size:1.1rem;
+    }
+    .bio{color:#d8d8d8; line-height:1.7; font-size:1.02rem; white-space:pre-wrap}
+    .stats{display:flex; gap:18px; margin-top:8px; flex-wrap:wrap}
+    .stat{display:flex; flex-direction:column}
+    .stat .label{font-size:.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px}
+    .stat .value{font-weight:800; color:var(--magenta)}
+
+    .links{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .btn{
+      display:inline-block; padding:10px 14px; border-radius:10px; font-weight:700;
+      border:1px solid var(--border); transition:all .2s ease; font-size:.95rem;
+      background:linear-gradient(135deg,var(--cyan),var(--violet)); color:#000;
+    }
+    .btn:hover{transform:translateY(-2px); background:linear-gradient(135deg,var(--violet),var(--magenta))}
+    .btn.ghost{background:transparent; color:var(--text)}
+    .btn.ghost:hover{border-color:#00d4ff80}
+
+    /* Sub-grids */
+    .list{display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:14px}
+    .tile{
+      background: var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .tile:hover{transform:translateY(-3px); box-shadow: 0 14px 36px rgba(0,212,255,.18)}
+    .tile-img{width:100%; aspect-ratio: 16/10; object-fit:cover; display:block}
+    .tile-body{padding:12px}
+    .tile-title{font-weight:700; color:var(--cyan); margin-bottom:4px}
+    .tile-desc{color:var(--muted); font-size:.92rem}
+
+    footer{margin:36px 0 12px; color:var(--muted); font-size:.85rem; text-align:center}
+    @media (max-width: 900px){ .grid{grid-template-columns: 1fr; } .hero{min-height:220px} .pfp{width:96px;height:96px}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">AETHERWAVE STUDIO</div>
+        <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
+      </div>
+      <a class="back-link" href="/"><span aria-hidden="true">←</span> Home</a>
+    </header>
+
+    <section class="hero" id="hero">
+      <div class="hero-overlay">
+        <div class="pfp" id="pfp"></div>
+        <div class="title-wrap">
+          <div class="artist-name" id="name">Loading…</div>
+          <div class="genre" id="genre"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <div class="section-title">About</div>
+        <div class="bio" id="bio"></div>
+        <div class="stats">
+          <div class="stat"><span class="label">Tracks</span><span class="value" id="tracks">0</span></div>
+          <div class="stat"><span class="label">Followers</span><span class="value" id="followers">0</span></div>
+        </div>
+        <div class="links">
+          <a class="btn" href="/Gallery Dynamic.html">Gallery</a>
+          <a class="btn" href="/Merch Dynamic.html">Merch</a>
+          <a class="btn ghost" href="/">All Artists</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Highlights</div>
+        <div class="list" id="highlights">
+          <!-- Optional: show this artist’s gallery items or media -->
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    © <span id="year"></span> AetherWave Studio
+  </footer>
+
+  <script>
+    // Footer year
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Helpers
+    function escapeHtml(str){ return String(str ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+    function getPathSlug(){
+      // 1) Prefer query string ?slug=... for flexibility
+      const q = new URLSearchParams(location.search).get('slug');
+      if (q) return q.trim().toLowerCase();
+
+      // 2) Fallback: read from path /{slug}/
+      const parts = location.pathname.replace(/\/+$/,'').split('/').filter(Boolean);
+      // e.g., /helena/ -> ["helena"]; /artists/helena/ -> ["artists","helena"]
+      return (parts.pop() || '').toLowerCase();
+    }
+    function getArtists(){
+      try { return JSON.parse(localStorage.getItem('aetherwave_artists') || '[]'); } catch { return []; }
+    }
+    function getGallery(){ try { return JSON.parse(localStorage.getItem('aetherwave_gallery') || '[]'); } catch { return []; } }
+
+    function renderNotFound(slug){
+      document.getElementById('name').textContent = 'Artist Not Found';
+      document.getElementById('genre').textContent = slug ? `Slug: ${escapeHtml(slug)}` : '';
+      document.getElementById('bio').textContent = 'Please verify the URL or create this artist in the admin panel.';
+      // neutral visuals
+      document.getElementById('hero').style.setProperty('--hero','');
+      document.getElementById('pfp').style.backgroundImage = '';
+    }
+
+    function renderArtist(artist){
+      const hero = document.getElementById('hero');
+      const pfp = document.getElementById('pfp');
+      const nameEl = document.getElementById('name');
+      const genreEl = document.getElementById('genre');
+      const bioEl = document.getElementById('bio');
+      const tracksEl = document.getElementById('tracks');
+      const followersEl = document.getElementById('followers');
+
+      const heroUrl = (artist.heroImage || '').trim();
+      const pfpUrl  = (artist.profileImage || '').trim();
+
+      if (heroUrl) hero.style.setProperty('--bg', `url("${heroUrl}")`);
+      hero.style.setProperty('background','var(--card)');
+      hero.style.setProperty('position','relative');
+      // inject background via ::before
+      hero.style.setProperty('--hero-url', heroUrl);
+      hero.querySelector(':scope').style;
+
+      hero.style.setProperty('--x','0');
+
+      hero.style.setProperty('--y','0');
+
+      hero.style.setProperty('--scale','1');
+
+      // set ::before background via inline style
+      hero.style.setProperty('--hero-img', heroUrl);
+      hero.style.setProperty('--hero-gradient', 'linear-gradient(0deg, rgba(0,0,0,.55), transparent 60%)');
+      hero.style.cssText += `--heroImg: url("${heroUrl}");`;
+      hero.style.setProperty('--heroImg', `url("${heroUrl}")`);
+      // Fallback: set ::before background-image via direct style tag injection
+      const beforeCss = document.createElement('style');
+      beforeCss.textContent = `
+        .hero::before { background-image: ${heroUrl ? `url("${heroUrl}")` : 'linear-gradient(135deg,#667eea,#764ba2)'}; }
+      `;
+      document.head.appendChild(beforeCss);
+
+      if (pfpUrl) pfp.style.backgroundImage = `url("${pfpUrl}")`;
+
+      nameEl.textContent = artist.name || 'Untitled';
+      genreEl.textContent = (artist.genre || '').toUpperCase();
+      bioEl.textContent = artist.bio || '';
+      tracksEl.textContent = artist.tracks || '0';
+      followersEl.textContent = artist.followers || '0';
+    }
+
+    function renderHighlightsForArtist(artist){
+      // Optional: Show first 4 gallery items (no filtering by artist by default)
+      const list = document.getElementById('highlights');
+      const items = getGallery().slice(0,4);
+      if (!items.length) {
+        list.innerHTML = `<div class="tile" style="padding:14px;">No highlights yet. Add items in the <a href="/admin/" style="color:#00d4ff; text-decoration:underline;">Admin Panel</a>.</div>`;
+        return;
+      }
+      list.innerHTML = items.map(g => `
+        <div class="tile">
+          <img class="tile-img" src="${(g.thumb || g.full || '').trim() || 'https://placehold.co/640x400'}"
+               alt="${escapeHtml(g.title || 'Image')}"
+               onerror="this.src='https://placehold.co/640x400/667eea/ffff/png?text=Image'"/>
+          <div class="tile-body">
+            <div class="tile-title">${escapeHtml(g.title || 'Untitled')}</div>
+            <div class="tile-desc">${escapeHtml(g.description || '')}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    (function init(){
+      const slug = getPathSlug();
+      const artists = getArtists();
+      const artist = artists.find(a => (a.slug || '').toLowerCase() === slug);
+
+      if (!slug || !artist) {
+        renderNotFound(slug);
+        return;
+      }
+      renderArtist(artist);
+      renderHighlightsForArtist(artist);
+    })();
+
+    // Optional: live refresh if Admin changes artists
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'aetherwave_artists') location.reload();
+    });
+  </script>
+</body>
+</html>

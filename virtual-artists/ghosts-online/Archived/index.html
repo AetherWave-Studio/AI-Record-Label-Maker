@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherWave Studio | Synthwave Band</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(180deg, #0a0a1f 0%, #1a0a2e 50%, #2d1b3d 100%);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Animated Grid Background */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                linear-gradient(0deg, transparent 24%, rgba(255, 0, 255, 0.05) 25%, rgba(255, 0, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(255, 0, 255, 0.05) 75%, rgba(255, 0, 255, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            z-index: -1;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(50px); }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            background: rgba(10, 10, 31, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid #ff00ff;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #00ffff;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        nav a:hover {
+            color: #ff00ff;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px 60px;
+            position: relative;
+        }
+
+        .hero h1 {
+            font-size: 80px;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(255, 0, 255, 0.6);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px #ff00ff); }
+            to { filter: drop-shadow(0 0 40px #00ffff); }
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: #00ffff;
+            margin-bottom: 40px;
+            letter-spacing: 4px;
+        }
+
+        .video-container {
+            width: 80%;
+            max-width: 800px;
+            margin: 40px auto;
+            border: 3px solid #ff00ff;
+            box-shadow: 0 0 30px rgba(255, 0, 255, 0.6), 0 0 60px rgba(0, 255, 255, 0.4);
+            background: #000;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1a0a2e 0%, #2d1b3d 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #ff00ff;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 15px 40px;
+            margin: 10px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            color: #000;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 2px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.6);
+        }
+
+        /* Bio Section */
+        .bio-section {
+            padding: 80px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 60px;
+            background: linear-gradient(90deg, #ff00ff, #00ffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .band-members {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .member-card {
+            background: rgba(255, 0, 255, 0.1);
+            border: 2px solid #ff00ff;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+        }
+
+        .member-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.6), 0 0 60px rgba(0, 255, 255, 0.4);
+        }
+
+        .member-photo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #ff00ff, #00ffff);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #000;
+        }
+
+        .member-name {
+            font-size: 24px;
+            color: #00ffff;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .member-role {
+            font-size: 16px;
+            color: #ff00ff;
+            letter-spacing: 2px;
+        }
+
+        /* Media Section */
+        .media-section {
+            padding: 80px 50px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .media-item {
+            aspect-ratio: 1;
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.2), rgba(0, 255, 255, 0.2));
+            border: 2px solid #00ffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            color: #ff00ff;
+            transition: all 0.3s;
+        }
+
+        .media-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.6);
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px;
+            text-align: center;
+            background: rgba(10, 10, 31, 0.9);
+            border-top: 2px solid #ff00ff;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .social-links a {
+            color: #00ffff;
+            font-size: 30px;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            color: #ff00ff;
+            transform: scale(1.2);
+        }
+
+        footer p {
+            color: #00ffff;
+            font-size: 14px;
+            letter-spacing: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 48px; }
+            .hero p { font-size: 18px; }
+            nav { padding: 15px 20px; }
+            nav ul { gap: 15px; }
+            .bio-section, .media-section { padding: 40px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <nav>
+        <div class="logo">AETHERWAVE</div>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#bio">Bio</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="merch.html">Merch</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="home">
+        <h1>AETHERWAVE STUDIO</h1>
+        <p>AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</p>
+        
+        <div class="video-container">
+            <div class="video-placeholder">
+                <i class="fas fa-play-circle" style="font-size: 80px;"></i>
+                <!-- Replace with: <video controls><source src="your-video.mp4" type="video/mp4"></video> -->
+            </div>
+        </div>
+
+        <div>
+            <a href="gallery.html" class="cta-button">View Gallery</a>
+            <a href="merch.html" class="cta-button">Shop Merch</a>
+        </div>
+    </section>
+
+    <section class="media-section">
+        <h2 class="section-title">Latest Releases</h2>
+        <div class="media-grid">
+            <div class="media-item">
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="media-item">
+                <i class="fas fa-compact-disc"></i>
+            </div>
+            <div class="media-item">
+                <i class="fas fa-headphones"></i>
+            </div>
+        </div>
+    </section>
+
+    <section class="bio-section" id="bio">
+        <h2 class="section-title">The Band</h2>
+        <p style="text-align: center; color: #00ffff; font-size: 18px; line-height: 1.8; margin-bottom: 40px;">
+            AetherWave Studio emerged from the neon-lit streets of the digital underground, 
+            blending retro synthesizers with cutting-edge AI technology to create an immersive 
+            sonic experience that transcends time and space. Our mission is to bridge the gap 
+            between human emotion and artificial intelligence through the power of synthwave.
+        </p>
+
+        <div class="band-members">
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 class="member-name">Neon Pulse</h3>
+                <p class="member-role">Lead Synth / Vocals</p>
+            </div>
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 class="member-name">Cyber Echo</h3>
+                <p class="member-role">Bass / Production</p>
+            </div>
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 class="member-name">Retro Wave</h3>
+                <p class="member-role">Drums / Samples</p>
+            </div>
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h3 class="member-name">Digital Dream</h3>
+                <p class="member-role">Keys / AI Integration</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="social-links">
+            <a href="#"><i class="fab fa-spotify"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+        </div>
+        <p>© 2025 AetherWave Studio. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>

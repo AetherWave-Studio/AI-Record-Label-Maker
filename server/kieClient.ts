@@ -215,14 +215,39 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
   const statusEndpoint = '/jobs/query';
 
   // Map our internal model names to KIE.ai's expected format
-  const kieModelMap: Record<string, string> = {
-    'sora2': 'sora-2-text-to-video',
-    'sora2_pro': 'sora-2-pro-text-to-video',
-    'sora2_pro_hd': 'sora-2-pro-hd-text-to-video',
-    'veo3_fast': 'veo-3-fast-text-to-video',
+  // Different models have different naming conventions:
+  // - SORA 2: Uses "text-to-video" or "image-to-video"
+  // - VEO 3: Uses "TEXT_2_VIDEO", "FIRST_AND_LAST_FRAMES_2_VIDEO", or "REFERENCE_2_VIDEO"
+
+  const kieModelBaseMap: Record<string, string> = {
+    'sora2': 'sora-2',
+    'sora2_pro': 'sora-2-pro',
+    'sora2_pro_hd': 'sora-2-pro-hd',
+    'veo3_fast': 'veo-3-fast',
   };
 
-  const kieModelName = kieModelMap[model] || model;
+  const modelBase = kieModelBaseMap[model] || model;
+  let kieModelName: string;
+
+  // Determine the correct model name based on model type and input
+  if (model.startsWith('veo')) {
+    // VEO 3 models use uppercase with underscores
+    const hasImageInput = input.image_url || input.imageUrl || input.first_frame_image;
+    if (!hasImageInput) {
+      kieModelName = `${modelBase}-TEXT_2_VIDEO`;
+    } else if (input.image_end !== undefined) {
+      // If image_end is specified, this is first/last frames mode
+      kieModelName = `${modelBase}-FIRST_AND_LAST_FRAMES_2_VIDEO`;
+    } else {
+      // Otherwise, it's reference mode
+      kieModelName = `${modelBase}-REFERENCE_2_VIDEO`;
+    }
+  } else {
+    // SORA 2 models use lowercase with hyphens
+    const hasImageInput = input.image_url || input.imageUrl || input.first_frame_image;
+    const modelSuffix = hasImageInput ? 'image-to-video' : 'text-to-video';
+    kieModelName = `${modelBase}-${modelSuffix}`;
+  }
 
   try {
     if (logs) {

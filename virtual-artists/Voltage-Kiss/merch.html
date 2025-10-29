@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Merch - AetherWave Studio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg1:#0a0a0a; --bg2:#1a1a2e; --bg3:#16213e; --cyan:#00d4ff; --violet:#7b2ff7; --magenta:#f72585; --text:#ffff; --muted:#a0a0a0; --card:#ffff0d; --line:#ffff1a; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;color:var(--text);background:radial-gradient(1200px 800px at 80% -10%,#7b2ff722 0%,transparent 60%),radial-gradient(1000px 600px at -10% 20%,#00d4ff22 0%,transparent 60%),linear-gradient(135deg,var(--bg1),var(--bg2) 50%,var(--bg3));min-height:100vh;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    .container{max-width:1200px;margin:0 auto;padding:24px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0 8px;border-bottom:1px solid var(--line);margin-bottom:28px}
+    .brand{display:flex;flex-direction:column}
+    .logo{font-family:'Orbitron',sans-serif;font-weight:900;letter-spacing:2px;font-size:1.2rem;background:linear-gradient(135deg,var(--cyan),var(--violet),var(--magenta));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    .tagline{font-size:.75rem;color:var(--muted);letter-spacing:2px}
+    .back-link{font-size:.85rem;opacity:.9;padding:10px 14px;border-radius:10px;border:1px solid var(--line)}
+    .back-link:hover{border-color:#00d4ff80}
+    .page-title{font-family:'Orbitron',sans-serif;font-size:2rem;text-align:center;margin-bottom:40px;color:var(--cyan)}
+    .product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:30px}
+    .product-card{background:var(--card);border-radius:15px;overflow:hidden;border:1px solid var(--line);transition:transform .3s ease,box-shadow .3s ease;display:flex;flex-direction:column}
+    .product-card:hover{transform:translateY(-5px);box-shadow:0 10px 20px rgba(123,47,247,.2)}
+    .product-image{width:100%;height:250px;object-fit:cover;display:block}
+    .product-info{padding:20px;flex-grow:1;display:flex;flex-direction:column}
+    .product-name{font-family:'Orbitron',sans-serif;font-size:1.3rem;margin-bottom:8px;color:var(--cyan)}
+    .product-description{font-size:.9rem;color:#d0d0d0;line-height:1.6;margin-bottom:15px;flex-grow:1}
+    .product-price{font-size:1.5rem;font-weight:700;color:var(--magenta);margin-bottom:20px}
+    .buy-button{display:block;width:100%;padding:12px 20px;background:linear-gradient(135deg,var(--cyan) 0%,var(--violet) 100%);border-radius:25px;font-size:1rem;font-weight:600;text-align:center;text-transform:uppercase;letter-spacing:1px;transition:all .3s ease;border:none;color:var(--text)}
+    .buy-button:hover{background:linear-gradient(135deg,var(--violet) 0%,var(--magenta) 100%);box-shadow:0 5px 15px rgba(247,37,133,.3)}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1 / -1}
+    .empty-state h2{font-family:'Orbitron',sans-serif;color:var(--cyan);margin-bottom:15px}
+    .empty-state a{color:var(--cyan);text-decoration:underline}
+    footer{margin:40px 0 12px;color:var(--muted);font-size:.85rem;text-align:center}
+    @media (max-width:768px){.page-title{font-size:1.5rem}.product-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">AETHERWAVE STUDIO</div>
+        <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
+      </div>
+      <a class="back-link" href="index.html"><span aria-hidden="true">←</span> Back to Artist</a>
+    </header>
+
+    <h1 class="page-title">Merch</h1>
+    <div class="product-grid" id="productGrid"></div>
+  </div>
+
+  <footer>© <span id="year"></span> AetherWave Studio</footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function escapeHtml(str){ return String(str ?? '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+    function getSlugFromQuery(){ return new URLSearchParams(location.search).get('slug')?.trim().toLowerCase() || ''; }
+    function getDirSlug(){ const parts = location.pathname.split('/').filter(Boolean); return parts.length>=2 ? parts[parts.length-2].toLowerCase() : ''; }
+    function currentSlug(){ const q=getSlugFromQuery(); if(q && !q.endsWith('.html')) return q; return getDirSlug(); }
+
+    function getArtists(){ try{ return JSON.parse(localStorage.getItem('aetherwave_artists')||'[]'); } catch { return []; } }
+    function getArtistName(slug){ const a=getArtists().find(x => (x.slug||'').toLowerCase()===slug); return a?.name || null; }
+
+    function setTitle(slug){
+      const name=getArtistName(slug);
+      document.title = name ? `Merch – ${name}` : `Merch – ${slug || 'Artist'}`;
+      const h1=document.querySelector('.page-title');
+      if(h1) h1.textContent = name ? `${name} – Merch` : `Merch`;
+    }
+
+    function getMerch(){ try{ return JSON.parse(localStorage.getItem('aetherwave_merch')||'[]'); } catch { return []; } }
+
+    function renderMerchForArtist(slug){
+      setTitle(slug);
+      const all=getMerch();
+      const products=all.filter(p => (p.artistSlug || '').toLowerCase() === slug);
+      const grid=document.getElementById('productGrid');
+      if(!grid) return;
+
+      if(!products.length){
+        grid.innerHTML = `<div class="empty-state"><h2>No Products Yet</h2><p>Add products for this artist in the <a href="/admin/">admin panel</a>.</p></div>`;
+        return;
+      }
+
+      grid.innerHTML='';
+      products.forEach(product=>{
+        const name=escapeHtml(product.name || 'Product');
+        const description=escapeHtml(product.description || '');
+        const price=escapeHtml((product.price || '').toString());
+        const image=(product.image || '').trim() || 'https://placehold.co/600x400/667eea/ffff/png?text=Product+Image';
+        const stripeLink=(product.stripeLink || '').trim();
+
+        const card=document.createElement('div');
+        card.className='product-card';
+        card.innerHTML = `
+          <img src="${image}" alt="${name}" class="product-image" onerror="this.src='https://placehold.co/600x400/667eea/ffff/png?text=Product+Image'">
+          <div class="product-info">
+            <h2 class="product-name">${name}</h2>
+            ${description ? `<p class="product-description">${description}</p>` : ''}
+            ${price ? `<div class="product-price">${price}</div>` : ''}
+            <a ${stripeLink ? `href="${stripeLink}" target="_blank" rel="noopener"` : `href="javascript:void(0)" aria-disabled="true"`}
+               class="buy-button">${stripeLink ? 'Buy Now' : 'Unavailable'}</a>
+          </div>`;
+        grid.appendChild(card);
+      });
+    }
+
+    (function init(){
+      const slug=currentSlug();
+      renderMerchForArtist(slug);
+    })();
+
+    window.addEventListener('storage', (e)=>{
+      if(e.key==='aetherwave_merch'){
+        const slug=currentSlug();
+        renderMerchForArtist(slug);
+      }
+    });
+  </script>
+</body>
+</html>

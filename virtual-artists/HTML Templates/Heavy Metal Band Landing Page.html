@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iron Requiem | Heavy Metal Band</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Animated Fire/Smoke Background */
+        .fire-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at bottom, #1a0000 0%, #000 50%),
+                radial-gradient(ellipse at top, #330000 0%, transparent 50%);
+            z-index: -2;
+        }
+
+        .fire-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(139, 0, 0, 0.03) 2px,
+                    rgba(139, 0, 0, 0.03) 4px
+                );
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(50px); }
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, rgba(255, 69, 0, 0.3), transparent),
+                radial-gradient(2px 2px at 60% 70%, rgba(139, 0, 0, 0.3), transparent),
+                radial-gradient(1px 1px at 50% 50%, rgba(255, 0, 0, 0.3), transparent),
+                radial-gradient(1px 1px at 80% 10%, rgba(178, 34, 34, 0.3), transparent);
+            background-size: 200% 200%;
+            animation: particles 20s ease-in-out infinite;
+        }
+
+        @keyframes particles {
+            0%, 100% { background-position: 0% 0%, 100% 100%, 50% 50%, 80% 10%; }
+            50% { background-position: 100% 100%, 0% 0%, 25% 75%, 20% 90%; }
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid #8B0000;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 
+                0 0 10px #ff0000,
+                0 0 20px #8B0000,
+                2px 2px 4px #000;
+            letter-spacing: 3px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-size: 14px;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        nav a:hover {
+            color: #ff4500;
+            text-shadow: 
+                0 0 10px #ff4500,
+                0 0 20px #ff0000,
+                2px 2px 4px #000;
+            transform: scale(1.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 120px 20px 60px;
+            position: relative;
+            background: 
+                radial-gradient(ellipse at center, rgba(139, 0, 0, 0.2) 0%, transparent 70%);
+        }
+
+        .hero h1 {
+            font-size: 90px;
+            margin-bottom: 20px;
+            color: #fff;
+            text-shadow: 
+                0 0 20px #ff0000,
+                0 0 40px #8B0000,
+                0 0 60px #8B0000,
+                4px 4px 8px #000;
+            animation: metalGlow 3s ease-in-out infinite alternate;
+            letter-spacing: 8px;
+            font-weight: 900;
+        }
+
+        @keyframes metalGlow {
+            from { 
+                text-shadow: 
+                    0 0 20px #ff0000,
+                    0 0 40px #8B0000,
+                    0 0 60px #8B0000,
+                    4px 4px 8px #000;
+            }
+            to { 
+                text-shadow: 
+                    0 0 30px #ff4500,
+                    0 0 60px #ff0000,
+                    0 0 80px #8B0000,
+                    4px 4px 8px #000;
+            }
+        }
+
+        .hero p {
+            font-size: 24px;
+            color: #ff4500;
+            margin-bottom: 40px;
+            letter-spacing: 6px;
+            text-shadow: 2px 2px 4px #000;
+            font-weight: bold;
+        }
+
+        .video-container {
+            width: 80%;
+            max-width: 800px;
+            margin: 40px auto;
+            border: 4px solid #8B0000;
+            box-shadow: 
+                0 0 30px rgba(139, 0, 0, 0.8),
+                0 0 60px rgba(255, 69, 0, 0.4),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            background: #000;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: 
+                linear-gradient(135deg, #1a0000 0%, #000 50%, #1a0000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #ff4500;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 18px 45px;
+            margin: 10px;
+            background: linear-gradient(135deg, #8B0000, #ff4500);
+            color: #fff;
+            text-decoration: none;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 3px;
+            border: 2px solid #ff0000;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 
+                0 0 20px rgba(139, 0, 0, 0.6),
+                inset 0 0 10px rgba(0, 0, 0, 0.5);
+            text-shadow: 2px 2px 4px #000;
+        }
+
+        .cta-button:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 
+                0 0 40px rgba(255, 69, 0, 0.8),
+                0 0 60px rgba(139, 0, 0, 0.6),
+                inset 0 0 10px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, #ff4500, #ff0000);
+        }
+
+        /* Bio Section */
+        .bio-section {
+            padding: 80px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(20, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 56px;
+            text-align: center;
+            margin-bottom: 60px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            text-shadow: 
+                0 0 20px #ff0000,
+                0 0 40px #8B0000,
+                4px 4px 8px #000;
+            font-weight: 900;
+        }
+
+        .band-members {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .member-card {
+            background: rgba(0, 0, 0, 0.7);
+            border: 3px solid #8B0000;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 
+                0 0 20px rgba(139, 0, 0, 0.4),
+                inset 0 0 20px rgba(139, 0, 0, 0.1);
+        }
+
+        .member-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 
+                0 0 40px rgba(255, 69, 0, 0.6),
+                0 0 60px rgba(139, 0, 0, 0.4),
+                inset 0 0 20px rgba(139, 0, 0, 0.2);
+            border-color: #ff4500;
+        }
+
+        .member-photo {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            background: linear-gradient(135deg, #8B0000, #ff4500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            color: #000;
+            border: 4px solid #ff0000;
+            box-shadow: 
+                0 0 30px rgba(255, 69, 0, 0.5),
+                inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .member-name {
+            font-size: 26px;
+            color: #fff;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px #000;
+            font-weight: bold;
+        }
+
+        .member-role {
+            font-size: 16px;
+            color: #ff4500;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px #000;
+            font-weight: bold;
+        }
+
+        /* Media Section */
+        .media-section {
+            padding: 80px 50px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .media-item {
+            aspect-ratio: 1;
+            background: 
+                linear-gradient(135deg, rgba(139, 0, 0, 0.3), rgba(255, 69, 0, 0.2)),
+                #000;
+            border: 3px solid #8B0000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            color: #ff4500;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.4);
+        }
+
+        .media-item:hover {
+            transform: scale(1.05);
+            box-shadow: 
+                0 0 40px rgba(255, 69, 0, 0.6),
+                0 0 60px rgba(139, 0, 0, 0.4);
+            border-color: #ff4500;
+        }
+
+        /* Footer */
+        footer {
+            padding: 40px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 3px solid #8B0000;
+            box-shadow: 0 -10px 30px rgba(139, 0, 0, 0.3);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .social-links a {
+            color: #ff4500;
+            font-size: 30px;
+            transition: all 0.3s;
+            text-shadow: 0 0 10px rgba(255, 69, 0, 0.5);
+        }
+
+        .social-links a:hover {
+            color: #fff;
+            transform: scale(1.3) rotate(10deg);
+            text-shadow: 
+                0 0 20px #ff4500,
+                0 0 40px #ff0000;
+        }
+
+        footer p {
+            color: #ff4500;
+            font-size: 14px;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        .bio-text {
+            text-align: center;
+            color: #ddd;
+            font-size: 18px;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            font-family: Arial, sans-serif;
+            text-shadow: 1px 1px 2px #000;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 48px; }
+            .hero p { font-size: 18px; }
+            nav { padding: 15px 20px; }
+            nav ul { gap: 15px; }
+            .bio-section, .media-section { padding: 40px 20px; }
+            .section-title { font-size: 36px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="fire-bg"></div>
+    <div class="particles"></div>
+
+    <nav>
+        <div class="logo">⚡ IRON REQUIEM ⚡</div>
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#bio">Bio</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="merch.html">Merch</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero" id="home">
+        <h1>IRON REQUIEM</h1>
+        <p>UNLEASH THE FURY</p>
+        
+        <div class="video-container">
+            <div class="video-placeholder">
+                <i class="fas fa-play-circle" style="font-size: 80px;"></i>
+                <!-- Replace with: <video controls><source src="your-video.mp4" type="video/mp4"></video> -->
+            </div>
+        </div>
+
+        <div>
+            <a href="gallery.html" class="cta-button">View Gallery</a>
+            <a href="merch.html" class="cta-button">Shop Merch</a>
+        </div>
+    </section>
+
+    <section class="media-section">
+        <h2 class="section-title">Latest Releases</h2>
+        <div class="media-grid">
+            <div class="media-item">
+                <i class="fas fa-guitar"></i>
+            </div>
+            <div class="media-item">
+                <i class="fas fa-compact-disc"></i>
+            </div>
+            <div class="media-item">
+                <i class="fas fa-fire"></i>
+            </div>
+        </div>
+    </section>
+
+    <section class="bio-section" id="bio">
+        <h2 class="section-title">The Band</h2>
+        <p class="bio-text">
+            Forged in the fires of rebellion and tempered by the hammer of pure sonic aggression, 
+            Iron Requiem emerged from the underground to deliver a relentless assault of heavy metal fury. 
+            With crushing riffs, thunderous drums, and vocals that shake the very foundations of reality, 
+            we are the soundtrack to chaos, the anthem of the defiant, and the requiem for the weak.
+        </p>
+
+        <div class="band-members">
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-skull"></i>
+                </div>
+                <h3 class="member-name">Axe Reaper</h3>
+                <p class="member-role">Lead Guitar / Vocals</p>
+            </div>
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-skull"></i>
+                </div>
+                <h3 class="member-name">Thunder Fist</h3>
+                <p class="member-role">Bass</p>
+            </div>
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-skull"></i>
+                </div>
+                <h3 class="member-name">Chaos Hammer</h3>
+                <p class="member-role">Drums</p>
+            </div>
+            <div class="member-card">
+                <div class="member-photo">
+                    <i class="fas fa-skull"></i>
+                </div>
+                <h3 class="member-name">Riff Destroyer</h3>
+                <p class="member-role">Rhythm Guitar</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="social-links">
+            <a href="#"><i class="fab fa-spotify"></i></a>
+            <a href="#"><i class="fab fa-youtube"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-facebook"></i></a>
+        </div>
+        <p>© 2025 Iron Requiem. All Rights Reserved.</p>
+    </footer>
+</body>
+</html>

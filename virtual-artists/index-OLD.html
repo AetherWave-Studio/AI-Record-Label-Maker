@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Artists - AetherWave Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 50%, #f72585 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: #a0a0a0;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin-top: 20px;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        .artist-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .artist-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(123,47,247,0.1) 50%, rgba(247,37,133,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+        }
+
+        .artist-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0,212,255,0.5);
+            box-shadow: 0 20px 40px rgba(0,212,255,0.3);
+        }
+
+        .artist-card:hover::before {
+            opacity: 1;
+        }
+
+        .artist-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .artist-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.7) 100%);
+        }
+
+        .artist-info {
+            padding: 25px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .artist-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #00d4ff;
+        }
+
+        .artist-genre {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .artist-bio {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #d0d0d0;
+            margin-bottom: 15px;
+        }
+
+        .artist-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f72585;
+        }
+
+        .view-profile {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .artist-card:hover .view-profile {
+            background: linear-gradient(135deg, #7b2ff7 0%, #f72585 100%);
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .gallery {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div>
+			<a href="https://aetherwavestudio.com/"><img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FAetherWave%20Banner%20pinwhite1920x192.png?alt=media&token=0f9154af-2d16-4a4f-8822-4c641355c377" alt="Aetherwave-Banner" style="width: 100%; max-width: 1920px; border-radius: 10px;"></a>
+			<nav class="aether-nav">
+				<ul>
+					<li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
+					<li class="dropdown">
+						<a href="https://playlists.aetherwavestudio.com">Playlists</a>
+						<div class="dropdown-content">
+							<a href="https://playlists.aetherwavestudio.com/darkwave/">DarkWave Essentials</a>
+							<a href="https://playlists.aetherwavestudio.com/meditation/">Meditation Soundscapes</a>
+							<a href="https://playlists.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+							<a href="https://playlists.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+						</div>
+					</li>
+					<li class="dropdown">
+						<a href="https://virtual-artists.aetherwavestudio.com">Virtual Artists</a>
+						<div class="dropdown-content">
+							<a href="https://virtual-artistsaetherwavestudio.com/helena/">Helena</a>
+							<a class="active" href="https://virtual-artistsaetherwavestudio.com/ghosts-online/">Ghosts-Online</a>
+							<a href="https://virtual-artistsaetherwavestudio.com/Witch-Eden">Witch Eden</a>
+							<a href="https://virtual-artistsaetherwavestudio.com/Lily Starr">Lily Starr</a>
+						</div>
+					<li><a href="#" class="active">Featured Artist</a></li>
+					<li class="dropdown">
+						<a href="https://shop.aetherwavestudio.com">Shop</a>
+						<div class="dropdown-content">
+							<a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+							<a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+						</div>
+					</li>
+					<li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
+					
+				</ul>
+			</nav>
+		</div>
+
+    <div class="container">
+        <div class="gallery">
+            <!-- Artist Card 1 -->
+            <a href="https://virtual-artists.aetherwavestudio.com/helena/" style="text-decoration: none; color: inherit;">
+                <div class="artist-card">
+                    <div class="artist-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <span style="position: relative; z-index: 2;">🎤<img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Virtual%20Artists%2FHelena%20Profile%20Thumb%20600x600.png?alt=media&token=345d5895-6f43-4549-9250-a2c5bf732d19"></span>
+                    </div>
+                    <div class="artist-info">
+                        <h2 class="artist-name">Helena</h2>
+                        <div class="artist-genre">Dream Pop/Shoegaze</div>
+                        <p class="artist-bio">Ethereal vocals meet cutting-edge production. Helena blends human emotion with AI precision to create unforgettable sonic experiences.</p>
+                        <div class="artist-stats">
+                            <div class="stat">
+                                <span class="stat-label">Tracks</span>
+                                <span class="stat-value">24</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Followers</span>
+                                <span class="stat-value">12.5K</span>
+                            </div>
+                        </div>
+                        <span class="view-profile">View Profile →</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Artist Card 2 -->
+            <a href="https://virtual-artists.aetherwavestudio.com/ghosts-online/" style="text-decoration: none; color: inherit;">
+                <div class="artist-card">
+                    <div class="artist-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <span style="position: relative; z-index: 2;"><img src=".\ghosts-online\assets\ghost_gum_headshot.png""></span>
+                    </div>
+                    <div class="artist-info">
+                        <h2 class="artist-name">Ghosts Online</h2>
+                        <div class="artist-genre">Post-Punk Revival/Punk-Pop</div>
+                        <p class="artist-bio">Journey through soundscapes where retro meets future. Nexus crafts immersive audio worlds that transcend time and space.</p>
+                        <div class="artist-stats">
+                            <div class="stat">
+                                <span class="stat-label">Tracks</span>
+                                <span class="stat-value">18</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Followers</span>
+                                <span class="stat-value">8.2K</span>
+                            </div>
+                        </div>
+                        <span class="view-profile">View Profile →</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Artist Card 3 -->
+            <a href="https://virtual-artists.aetherwavestudio.com/witch-eden/" style="text-decoration: none; color: inherit;">
+                <div class="artist-card">
+                    <div class="artist-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <span style="position: relative; z-index: 2;">🎧<img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Virtual%20Artists%2FWitch-Eden.png?alt=media&token=a32a2532-0a99-48c4-87e8-d0e8e04ebe85"></span>
+                    </div>
+                    <div class="artist-info">
+                        <h2 class="artist-name">Witch-Eden</h2>
+                        <div class="artist-genre">Experimental / IDM</div>
+                        <p class="artist-bio">Pushing boundaries of sound design. Echo explores the intersection of glitch, rhythm, and melody in unexpected ways.</p>
+                        <div class="artist-stats">
+                            <div class="stat">
+                                <span class="stat-label">Tracks</span>
+                                <span class="stat-value">31</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Followers</span>
+                                <span class="stat-value">15.7K</span>
+                            </div>
+                        </div>
+                        <span class="view-profile">View Profile →</span>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Artist Card 4 -->
+            <a href="https://virtual-artists.aetherwavestudio.com/lily-starr/" style="text-decoration: none; color: inherit;">
+                <div class="artist-card">
+                    <div class="artist-image" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <span style="position: relative; z-index: 2;">✨</span>
+                    </div>
+                    <div class="artist-info">
+                        <h2 class="artist-name"Lily Starr></h2>
+                        <div class="artist-genre">Cyber-Goth</div>
+                        <p class="artist-bio">Soft melodies and lush atmospheres define Aurora's signature sound. Perfect for late-night contemplation and cosmic dreaming.</p>
+                        <div class="artist-stats">
+                            <div class="stat">
+                                <span class="stat-label">Tracks</span>
+                                <span class="stat-value">27</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Followers</span>
+                                <span class="stat-value">19.3K</span>
+                            </div>
+                        </div>
+                        <span class="view-profile">View Profile →</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

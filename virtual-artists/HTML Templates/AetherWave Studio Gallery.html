@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - AetherWave Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg1: #0a0a0a;
+            --bg2: #1a1a2e;
+            --bg3: #16213e;
+            --cyan: #00d4ff;
+            --violet: #7b2ff7;
+            --magenta: #f72585;
+            --text: #ffffff;
+            --muted: #a0a0a0;
+            --card: #ffffff0d;
+            --line: #ffffff1a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background: radial-gradient(1200px 800px at 80% -10%, #7b2ff722 0%, transparent 60%),
+                        radial-gradient(1000px 600px at -10% 20%, #00d4ff22 0%, transparent 60%),
+                        linear-gradient(135deg, var(--bg1), var(--bg2) 50%, var(--bg3));
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 0 8px;
+            border-bottom: 1px solid var(--line);
+            margin-bottom: 28px;
+        }
+
+        .brand {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            letter-spacing: 2px;
+            font-size: 1.2rem;
+            background: linear-gradient(135deg, var(--cyan), var(--violet), var(--magenta));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: .75rem;
+            color: var(--muted);
+            letter-spacing: 2px;
+        }
+
+        .back-link {
+            font-size: .85rem;
+            opacity: .9;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--line);
+        }
+
+        .back-link:hover {
+            border-color: #00d4ff80;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 40px;
+            color: var(--cyan);
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .gallery-item {
+            background: var(--card);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .gallery-caption {
+            padding: 15px;
+            font-size: 0.95rem;
+            color: #d0d0d0;
+            line-height: 1.5;
+        }
+
+        .gallery-caption strong {
+            color: var(--cyan);
+            font-weight: 600;
+        }
+
+        /* Lightbox Styles */
+        .lightbox {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.9);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lightbox-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--cyan);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        footer {
+            margin: 40px 0 12px;
+            color: var(--muted);
+            font-size: .85rem;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="brand">
+                <div class="logo">AETHERWAVE STUDIO</div>
+                <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
+            </div>
+            <a class="back-link" href="/"><span aria-hidden="true">←</span> Back to Home</a>
+        </header>
+
+        <h1 class="page-title">AetherWave Studio Gallery</h1>
+
+        <div class="gallery-grid">
+            <!-- Gallery Item 1 -->
+            <div class="gallery-item" data-src="https://placehold.co/800x600/00d4ff/ffffff/png?text=Helena+Live">
+                <img src="https://placehold.co/400x300/00d4ff/ffffff/png?text=Helena+Live" alt="Helena Live Performance" class="gallery-image">
+                <div class="gallery-caption">
+                    <strong>Helena Live Performance:</strong> A captivating moment from Helena's recent virtual concert, showcasing her dynamic stage presence.
+                </div>
+            </div>
+
+            <!-- Gallery Item 2 -->
+            <div class="gallery-item" data-src="https://placehold.co/800x600/7b2ff7/ffffff/png?text=Nexus+Soundscape">
+                <img src="https://placehold.co/400x300/7b2ff7/ffffff/png?text=Nexus+Soundscape" alt="Nexus Soundscape" class="gallery-image">
+                <div class="gallery-caption">
+                    <strong>Nexus Soundscape:</strong> An abstract visual representation of Nexus's intricate ambient soundscapes.
+                </div>
+            </div>
+
+            <!-- Gallery Item 3 -->
+            <div class="gallery-item" data-src="https://placehold.co/800x600/f72585/ffffff/png?text=Echo+Visualizer">
+                <img src="https://placehold.co/400x300/f72585/ffffff/png?text=Echo+Visualizer" alt="Echo Visualizer" class="gallery-image">
+                <div class="gallery-caption">
+                    <strong>Echo Visualizer:</strong> A still from Echo's latest experimental music video, pushing visual boundaries.
+                </div>
+            </div>
+
+            <!-- Gallery Item 4 -->
+            <div class="gallery-item" data-src="https://placehold.co/800x600/00d4ff/ffffff/png?text=Aurora+Dreamscape">
+                <img src="https://placehold.co/400x300/00d4ff/ffffff/png?text=Aurora+Dreamscape" alt="Aurora Dreamscape" class="gallery-image">
+                <div class="gallery-caption">
+                    <strong>Aurora Dreamscape:</strong> A serene image reflecting the tranquil and dreamy essence of Aurora's music.
+                </div>
+            </div>
+
+            <!-- Gallery Item 5 -->
+            <div class="gallery-item" data-src="https://placehold.co/800x600/7b2ff7/ffffff/png?text=Studio+Session">
+                <img src="https://placehold.co/400x300/7b2ff7/ffffff/png?text=Studio+Session" alt="Virtual Studio Session" class="gallery-image">
+                <div class="gallery-caption">
+                    <strong>Virtual Studio Session:</strong> A glimpse into the creative process behind AetherWave Studio's AI-driven music.
+                </div>
+            </div>
+
+            <!-- Gallery Item 6 -->
+            <div class="gallery-item" data-src="https://placehold.co/800x600/f72585/ffffff/png?text=Concert+View">
+                <img src="https://placehold.co/400x300/f72585/ffffff/png?text=Concert+View" alt="Audience View" class="gallery-image">
+                <div class="gallery-caption">
+                    <strong>Immersive Concert View:</strong> The audience's perspective during an AetherWave Studio virtual event.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Lightbox -->
+    <div id="myLightbox" class="lightbox">
+        <span class="close-button">×</span>
+        <img class="lightbox-content" id="lightboxImg">
+    </div>
+
+    <footer>
+        © <span id="year"></span> AetherWave Studio
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Lightbox functionality
+        const lightbox = document.getElementById('myLightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const closeButton = document.querySelector('.close-button');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+
+        galleryItems.forEach(item => {
+            item.addEventListener('click', function() {
+                lightbox.style.display = 'flex';
+                lightboxImg.src = this.getAttribute('data-src');
+            });
+        });
+
+        closeButton.addEventListener('click', function() {
+            lightbox.style.display = 'none';
+        });
+
+        lightbox.addEventListener('click', function(event) {
+            if (event.target === lightbox) {
+                lightbox.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
