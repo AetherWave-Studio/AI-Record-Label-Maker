@@ -1637,17 +1637,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasImage: !!(imageData || imageUrl)
         });
 
-        // Build KIE.ai input
+        // Build KIE.ai input according to their API specification
         const kieInput: any = {
           prompt: prompt,
-          duration: duration,
-          aspect_ratio: aspectRatio,
-          enable_safety_checker: enableSafetyChecker
         };
 
-        // Add image if provided (Veo 3 and Sora 2 support image conditioning)
+        // SORA 2 uses different parameter names than VEO 3
+        if (model.startsWith('sora')) {
+          // SORA 2 API parameters
+          kieInput.aspect_ratio = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '9:16' ? 'portrait' : 'landscape';
+          kieInput.n_frames = duration.toString(); // "10" or "15" as string
+
+          // Watermark removal based on subscription (free users get watermark, paid users don't)
+          const isPaidUser = user.subscriptionPlan !== 'free';
+          kieInput.remove_watermark = isPaidUser;
+
+          console.log(`SORA 2 watermark removal: ${isPaidUser} (plan: ${user.subscriptionPlan})`);
+        } else {
+          // VEO 3 API parameters (keep existing format)
+          kieInput.aspect_ratio = aspectRatio;
+          kieInput.duration = duration;
+        }
+
+        // Add image if provided (different format for SORA 2 vs VEO 3)
         if (imageData || imageUrl) {
-          kieInput.image_url = imageData || imageUrl;
+          if (model.startsWith('sora')) {
+            // SORA 2 uses image_urls as an array
+            kieInput.image_urls = [imageData || imageUrl];
+          } else {
+            // VEO 3 uses image_url as a single string
+            kieInput.image_url = imageData || imageUrl;
+          }
         }
 
         if (seed) {

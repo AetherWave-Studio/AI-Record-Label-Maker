@@ -45,6 +45,7 @@ export interface KieSubscribeOptions {
   input: any; // Model-specific input parameters
   apiKey: string;
   logs?: boolean;
+  callbackUrl?: string; // Optional callback URL
   onQueueUpdate?: (update: { status: string; progress?: number }) => void;
 }
 
@@ -244,7 +245,7 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
     }
   } else {
     // SORA 2 models use lowercase with hyphens
-    const hasImageInput = input.image_url || input.imageUrl || input.first_frame_image;
+    const hasImageInput = input.image_urls || input.image_url || input.imageUrl || input.first_frame_image;
     const modelSuffix = hasImageInput ? 'image-to-video' : 'text-to-video';
     kieModelName = `${modelBase}-${modelSuffix}`;
   }
@@ -254,13 +255,17 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
       console.log(`KIE.ai: Creating task for model ${model} (mapped to ${kieModelName})`);
     }
 
-    // Prepare request body with callback URL
-    // KIE.ai requires a callback URL - we use a dummy one since we're polling instead
-    const requestBody = {
+    // Prepare request body with optional callback URL
+    // Callback is optional - we're polling instead of waiting for callbacks
+    const requestBody: any = {
       model: kieModelName,
       input,
-      callBackUrl: 'https://example.com/callback', // Required by KIE.ai API
     };
+
+    // Only include callBackUrl if provided (it's optional)
+    if (options.callbackUrl) {
+      requestBody.callBackUrl = options.callbackUrl;
+    }
 
     console.log('KIE.ai request body:', JSON.stringify(requestBody, null, 2));
     console.log('KIE.ai endpoint:', `${KIE_API_BASE}${createEndpoint}`);
