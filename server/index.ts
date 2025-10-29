@@ -61,9 +61,7 @@ app.use((req, res, next) => {
 
   // Serve static HTML directories before the SPA catch-all
   app.use('/virtual-artists', express.static('virtual-artists'));
-  app.use('/playlists', express.static('playlists'));
-  app.use('/featured-artist', express.static('featured-artist'));
-  app.use('/shop', express.static('shop'));
+  app.use('/creators-lounge', express.static('creators-lounge'));
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
