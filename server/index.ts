@@ -63,6 +63,7 @@ app.use((req, res, next) => {
   app.use('/virtual-artists', express.static('virtual-artists'));
   app.use('/playlists', express.static('playlists'));
   app.use('/featured-artist', express.static('featured-artist'));
+  app.use('/shop', express.static('shop'));
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
