@@ -217,32 +217,32 @@ async function pollVeo3Status(
 
       console.log(`VEO 3 task ${taskId} status: ${taskStatus}${progress ? ` (${progress}%)` : ''}`);
 
-      // VEO 3 completion check
-      if (taskStatus === 'SUCCESS' || taskStatus === 'success') {
-        // Extract video/image URL from VEO 3 response
-        const videoUrl = statusData.data?.videoUrl ||
-                        statusData.data?.video_url ||
-                        statusData.data.result?.videoUrl ||
-                        statusData.data.result?.video_url;
+      // VEO 3 completion check - use successFlag instead of msg
+      const isSuccess = statusData.data?.successFlag === 1 || 
+                       taskStatus === 'SUCCESS' || 
+                       taskStatus === 'success';
+      
+      if (isSuccess) {
+        // VEO 3 returns video URLs in data.response.resultUrls array
+        const resultUrls = statusData.data?.response?.resultUrls;
+        const originUrls = statusData.data?.response?.originUrls;
+        
+        const videoUrl = resultUrls?.[0] || originUrls?.[0];
 
-        const imageUrl = statusData.data?.imageUrl ||
-                      statusData.data?.image_url ||
-                      statusData.data.result?.imageUrl ||
-                      statusData.data.result?.image_url;
-
-        if (!videoUrl && !imageUrl) {
-          console.error('VEO 3 task completed but no media URL found:', statusData);
+        if (!videoUrl) {
+          console.error('VEO 3 task completed but no video URL found:', JSON.stringify(statusData, null, 2));
           return {
             status: 'failed',
-            error: 'Task completed but no media URL found in response',
+            error: 'Task completed but no video URL found in response',
             data: statusData.data
           };
         }
 
+        console.log('VEO 3 task completed successfully, video URL:', videoUrl);
+        
         return {
           status: 'complete',
           videoUrl,
-          imageUrl,
           data: statusData.data
         };
       }
