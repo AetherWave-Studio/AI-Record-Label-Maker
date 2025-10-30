@@ -10,7 +10,7 @@ import OpenAI from "openai";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
-import { kieSubscribe, uploadImageToKie, KIE_MODELS } from "./kieClient";
+import { kieSubscribe, uploadImageToKie, generateMidjourney, KIE_MODELS } from "./kieClient";
 import {
   uploadedAudio,
   PLAN_FEATURES,
@@ -1367,6 +1367,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Failed to generate album art',
         details: error.message,
         body: error.body
+      });
+    }
+  });
+
+  // Midjourney Image Generation via KIE.ai
+  app.post("/api/generate-midjourney", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Check if user has Studio+ plan (required for Midjourney)
+      if (user.plan === 'free') {
+        return res.status(403).json({
+          error: 'Midjourney requires Studio plan or higher',
+          message: 'Upgrade to Studio, Creator, or All Access to use Midjourney'
+        });
+      }
+
+      const { prompt, referenceImage, version = 'v7' } = req.body;
+      
+      // Validate inputs
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'Invalid prompt' });
+      }
+      
+      if (prompt.length > 1000) {
+        return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
+      }
+
+      // Deduct credits for Midjourney generation (3 credits for 4 images)
+      const creditResult = await storage.deductCredits(userId, 'midjourney_generation');
+      
+      if (!creditResult.success) {
+        return res.status(403).json({
+          error: 'Insufficient credits',
+          credits: creditResult.newBalance,
+          required: SERVICE_CREDIT_COSTS.midjourney_generation,
+          message: creditResult.error || 'You need more credits to generate with Midjourney. Upgrade your plan or wait for daily reset.'
+        });
+      }
+
+      const kieApiKey = process.env.SUNO_API_KEY;
+
+      if (!kieApiKey) {
+        return res.status(500).json({ error: 'KIE.ai API key not configured' });
+      }
+
+      console.log('Generating images with Midjourney via KIE.ai:', { prompt, version, hasReference: !!referenceImage });
+
+      let imageUrl: string | undefined;
+
+      // If reference image provided, upload it first
+      if (referenceImage && referenceImage.trim().length > 0) {
+        try {
+          imageUrl = await uploadImageToKie(referenceImage, kieApiKey);
+          console.log('Reference image uploaded for Midjourney:', imageUrl);
+        } catch (uploadError: any) {
+          console.error('Failed to upload reference image:', uploadError);
+          return res.status(500).json({
+            error: 'Failed to upload reference image',
+            details: uploadError.message
+          });
+        }
+      }
+
+      // Call Midjourney via KIE.ai
+      const result = await generateMidjourney({
+        prompt,
+        apiKey: kieApiKey,
+        imageUrl,
+        version,
+        aspectRatio: '1:1',
+        onQueueUpdate: (update: any) => {
+          console.log('Midjourney queue update:', update.status, update.progress);
+        }
+      });
+
+      if (result.status === 'failed') {
+        console.error('Midjourney generation failed:', result.error);
+        return res.status(500).json({
+          error: 'Midjourney generation failed',
+          details: result.error
+        });
+      }
+
+      // Extract all 4 image URLs from result
+      const imageUrls = result.data?.imageUrls || [];
+
+      if (imageUrls.length === 0) {
+        console.error('No images returned from Midjourney');
+        return res.status(500).json({
+          error: 'Midjourney generation completed but no images found'
+        });
+      }
+
+      console.log(`✅ Midjourney generated ${imageUrls.length} images successfully`);
+      
+      return res.status(200).json({
+        imageUrls,
+        prompt,
+        version,
+        hasReference: !!imageUrl,
+        model: 'midjourney'
+      });
+
+    } catch (error: any) {
+      console.error('Midjourney generation error:', error);
+      res.status(500).json({
+        error: 'Failed to generate with Midjourney',
+        details: error.message
       });
     }
   });
