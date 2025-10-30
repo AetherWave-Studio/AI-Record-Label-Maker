@@ -1463,29 +1463,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const styleName = styleNames[style] || 'photorealistic';
       const styledPrompt = `In the style of ${styleName}, ${prompt}`;
 
-      console.log('Generating images with Midjourney via KIE.ai:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, version, hasReference: !!referenceImage });
-
-      let imageUrl: string | undefined;
-
-      // If reference image provided, upload it first
+      // NOTE: Reference images are not currently supported for Midjourney
+      // KIE.ai Midjourney API doesn't accept external image URLs (like ImgBB)
+      // Only text-to-image generation is supported for now
       if (referenceImage && referenceImage.trim().length > 0) {
-        try {
-          imageUrl = await uploadImageToKie(referenceImage, kieApiKey);
-          console.log('Reference image uploaded for Midjourney:', imageUrl);
-        } catch (uploadError: any) {
-          console.error('Failed to upload reference image:', uploadError);
-          return res.status(500).json({
-            error: 'Failed to upload reference image',
-            details: uploadError.message
-          });
-        }
+        console.log('⚠️ Reference image ignored - Midjourney only supports text-to-image via KIE.ai');
       }
 
-      // Call Midjourney via KIE.ai with styled prompt
+      console.log('Generating images with Midjourney via KIE.ai:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, version });
+
+      // Call Midjourney via KIE.ai with styled prompt (text-to-image only)
       const result = await generateMidjourney({
         prompt: styledPrompt,
         apiKey: kieApiKey,
-        imageUrl,
+        imageUrl: undefined, // No reference image support
         version,
         aspectRatio,
         onQueueUpdate: (update: any) => {
@@ -1517,7 +1508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrls,
         prompt,
         version,
-        hasReference: !!imageUrl,
+        hasReference: false, // Reference images not supported for Midjourney
         model: 'midjourney'
       });
 
