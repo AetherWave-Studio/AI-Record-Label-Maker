@@ -1500,15 +1500,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let modelId;
       if (hasImage) {
-        // Seedance Pro: Always reference mode (doesn't support first/last frame)
-        // Seedance Lite: Supports both reference and first-frame modes
-        if (modelVersion === 'pro') {
-          modelId = 'fal-ai/bytedance/seedance/v1/pro/reference-to-video';
-        } else if (imageMode === 'reference') {
-          modelId = 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
-        } else {
-          modelId = 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
-        }
+        // Both Pro and Lite use image-to-video for ANY image-based generation
+        // The image-to-video model handles both reference mode and first-frame mode
+        modelId = modelVersion === 'pro'
+          ? 'fal-ai/bytedance/seedance/v1/pro/image-to-video'
+          : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
       } else {
         modelId = modelVersion === 'pro'
           ? 'fal-ai/bytedance/seedance/v1/pro/text-to-video'
@@ -1545,30 +1541,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const imageSource = imageData || finalImageUrl;
       
       if (imageSource) {
-        if (imageMode === 'reference') {
-          // Reference mode requires actual URLs, not base64
-          // Upload to KIE.ai storage if base64 data provided
-          let referenceUrl = imageSource;
-          if (imageData && imageData.startsWith('data:image')) {
-            console.log('Reference mode: Uploading base64 image to KIE.ai storage...');
-            try {
-              referenceUrl = await uploadImageToKie(imageData, process.env.KIE_API_KEY!);
-              console.log('Reference image uploaded successfully:', referenceUrl);
-            } catch (uploadError: any) {
-              console.error('Failed to upload reference image:', uploadError);
-              throw new Error(`Failed to upload reference image: ${uploadError.message}`);
-            }
-          }
-          input.image_urls = [referenceUrl];
-        } else {
-          // First-frame mode accepts base64 data URLs
-          input.image_url = imageSource;
-          
-          // Add end frame if provided (only for image-to-video mode)
-          if (end_image_url) {
-            input.end_image_url = end_image_url;
-            console.log('Using end frame:', end_image_url);
-          }
+        // Seedance image-to-video accepts image_url parameter (supports base64 and URLs)
+        input.image_url = imageSource;
+        
+        // Add end frame if provided (for first+last frame mode)
+        if (end_image_url) {
+          input.end_image_url = end_image_url;
+          console.log('Using end frame for first+last frame mode');
         }
       }
 
