@@ -1422,8 +1422,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enableSafetyChecker = true
       } = req.body;
       
-      // Extract model version from model name (e.g., 'seedance-lite' -> 'lite')
-      const modelVersion = model ? model.split('-')[1] || 'lite' : 'lite';
+      // Extract model version from model name (e.g., 'seedance-lite' -> 'lite', 'seedance-pro-fast' -> 'pro-fast')
+      const modelVersion = model ? model.replace('seedance-', '') || 'lite' : 'lite';
       
       // Support end_image_url field (endImageData is the new frontend field)
       const end_image_url = endImageData;
@@ -1463,9 +1463,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Calculate credits based on quality settings
+      // Map model version to credit calculation format
+      const creditModelName = modelVersion.startsWith('pro') ? 'seedance-pro' : 'seedance-lite';
+
+      // Calculate credits based on quality settings (pro and pro-fast both use 'seedance-pro' pricing)
       const requiredCredits = calculateVideoCredits(
-        `seedance-${modelVersion}` as 'seedance-lite' | 'seedance-pro',
+        creditModelName as 'seedance-lite' | 'seedance-pro',
         resolution as '480p' | '720p' | '1080p' | '4k',
         parseInt(duration)
       );
@@ -1500,15 +1503,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let modelId;
       if (hasImage) {
-        // Both Pro Fast and Lite use image-to-video for ANY image-based generation
+        // All variants use image-to-video for ANY image-based generation
         // The image-to-video model handles both reference mode and first-frame mode
-        modelId = modelVersion === 'pro'
-          ? 'fal-ai/bytedance/seedance/v1/pro/fast/image-to-video'
-          : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
+        if (modelVersion === 'pro') {
+          modelId = 'fal-ai/bytedance/seedance/v1/pro/image-to-video';
+        } else if (modelVersion === 'pro-fast') {
+          modelId = 'fal-ai/bytedance/seedance/v1/pro/fast/image-to-video';
+        } else {
+          modelId = 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
+        }
       } else {
-        modelId = modelVersion === 'pro'
-          ? 'fal-ai/bytedance/seedance/v1/pro/fast/text-to-video'
-          : 'fal-ai/bytedance/seedance/v1/lite/text-to-video';
+        if (modelVersion === 'pro') {
+          modelId = 'fal-ai/bytedance/seedance/v1/pro/text-to-video';
+        } else if (modelVersion === 'pro-fast') {
+          modelId = 'fal-ai/bytedance/seedance/v1/pro/fast/text-to-video';
+        } else {
+          modelId = 'fal-ai/bytedance/seedance/v1/lite/text-to-video';
+        }
       }
 
       console.log('Generating video with Fal.ai Seedance:', {
