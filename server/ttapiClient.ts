@@ -126,11 +126,13 @@ export async function generateMidjourneyTtapi(
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
 
-      const statusResponse = await nodeFetch(`${TTAPI_BASE_URL}/job/${jobId}`, {
-        method: "GET",
+      const statusResponse = await nodeFetch(`${TTAPI_BASE_URL}/fetch`, {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "TT-API-KEY": TTAPI_API_KEY
-        }
+        },
+        body: JSON.stringify({ jobId })
       });
 
       if (!statusResponse.ok) {
