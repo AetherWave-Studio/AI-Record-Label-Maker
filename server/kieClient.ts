@@ -12,8 +12,18 @@ const POLL_INTERVAL_MS = 3000; // Poll every 3 seconds
 const MAX_POLL_ATTEMPTS = 200; // ~10 minutes max (200 * 3s = 600s)
 
 // Proxy configuration (optional)
-// Set WEBSHARE_PROXY env var to: http://username:password@proxy.webshare.io:80
-const PROXY_URL = process.env.WEBSHARE_PROXY;
+// Construct proxy URL from individual environment variables or use WEBSHARE_PROXY
+let PROXY_URL: string | undefined;
+
+if (process.env.WEBSHARE_PROXY) {
+  PROXY_URL = process.env.WEBSHARE_PROXY;
+} else if (process.env.PROXY_HOST && process.env.PROXY_PORT && process.env.PROXY_USERNAME && process.env.PROXY_PASSWORD) {
+  // Construct from individual components
+  const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD } = process.env;
+  PROXY_URL = `http://${PROXY_USERNAME}:${PROXY_PASSWORD}@${PROXY_HOST}:${PROXY_PORT}`;
+  console.log(`🔧 Using Webshare proxy: ${PROXY_USERNAME}@${PROXY_HOST}:${PROXY_PORT}`);
+}
+
 const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
 
 /**
