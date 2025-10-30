@@ -580,12 +580,12 @@
     .btn-primary {
     padding: 0.75rem 2rem;
     background-image: url('/assets/Pick-btn_1761529942548.png');
-    background-size: 100% 100%;
+    background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     color: white;
     border: none;
-    border-radius: 28px;
+    border-radius: 0;
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
@@ -620,12 +620,12 @@
     .btn-video-generate {
     padding: 1rem 2rem;
     background-image: url('/assets/Pick-btn_1761529942548.png');
-    background-size: 100% 100%;
+    background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
     color: white;
     border: none;
-    border-radius: 28px;
+    border-radius: 0;
     font-weight: 600;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
@@ -648,7 +648,7 @@
     .btn-video-generate:active,
     .btn-video-generate.processing {
     background-image: url('/assets/Pick-btn-on_1761530040819.png');
-    background-size: 100% 100%;
+    background-size: contain;
     animation: pinkPulse 2s ease-in-out infinite;
     }
 
@@ -4659,7 +4659,7 @@ async function generateMedia() {
     // Add processing class for video generation
     if (selectedMediaType === 'video') {
         generateMediaBtn.classList.add('processing');
-        generateMediaBtn.innerHTML = `⏳ Generating Video... (may take 5-10 min)`;
+        generateMediaBtn.innerHTML = `⏳ Generating Video...`;
     } else {
         generateMediaBtn.innerHTML = `⏳ Generating ${selectedMediaType}...`;
     }
