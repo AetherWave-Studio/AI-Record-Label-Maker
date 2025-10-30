@@ -5429,6 +5429,11 @@ function updateCreditCostPreview() {
     else if (resolution === '720p') costPerSecond = 0.0225;
     else if (resolution === '1080p') costPerSecond = 0.050;
     else if (resolution === '4k') costPerSecond = 0.100;
+  } else if (model === 'seedance-pro-fast') {
+    // Pro Fast: Token-based pricing ($1.0 per million tokens)
+    if (resolution === '480p') costPerSecond = 0.00922;   // 9,220 tokens/sec
+    else if (resolution === '720p') costPerSecond = 0.0216;  // 21,600 tokens/sec
+    else if (resolution === '1080p') costPerSecond = 0.0486; // 48,600 tokens/sec
   } else if (model === 'seedance-pro') {
     if (resolution === '480p') costPerSecond = 0.020;
     else if (resolution === '720p') costPerSecond = 0.045;
