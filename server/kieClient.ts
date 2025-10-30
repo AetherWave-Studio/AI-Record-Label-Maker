@@ -217,7 +217,9 @@ async function pollVeo3Status(
       }
 
       // Check VEO 3 specific status fields
-      const taskStatus = statusData.msg || statusData.data?.status || statusData.data?.state;
+      // Note: statusData.msg is the API response status (e.g., "success"), NOT the task status
+      // Task status comes from data.status, data.state, or successFlag
+      const taskStatus = statusData.data?.status || statusData.data?.state || 'processing';
       const progress = statusData.data?.progress;
 
       // Call update callback if provided
@@ -225,12 +227,11 @@ async function pollVeo3Status(
         onUpdate({ status: taskStatus, progress });
       }
 
-      console.log(`VEO 3 task ${taskId} status: ${taskStatus}${progress ? ` (${progress}%)` : ''}`);
+      console.log(`VEO 3 task ${taskId} status: ${taskStatus}${progress ? ` (${progress}%)` : ''}, successFlag: ${statusData.data?.successFlag}`);
 
-      // VEO 3 completion check - use successFlag instead of msg
-      const isSuccess = statusData.data?.successFlag === 1 || 
-                       taskStatus === 'SUCCESS' || 
-                       taskStatus === 'success';
+      // VEO 3 completion check - ONLY use successFlag === 1
+      // Do NOT check msg field as it's just the API response status
+      const isSuccess = statusData.data?.successFlag === 1;
       
       if (isSuccess) {
         // VEO 3 returns video URLs in data.response.resultUrls array
