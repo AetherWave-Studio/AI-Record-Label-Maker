@@ -10,10 +10,24 @@ The application provides a creative tool interface for generating AI-created mus
 
 ## Recent Changes (October 30, 2025)
 
+**Unified Video Generation Workflow (Seedance + VEO):**
+- Aligned Seedance workflow with VEO 3.1 Fast - both now support 3 generation types:
+  1. **Text-to-video** (no image)
+  2. **First frame mode** (one image as starting frame)
+  3. **First + Last frame mode** (two images for beginning and end)
+- Removed image mode dropdown for Seedance (auto-determined based on uploaded images)
+- Second image uploader now appears for both Seedance AND VEO when first image is uploaded
+- Frontend auto-sets `imageMode: 'first-frame'` for all image-based video generation
+- Backend properly handles `endImageData` for Fal.ai Seedance first+last frame mode
+- Image upload labels standardized across all models:
+  - Default: "- First frame or reference"
+  - When second image uploaded: "- First frame"
+  - SORA 2: "- Reference only"
+
 **Custom Video Generation Button Styling:**
 - Added custom button styling for video generation with background images
-- Button uses `/assets/Pick-btn_1761529942548.png` for default state
-- Button uses `/assets/Pick-btn-on_1761530040819.png` for active/processing state
+- Button uses `/assets/Generate-video-btn.png` for default state
+- Button uses `/assets/Generate-video-btn-active.png` for active/processing state
 - Added pink pulsating glow animation during video generation (5-10 min process)
 - Button dynamically switches between `btn-video-generate` (video) and `btn-primary` (image) classes
 - Processing state shows "⏳ Generating Video... (may take 5-10 min)" with animated glow

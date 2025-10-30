@@ -882,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const { prompt, model, aspectRatio = '16:9', duration = 5, imageData, endImageData, imageMode = 'reference' } = req.body;
+      const { prompt, model, aspectRatio = '16:9', duration = 5, imageData, endImageData, imageMode = 'reference', quality = 'standard' } = req.body;
       const userPlan = user.subscriptionPlan as PlanType;
 
       // Validate model is allowed for user's plan
@@ -923,7 +923,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         kieInput.remove_watermark = true;
         // SORA 2 PRO: Set size/quality based on frontend selection
         if (model.includes('pro')) {
-          kieInput.size = soraQuality === 'hd' ? 'high' : 'standard';
+          kieInput.size = quality === 'hd' ? 'high' : 'standard';
         }
       } else {
         // Seedance and VEO 3 use standard format
@@ -1238,8 +1238,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             style: "vivid"
           });
 
-          const imageUrl = response.data[0]?.url;
-          const revisedPrompt = response.data[0]?.revised_prompt;
+          const imageUrl = response.data?.[0]?.url;
+          const revisedPrompt = response.data?.[0]?.revised_prompt;
 
           if (imageUrl) {
             console.log('✅ DALL-E 3 image generated:', imageUrl);

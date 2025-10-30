@@ -3945,22 +3945,18 @@ window.premiumPlayer = {
     mediaPreviewImg.src = uploadedImageData;
     mediaImagePreview.style.display = 'block';
 
-    // Show image mode selection only for video and only for Seedance models
+    // Show second image uploader for Seedance and VEO 3.1 Fast (same workflow)
     if (selectedMediaType === 'video') {
       const currentModel = mediaVideoModel?.value || 'seedance-lite';
       const isSeedance = currentModel.startsWith('seedance');
       const isVeo3Fast = currentModel === 'veo3_fast';
 
-      // Only show image mode for Seedance (VEO 3 and SORA 2 use reference only)
-      if (isSeedance) {
-        imageModeSelection.style.display = 'block';
-      } else {
-        imageModeSelection.style.display = 'none';
-      }
+      // Hide image mode dropdown - Seedance now uses same workflow as VEO (first+last frame)
+      imageModeSelection.style.display = 'none';
 
-      // Show second uploader (last frame) for VEO 3.1 Fast when first image is uploaded
+      // Show second uploader (last frame) for both Seedance AND VEO 3.1 Fast
       const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
-      if (isVeo3Fast && uploadedImageData) {
+      if ((isSeedance || isVeo3Fast) && uploadedImageData) {
         if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
       } else {
         if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
@@ -4073,12 +4069,13 @@ window.premiumPlayer = {
       mediaVideoModel.addEventListener('change', () => {
         const currentModel = mediaVideoModel.value;
         const isVeo3Fast = currentModel === 'veo3_fast';
+        const isSeedance = currentModel.startsWith('seedance');
         const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
         const imageLabelHint = document.getElementById('image-label-hint');
         const aspectRatioSelect = document.getElementById('media-aspect-ratio');
 
-        // Only show last frame uploader for VEO 3.1 Fast when first image is uploaded
-        if (isVeo3Fast && uploadedImageData && selectedMediaType === 'video') {
+        // Show last frame uploader for VEO 3.1 Fast AND Seedance when first image is uploaded
+        if ((isVeo3Fast || isSeedance) && uploadedImageData && selectedMediaType === 'video') {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
         } else {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
@@ -4709,9 +4706,12 @@ async function generateMedia() {
             // Add uploaded image data if provided
             if (uploadedImageData) {
                 requestBody.imageData = uploadedImageData;
-                requestBody.imageMode = document.getElementById('image-mode')?.value || 'reference';
+                // Auto-determine imageMode based on workflow (matching VEO):
+                // - One image only: first-frame mode (not reference)
+                // - Two images: first+last frame mode (still first-frame with end image)
+                requestBody.imageMode = 'first-frame';
             }
-            // Add second image data if provided (for VEO 3.1 Fast last frame)
+            // Add second image data if provided (for Seedance/VEO last frame)
             if (uploadedLastFrameData) {
                 requestBody.endImageData = uploadedLastFrameData;
             }
@@ -5501,9 +5501,9 @@ if (videoModelSelect) {
           <option value="10">10 seconds</option>
         `;
       }
-      // Show image mode selection if image is uploaded (Seedance only)
-      if (imageModeSelection && uploadedImageData) {
-        imageModeSelection.style.display = 'block';
+      // Hide image mode selection (Seedance now uses same workflow as VEO - first+last frame)
+      if (imageModeSelection) {
+        imageModeSelection.style.display = 'none';
       }
       // Update image label for Seedance
       if (imageLabel) imageLabel.textContent = '- First frame or reference';
