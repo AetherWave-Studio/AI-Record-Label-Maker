@@ -4829,6 +4829,7 @@ async function generateMedia() {
             if (useMidjourney) {
                 const requestBody = {
                     prompt: prompt,
+                    style: document.getElementById('media-image-style').value,
                     version: 'v7',
                     aspectRatio: aspectRatio
                 };

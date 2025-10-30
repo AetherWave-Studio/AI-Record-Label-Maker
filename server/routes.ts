@@ -1419,7 +1419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { prompt, aspectRatio = '1:1', referenceImage, version = 'v7' } = req.body;
+      const { prompt, style = 'photorealistic', aspectRatio = '1:1', referenceImage, version = 'v7' } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -1448,7 +1448,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'KIE.ai API key not configured' });
       }
 
-      console.log('Generating images with Midjourney via KIE.ai:', { prompt, aspectRatio, version, hasReference: !!referenceImage });
+      // Style prefixes for Midjourney prompts
+      const styleNames: Record<string, string> = {
+        photorealistic: 'photorealistic',
+        abstract: 'abstract art',
+        cyberpunk: 'cyberpunk',
+        retro: 'retro vaporwave',
+        minimal: 'minimalist',
+        surreal: 'surrealist',
+        cinematic: 'cinematic',
+        artistic: 'artistic'
+      };
+
+      const styleName = styleNames[style] || 'photorealistic';
+      const styledPrompt = `In the style of ${styleName}, ${prompt}`;
+
+      console.log('Generating images with Midjourney via KIE.ai:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, version, hasReference: !!referenceImage });
 
       let imageUrl: string | undefined;
 
@@ -1466,9 +1481,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Call Midjourney via KIE.ai
+      // Call Midjourney via KIE.ai with styled prompt
       const result = await generateMidjourney({
-        prompt,
+        prompt: styledPrompt,
         apiKey: kieApiKey,
         imageUrl,
         version,
