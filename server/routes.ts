@@ -85,6 +85,12 @@ function calculateVideoCredits(
     else if (resolution === '720p') costPerSecond = 0.0225;  // 720p pricing
     else if (resolution === '1080p') costPerSecond = 0.050;  // 1080p pricing
     else if (resolution === '4k') costPerSecond = 0.100;     // 4k estimate
+  } else if (model === 'seedance-pro-fast') {
+    // Pro Fast: $0.243 per 5s 1080p video = $0.0486/sec
+    if (resolution === '480p') costPerSecond = 0.015;
+    else if (resolution === '720p') costPerSecond = 0.030;
+    else if (resolution === '1080p') costPerSecond = 0.0486;
+    // No 4K for Pro Fast
   } else if (model === 'seedance-pro') {
     if (resolution === '480p') costPerSecond = 0.020;
     else if (resolution === '720p') costPerSecond = 0.045;
@@ -1465,11 +1471,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Map model version to credit calculation format
-      const creditModelName = modelVersion.startsWith('pro') ? 'seedance-pro' : 'seedance-lite';
+      let creditModelName: 'seedance-lite' | 'seedance-pro' | 'seedance-pro-fast';
+      if (modelVersion === 'pro-fast') {
+        creditModelName = 'seedance-pro-fast';
+      } else if (modelVersion === 'pro') {
+        creditModelName = 'seedance-pro';
+      } else {
+        creditModelName = 'seedance-lite';
+      }
 
-      // Calculate credits based on quality settings (pro and pro-fast both use 'seedance-pro' pricing)
+      // Calculate credits based on quality settings
       const requiredCredits = calculateVideoCredits(
-        creditModelName as 'seedance-lite' | 'seedance-pro',
+        creditModelName,
         resolution as '480p' | '720p' | '1080p' | '4k',
         parseInt(duration)
       );

@@ -108,6 +108,7 @@ export type VideoResolution = z.infer<typeof VideoResolution>;
 // Video model options (KIE.ai and Fal.ai providers)
 export const VideoModel = z.enum([
   'seedance-lite',      // Fal.ai ByteDance Seedance V1 Lite
+  'seedance-pro-fast',  // Fal.ai ByteDance Seedance V1 Pro Fast
   'seedance-pro',       // Fal.ai ByteDance Seedance V1 Pro
   'veo3_fast',          // KIE.ai Google Veo 3 Fast
   'sora2',              // KIE.ai OpenAI Sora 2 Standard
@@ -175,7 +176,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
     allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
-    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2'], // Seedance + Sora 2
+    allowedVideoModels: ['seedance-lite', 'seedance-pro-fast', 'seedance-pro', 'sora2'], // Seedance + Sora 2
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
@@ -190,7 +191,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
     allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
-    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2', 'veo3_fast'], // All available models
+    allowedVideoModels: ['seedance-lite', 'seedance-pro-fast', 'seedance-pro', 'sora2', 'veo3_fast'], // All available models
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
@@ -205,7 +206,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
     allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
-    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2', 'veo3_fast'], // All available models
+    allowedVideoModels: ['seedance-lite', 'seedance-pro-fast', 'seedance-pro', 'sora2', 'veo3_fast'], // All available models
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
