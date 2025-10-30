@@ -8,7 +8,21 @@ AetherWave Studio is an AI-powered music and media creation application featurin
 
 The application provides a creative tool interface for generating AI-created music and media content, inspired by professional creative tools like Runway ML, Midjourney, and ElevenLabs.
 
-## Recent Changes (October 27, 2025)
+## Recent Changes (October 30, 2025)
+
+**Custom Video Generation Button Styling:**
+- Added custom button styling for video generation with background images
+- Button uses `/assets/Pick-btn_1761529942548.png` for default state
+- Button uses `/assets/Pick-btn-on_1761530040819.png` for active/processing state
+- Added pink pulsating glow animation during video generation (5-10 min process)
+- Button dynamically switches between `btn-video-generate` (video) and `btn-primary` (image) classes
+- Processing state shows "⏳ Generating Video... (may take 5-10 min)" with animated glow
+- Backend now returns `model` field in video generation response for proper UI display
+
+**VEO3 Model Display Fix:**
+- Fixed UI to dynamically display correct model names (KIE.ai VEO 3, KIE.ai SORA 2, Fal.ai Seedance)
+- Title now shows "✅ Video Generated with KIE.ai VEO 3" instead of hardcoded "Fal.ai Seedance 1.0"
+- Model detection logic checks for veo3, sora, and seedance in model name
 
 **Album Art Video Animation Feature:**
 - Added duration picker modal for "Turn into Video" feature in Panel 1 (album art animation)

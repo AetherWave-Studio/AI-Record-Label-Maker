@@ -617,6 +617,61 @@
     filter: grayscale(0.3);
     }
 
+    /* Custom Video Generation Button */
+    .btn-video-generate {
+    padding: 1rem 2rem;
+    background-image: url('/assets/Pick-btn_1761529942548.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    color: white;
+    border: none;
+    border-radius: 28px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+    font-size: 1.1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    position: relative;
+    min-width: 200px;
+    }
+
+    .btn-video-generate:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+    }
+
+    .btn-video-generate:active,
+    .btn-video-generate.processing {
+    background-image: url('/assets/Pick-btn-on_1761530040819.png');
+    animation: pinkPulse 2s ease-in-out infinite;
+    }
+
+    .btn-video-generate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    animation: none;
+    }
+
+    .btn-video-generate.processing {
+    pointer-events: none;
+    }
+
+    @keyframes pinkPulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(255, 46, 166, 0.6), 0 0 40px rgba(255, 46, 166, 0.4), 0 0 60px rgba(255, 46, 166, 0.2);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(255, 46, 166, 0.8), 0 0 60px rgba(255, 46, 166, 0.6), 0 0 90px rgba(255, 46, 166, 0.4);
+    }
+    }
+
     .result-box {
     padding: 1rem;
     background: rgba(139, 92, 246, 0.08);
@@ -2088,7 +2143,7 @@
     </div>
 
     <!-- Generate Button -->
-    <button class="btn-primary" id="generate-media-btn" data-testid="button-generate-media" style="width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: 600;">
+    <button id="generate-media-btn" data-testid="button-generate-media" style="width: 100%;">
     🎨 Generate <span id="media-type-label">Image</span>
     </button>
 
@@ -3136,6 +3191,16 @@
 
         const mediaTypeBtns = document.querySelectorAll('.media-type-btn');
         let selectedMediaType = document.querySelector('.media-type-btn.active').dataset.type;
+        
+        // Initialize button class based on default media type
+        if (generateMediaBtn) {
+            generateMediaBtn.className = selectedMediaType === 'video' ? 'btn-video-generate' : 'btn-primary';
+            if (selectedMediaType === 'image') {
+                generateMediaBtn.style.padding = '1rem';
+                generateMediaBtn.style.fontSize = '1.1rem';
+                generateMediaBtn.style.fontWeight = '600';
+            }
+        }
 
 // ...rest of your code, using mediaTypeBtns...
 
@@ -3709,7 +3774,13 @@ window.premiumPlayer = {
     selectedMediaType = btn.dataset.type;
     mediaTypeLabel.textContent = selectedMediaType === 'image' ? 'Image' : 'Video';
         
-        
+    // Update button class based on media type
+    generateMediaBtn.className = selectedMediaType === 'video' ? 'btn-video-generate' : 'btn-primary';
+    if (selectedMediaType === 'image') {
+      generateMediaBtn.style.padding = '1rem';
+      generateMediaBtn.style.fontSize = '1.1rem';
+      generateMediaBtn.style.fontWeight = '600';
+    }
 
     // Show/hide video-specific settings and image-specific settings
     const videoModelGroup = document.getElementById('video-model-group');
@@ -4581,7 +4652,15 @@ async function generateMedia() {
 
     generateMediaBtn.disabled = true;
     const originalBtnText = generateMediaBtn.innerHTML;
-    generateMediaBtn.innerHTML = `⏳ Generating ${selectedMediaType}...`;
+    
+    // Add processing class for video generation
+    if (selectedMediaType === 'video') {
+        generateMediaBtn.classList.add('processing');
+        generateMediaBtn.innerHTML = `⏳ Generating Video... (may take 5-10 min)`;
+    } else {
+        generateMediaBtn.innerHTML = `⏳ Generating ${selectedMediaType}...`;
+    }
+    
     mediaResult.style.display = 'none';
 
     try {
@@ -4704,6 +4783,7 @@ async function generateMedia() {
         mediaResult.style.display = 'block';
     } finally {
         generateMediaBtn.disabled = false;
+        generateMediaBtn.classList.remove('processing');
         generateMediaBtn.innerHTML = originalBtnText;
     }
 }
