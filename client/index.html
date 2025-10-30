@@ -4073,13 +4073,14 @@ window.premiumPlayer = {
         const currentModel = mediaVideoModel.value;
         const isVeo3Fast = currentModel === 'veo3_fast';
         const isSeedanceLite = currentModel === 'seedance-lite';
+        const isSeedanceProFast = currentModel === 'seedance-pro-fast';
         const isSeedancePro = currentModel === 'seedance-pro';
         const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
         const imageLabelHint = document.getElementById('image-label-hint');
         const aspectRatioSelect = document.getElementById('media-aspect-ratio');
 
-        // Show last frame uploader for VEO 3.1 Fast and Seedance LITE only (Pro doesn't support it)
-        if ((isVeo3Fast || isSeedanceLite) && uploadedImageData && selectedMediaType === 'video') {
+        // Show last frame uploader for VEO 3.1 Fast, Seedance LITE, and Seedance PRO FAST (Pro doesn't support it)
+        if ((isVeo3Fast || isSeedanceLite || isSeedanceProFast) && uploadedImageData && selectedMediaType === 'video') {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
         } else {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
@@ -4087,6 +4088,8 @@ window.premiumPlayer = {
           if (imageLabelHint) {
             if (isSeedancePro) {
               imageLabelHint.textContent = '- Reference only';
+            } else if (isSeedanceProFast) {
+              imageLabelHint.textContent = '- First frame';
             } else {
               imageLabelHint.textContent = '- First frame or reference';
             }
@@ -5522,10 +5525,17 @@ if (videoModelSelect) {
       if (imageModeSelection) {
         imageModeSelection.style.display = 'none';
       }
-      // Update image label for Seedance (Lite: first frame, Pro: reference only)
+      // Update image label for Seedance (Lite: first frame or reference, Pro Fast: first frame, Pro: reference only)
       if (imageLabel) {
-        const isPro = model.includes('pro');
-        imageLabel.textContent = isPro ? '- Reference only' : '- First frame or reference';
+        const isProFast = model.includes('pro-fast');
+        const isPro = model.includes('pro') && !isProFast;
+        if (isPro) {
+          imageLabel.textContent = '- Reference only';
+        } else if (isProFast) {
+          imageLabel.textContent = '- First frame';
+        } else {
+          imageLabel.textContent = '- First frame or reference';
+        }
       }
       
       // Filter resolution options based on Lite vs Pro
