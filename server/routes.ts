@@ -1382,7 +1382,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check if user has Studio+ plan (required for Midjourney)
-      if (user.plan === 'free') {
+      if (user.subscriptionPlan === 'free') {
         return res.status(403).json({
           error: 'Midjourney requires Studio plan or higher',
           message: 'Upgrade to Studio, Creator, or All Access to use Midjourney'
