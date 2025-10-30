@@ -260,7 +260,7 @@ export const SERVICE_CREDIT_COSTS: Record<ServiceType, number> = {
   video_generation: 5,         // Base for lite 512p 3s (dynamic function calculates actual cost)
   image_generation: 6,         // DALL-E 3: $0.04 API + 50% margin = $0.06
   album_art_generation: 5,     // Seedream: $0.03 API + 50% margin = $0.045
-  midjourney_generation: 3,    // KIE.ai Midjourney: $0.04 API (4 images) + 50% margin = $0.06 total
+  midjourney_generation: 3,    // KIE.ai Midjourney: ~$0.04 API cost for 4 images, priced competitively at 3 credits
   wav_conversion: 3,           // $0.02 API + 50% margin = $0.03
 };
 

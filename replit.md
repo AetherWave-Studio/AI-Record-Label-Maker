@@ -32,7 +32,7 @@ Replit Auth provides OIDC-based authentication, with user accounts automatically
 
 -   **Neon Database**: Serverless PostgreSQL hosting.
 -   **KIE.ai SUNO API**: For AI music generation, accessed via a Webshare static proxy to manage IP whitelisting.
--   **KIE.ai Midjourney API**: For premium image generation, accessed via the Webshare static proxy. Generates 4 image variants per request with support for text-to-image and image-to-image modes. Available to Studio+ users at ~$0.04 API cost (50% markup applied). Uses Midjourney v7 by default.
+-   **KIE.ai Midjourney API**: For premium image generation, accessed via the Webshare static proxy. Generates 4 image variants per request with support for text-to-image and image-to-image modes. Available to Studio+ users at 3 credits per request (~$0.04 API cost, priced competitively for brand recognition and value). Uses Midjourney v7 by default.
 -   **OpenAI API**: For DALL-E 3 album art generation (Panel 1) and image generation (Panel 3 for Studio+ users).
 -   **Fal.ai Nano Banana**: For fast image generation in Panel 3, available to all users including Free tier.
 -   **Fal.ai Seedance**: For AI music video generation, supporting text-to-video, image-to-video, and reference-to-video modes with Lite/Pro variants. Features quality-based credit pricing and specific restrictions for free accounts.
