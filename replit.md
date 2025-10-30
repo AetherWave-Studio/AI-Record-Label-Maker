@@ -2,7 +2,7 @@
 
 ## Overview
 
-AetherWave Studio is an AI-powered application designed for music and media creation. It leverages AI for music generation (via SUNO through KIE.ai API), image generation with Midjourney, DALL-E 3, and Fal.ai Nano Banana, and AI video generation with Fal.ai Seedance. The platform features a 4-tier monetization model (Free, Studio, Creator, All Access) and a centralized credit system for resource consumption, with options for bundled credit purchases. The application aims to provide a professional-grade creative tool experience, drawing inspiration from platforms like Runway ML, Midjourney, and ElevenLabs.
+AetherWave Studio is an AI-powered application designed for music and media creation. It leverages AI for music generation (via SUNO through KIE.ai API), image generation with ttapi.io Midjourney, DALL-E 3, and Fal.ai Nano Banana, and AI video generation with Fal.ai Seedance. The platform features a 4-tier monetization model (Free, Studio, Creator, All Access) and a centralized credit system for resource consumption, with options for bundled credit purchases. The application aims to provide a professional-grade creative tool experience, drawing inspiration from platforms like Runway ML, Midjourney, and ElevenLabs.
 
 ## User Preferences
 
@@ -32,8 +32,7 @@ Replit Auth provides OIDC-based authentication, with user accounts automatically
 
 -   **Neon Database**: Serverless PostgreSQL hosting.
 -   **KIE.ai SUNO API**: For AI music generation, accessed via a Webshare static proxy to manage IP whitelisting.
--   **ttapi.io Midjourney API**: **Primary Midjourney provider** - Delivers reliable results with consistent ~30-40s generation times. Available to Studio+ users with three speed modes: Fast (3 credits), Turbo (6 credits), and Relax (3 credits). Generates 4 high-quality Midjourney v7 image variants per request. Features comprehensive timeout + auto-refund system with automatic credit refunds for metered users. Displayed with green UI theme. **Recommended for production use.**
--   **KIE.ai Midjourney API**: Alternative Midjourney provider, accessed via Webshare static proxy. Available to Studio+ users with two speed modes: Fast (3 credits) and Turbo (6 credits). **Currently experiencing persistent queue delays and timeouts** - often fails to complete within timeout windows (120s turbo, 180s fast). Features same timeout + auto-refund system. Displayed with purple UI theme. Text-to-image only (reference images not supported). Consider using ttapi.io for better reliability.
+-   **ttapi.io Midjourney API**: Primary Midjourney provider delivering reliable results with consistent ~30-40s generation times. Available to Studio+ users with three speed modes: Fast (3 credits), Turbo (6 credits), and Relax (3 credits). Generates 4 high-quality Midjourney v7 image variants per request. Features comprehensive timeout + auto-refund system with automatic credit refunds for metered users.
 -   **OpenAI API**: For DALL-E 3 album art generation (Panel 1) and image generation (Panel 3 for Studio+ users).
 -   **Fal.ai Nano Banana**: For fast image generation in Panel 3, available to all users including Free tier.
 -   **Fal.ai Seedance**: For AI music video generation, supporting text-to-video, image-to-video, and reference-to-video modes with Lite/Pro variants. Features quality-based credit pricing and specific restrictions for free accounts.
