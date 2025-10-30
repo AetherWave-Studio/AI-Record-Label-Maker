@@ -18,19 +18,18 @@ export interface TtapiImagineRequest {
 }
 
 export interface TtapiTaskResponse {
-  code: number;
+  status: string;
   message: string;
   data?: {
-    taskId: string;
-    status?: string;
+    jobId: string;
   };
 }
 
 export interface TtapiStatusResponse {
-  code: number;
+  status: string;
   message: string;
   data?: {
-    taskId: string;
+    jobId: string;
     status: string;
     prompt?: string;
     imageUrl?: string;
@@ -109,16 +108,16 @@ export async function generateMidjourneyTtapi(
     const imagineResult: TtapiTaskResponse = await imagineResponse.json();
     console.log("ttapi.io imagine response:", imagineResult);
 
-    if (imagineResult.code !== 1 || !imagineResult.data?.taskId) {
+    if (imagineResult.status !== 'SUCCESS' || !imagineResult.data?.jobId) {
       console.error("❌ Invalid response from ttapi.io:", imagineResult);
       return {
         success: false,
-        error: imagineResult.message || "Failed to create task"
+        error: imagineResult.message || "Failed to create job"
       };
     }
 
-    const taskId = imagineResult.data.taskId;
-    console.log(`✅ Task created: ${taskId}`);
+    const jobId = imagineResult.data.jobId;
+    console.log(`✅ Job created: ${jobId}`);
 
     // Step 2: Poll for completion
     const maxAttempts = timeoutSeconds ? Math.ceil((timeoutSeconds * 1000) / POLL_INTERVAL_MS) : MAX_POLL_ATTEMPTS;
@@ -127,7 +126,7 @@ export async function generateMidjourneyTtapi(
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       await new Promise(resolve => setTimeout(resolve, POLL_INTERVAL_MS));
 
-      const statusResponse = await nodeFetch(`${TTAPI_BASE_URL}/task/${taskId}`, {
+      const statusResponse = await nodeFetch(`${TTAPI_BASE_URL}/job/${jobId}`, {
         method: "GET",
         headers: {
           "TT-API-KEY": TTAPI_API_KEY
@@ -155,13 +154,13 @@ export async function generateMidjourneyTtapi(
             success: true,
             imageUrl: imageUrl || imageUrls?.[0],
             imageUrls: imageUrls || (imageUrl ? [imageUrl] : []),
-            taskId
+            taskId: jobId
           };
         } else {
-          console.error("❌ Task completed but no images returned:", statusResult);
+          console.error("❌ Job completed but no images returned:", statusResult);
           return {
             success: false,
-            error: "Task completed but no images were returned"
+            error: "Job completed but no images were returned"
           };
         }
       }
@@ -184,7 +183,7 @@ export async function generateMidjourneyTtapi(
     return {
       success: false,
       error: `Generation did not complete within ${timeoutDuration} seconds. The ttapi.io servers may be experiencing delays.`,
-      taskId
+      taskId: jobId
     };
 
   } catch (error: any) {
