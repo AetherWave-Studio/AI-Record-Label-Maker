@@ -17,6 +17,7 @@ import {
   SERVICE_CREDIT_COSTS,
   type PlanType,
   type VideoResolution,
+  type VideoModel,
   type ImageEngine,
   type MusicModel,
   type QuestType,
@@ -66,24 +67,20 @@ function validateMusicModel(planType: PlanType, model: MusicModel): boolean {
 // Updated 2025-01 with KIE.ai premium models (Veo 3, Sora 2)
 // All pricing includes 50% margin for infrastructure and profit
 function calculateVideoCredits(
-  model: 'seedance-lite' | 'seedance-pro' | 'veo3_fast' | 'sora2' | 'sora2_pro' | 'sora2_pro_hd',
+  model: VideoModel,
   resolution?: '512p' | '720p' | '1080p' | '4k',
-  duration?: number
+  duration?: number,
+  quality?: 'standard' | 'hd'
 ): number {
   let costPerSecond = 0;
 
-  // Premium KIE.ai models (fixed per-second cost, resolution-independent)
+  // Premium KIE.ai models (VEO 3.1 has fixed cost per generation, not per-second)
   if (model === 'veo3_fast') {
-    costPerSecond = 0.0375; // $0.30/8s via KIE.ai
+    return 0.30; // $0.30 per 8s generation (fixed cost)
   } else if (model === 'sora2') {
     costPerSecond = 0.015; // $0.15/10s via KIE.ai (60% cheaper than OpenAI!)
-  } else if (model === 'sora2_pro') {
-    costPerSecond = 0.045; // $0.45/10s via KIE.ai
-  } else if (model === 'sora2_pro_hd') {
-    costPerSecond = 0.10; // $1/10s (1080p) via KIE.ai
-  }
-  // Seedance models (fal.ai) - resolution-dependent pricing
-  else if (model === 'seedance-lite') {
+    // Seedance models (fal.ai) - resolution-dependent pricing
+  } else if (model === 'seedance-lite') {
     if (resolution === '512p') costPerSecond = 0.010;        // 480p pricing
     else if (resolution === '720p') costPerSecond = 0.0225;  // 720p pricing
     else if (resolution === '1080p') costPerSecond = 0.050;  // 1080p pricing
@@ -885,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const { prompt, model, aspectRatio = '16:9', duration = 5, imageData, imageMode = 'reference' } = req.body;
+      const { prompt, model, aspectRatio = '16:9', duration = 5, imageData, endImageData, imageMode = 'reference' } = req.body;
       const userPlan = user.subscriptionPlan as PlanType;
 
       // Validate model is allowed for user's plan
@@ -920,10 +917,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (model.startsWith('sora')) {
         // SORA 2: aspect_ratio must be 'landscape' or 'portrait'
         kieInput.aspect_ratio = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '9:16' ? 'portrait' : 'landscape';
-        // SORA 2: duration is passed as n_frames (string)
+        // SORA 2: n_frames must be exactly "10" or "15" (seconds as string)
         kieInput.n_frames = duration.toString();
         // SORA 2: Always remove watermark (Starter+ plan required)
         kieInput.remove_watermark = true;
+        // SORA 2 PRO: Set size/quality based on frontend selection
+        if (model.includes('pro')) {
+          kieInput.size = soraQuality === 'hd' ? 'high' : 'standard';
+        }
       } else {
         // Seedance and VEO 3 use standard format
         kieInput.aspect_ratio = aspectRatio;
@@ -932,19 +933,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Add image if provided
       if (imageData) {
-        // SORA 2 requires publicly accessible URLs, not base64 data
-        if (model.startsWith('sora')) {
-          console.log('SORA 2: Uploading base64 image to KIE.ai file storage...');
+        // SORA 2 and VEO 3 require publicly accessible URLs, not base64 data
+        if (model.startsWith('sora') || model.startsWith('veo3')) {
+          const modelName = model.startsWith('sora') ? 'SORA 2' : 'VEO 3';
+          console.log(`${modelName}: Uploading base64 image to ImgBB...`);
           try {
             const publicUrl = await uploadImageToKie(imageData, process.env.KIE_API_KEY!);
-            console.log(`SORA 2: Image uploaded successfully: ${publicUrl}`);
-            kieInput.image_urls = [publicUrl];
+            console.log(`${modelName}: Image uploaded successfully: ${publicUrl}`);
+
+            if (model.startsWith('sora')) {
+              kieInput.image_urls = [publicUrl];
+            } else {
+              // VEO 3: Use imageUrl parameter
+              kieInput.imageUrl = publicUrl;
+
+              // If second image provided (for FIRST_AND_LAST_FRAMES_2_VIDEO)
+              if (endImageData) {
+                console.log(`${modelName}: Uploading second image (last frame) to ImgBB...`);
+                const endPublicUrl = await uploadImageToKie(endImageData, process.env.KIE_API_KEY!);
+                console.log(`${modelName}: Second image uploaded successfully: ${endPublicUrl}`);
+                kieInput.endImageUrl = endPublicUrl;
+              }
+            }
           } catch (uploadError: any) {
-            console.error('SORA 2: Image upload failed:', uploadError);
-            throw new Error(`Failed to upload image for SORA 2: ${uploadError.message}`);
+            console.error(`${modelName}: Image upload failed:`, uploadError);
+            throw new Error(`Failed to upload image for ${modelName}: ${uploadError.message}`);
           }
         } else {
-          // Seedance and VEO 3 accept base64 data URLs
+          // Seedance accepts base64 data URLs
           kieInput.image_url = imageData;
           if (imageMode === 'first-frame') {
             kieInput.image_end = false; // Image at start
@@ -957,6 +973,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Call KIE.ai API
       console.log(`Generating video with KIE.ai model: ${model}`);
+
+      
       const result = await kieSubscribe({
         model,
         input: kieInput,
@@ -1587,7 +1605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const {
         prompt,
-        model = 'seedance-lite', // 'seedance-lite', 'seedance-pro', 'veo3_fast', 'sora2', 'sora2_pro', 'sora2_pro_hd'
+        model = 'seedance-lite', // 'seedance-lite', 'seedance-pro', 'veo3_fast', 'sora2'
         imageData, // Base64 or URL
         imageUrl,
         endImageUrl, // For first+last frame (Seedance only)
@@ -1596,6 +1614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         duration = 5, // Duration in seconds
         aspectRatio = '16:9', // For Veo/Sora: '16:9', '9:16', '1:1', '4:3', '21:9'
         seed,
+        soraQuality = 'standard', // 'standard' or 'high' for SORA 2 Pro
         enableSafetyChecker = true
       } = req.body;
 
@@ -1618,9 +1637,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Calculate credits based on model and settings
       const requiredCredits = calculateVideoCredits(
-        model as 'seedance-lite' | 'seedance-pro' | 'veo3_fast' | 'sora2' | 'sora2_pro' | 'sora2_pro_hd',
-        resolution as '512p' | '720p' | '1080p' | '4k',
-        duration
+        model,
+        resolution,
+        duration,
+        soraQuality
       );
 
       // Check if plan has unlimited video generation
@@ -1670,15 +1690,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // SORA 2 uses different parameter names than VEO 3
         console.log(`DEBUG: Checking model.startsWith('sora'): model="${model}", result=${model.startsWith('sora')}`);
+        console.log(`DEBUG: duration value: ${duration} (type: ${typeof duration})`);
         if (model.startsWith('sora')) {
           console.log('DEBUG: Inside SORA 2 block');
           // SORA 2 API parameters
           kieInput.aspect_ratio = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '9:16' ? 'portrait' : 'landscape';
           kieInput.n_frames = duration.toString(); // "10" or "15" as string
+          console.log(`DEBUG: Setting n_frames to: ${kieInput.n_frames}`);
 
           // SORA 2 requires Starter+ plan, so all SORA 2 users are paid users
           // Always remove watermark for SORA 2 (free users can't access it)
           kieInput.remove_watermark = true;
+          // SORA 2 PRO: Set size/quality based on frontend selection
+          if (model.includes('pro')) {
+            kieInput.size = soraQuality === 'hd' ? 'high' : 'standard';
+          }
 
           console.log(`SORA 2 watermark removal: true (plan: ${user.subscriptionPlan})`);
           console.log(`SORA 2 kieInput after format:`, JSON.stringify(kieInput, null, 2));
@@ -1851,7 +1877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       else {
         return res.status(400).json({
           error: 'Invalid model specified',
-          validModels: ['seedance-lite', 'seedance-pro', 'veo3_fast', 'sora2', 'sora2_pro', 'sora2_pro_hd']
+          validModels: ['seedance-lite', 'seedance-pro', 'veo3_fast', 'sora2']
         });
       }
 

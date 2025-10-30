@@ -111,8 +111,6 @@ export const VideoModel = z.enum([
   'seedance-pro',       // Fal.ai ByteDance Seedance V1 Pro
   'veo3_fast',          // KIE.ai Google Veo 3 Fast
   'sora2',              // KIE.ai OpenAI Sora 2 Standard
-  'sora2_pro',          // KIE.ai OpenAI Sora 2 Pro
-  'sora2_pro_hd'        // KIE.ai OpenAI Sora 2 Pro HD (1080p)
 ]);
 export type VideoModel = z.infer<typeof VideoModel>;
 
@@ -192,7 +190,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
     allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
-    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2', 'sora2_pro', 'veo3_fast'], // All except Sora Pro HD
+    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2', 'veo3_fast'], // All available models
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
@@ -207,7 +205,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     imageGeneration: true,
     wavConversion: true, // WAV conversion available
     allowedVideoResolutions: ['512p', '720p', '1080p', '4k'], // All resolutions
-    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2', 'sora2_pro', 'sora2_pro_hd', 'veo3_fast'], // ALL models
+    allowedVideoModels: ['seedance-lite', 'seedance-pro', 'sora2', 'veo3_fast'], // All available models
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',

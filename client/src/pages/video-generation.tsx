@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Video, Wand2, Upload, Download } from "lucide-react";
 
-type VideoModel = 'seedance-lite' | 'seedance-pro' | 'veo3_fast' | 'sora2' | 'sora2_pro' | 'sora2_pro_hd';
+type VideoModel = 'seedance-lite' | 'seedance-pro' | 'veo3_fast' | 'sora2';
 type ImageMode = 'first-frame' | 'last-frame' | 'reference';
-type AspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '21:9';
+type AspectRatio = '16:9' | '9:16' | '1:1' | '4:3' | '21:9' | 'auto';
+type SoraQuality = 'standard' | 'hd';
 
 // Model-specific configurations
 const MODEL_CONFIG = {
@@ -28,25 +29,11 @@ const MODEL_CONFIG = {
     durationOptions: [10, 15], // Fixed durations for SORA 2
     imageLabel: '- For style reference',
   },
-  sora2_pro: {
+      veo3_fast: {
     supportsAspectRatio: true,
-    aspectRatios: ['16:9', '9:16'] as AspectRatio[],
+    aspectRatios: ['16:9', '9:16', 'auto'] as AspectRatio[], // Limited options for VEO 3.1
     supportsResolution: false,
-    durationOptions: [10, 15], // Fixed durations for SORA 2
-    imageLabel: '- For style reference',
-  },
-  sora2_pro_hd: {
-    supportsAspectRatio: true,
-    aspectRatios: ['16:9', '9:16'] as AspectRatio[],
-    supportsResolution: false,
-    durationOptions: [10, 15], // Fixed durations for SORA 2
-    imageLabel: '- For style reference',
-  },
-  veo3_fast: {
-    supportsAspectRatio: true,
-    aspectRatios: ['16:9', '9:16', '1:1', '4:3', '21:9'] as AspectRatio[],
-    supportsResolution: false,
-    durationRange: { min: 5, max: 10, step: 1 }, // Slider for VEO 3
+    durationOptions: [8], // Fixed 8 seconds for VEO 3.1
     imageLabel: '- First frame or reference',
   },
   'seedance-lite': {
@@ -76,6 +63,7 @@ interface VideoGenerationRequest {
   duration?: number;
   aspectRatio?: AspectRatio;
   seed?: number;
+  soraQuality?: SoraQuality;
 }
 
 export default function VideoGeneration() {
@@ -84,7 +72,7 @@ export default function VideoGeneration() {
   const [model, setModel] = useState<VideoModel>("sora2");
   const [imageMode, setImageMode] = useState<ImageMode>("first-frame");
   const [resolution, setResolution] = useState("720p");
-  const [duration, setDuration] = useState(10); // Default to 10s for SORA 2
+  const [duration, setDuration] = useState(8); // Default to 8s for VEO 3.1
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -92,13 +80,27 @@ export default function VideoGeneration() {
   const [endImagePreview, setEndImagePreview] = useState<string>("");
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string>("");
   const [seed, setSeed] = useState<number | undefined>(undefined);
+  const [soraQuality, setSoraQuality] = useState<SoraQuality>('standard');
 
   // Get current model configuration
   const modelConfig = MODEL_CONFIG[model];
   const isSeedanceModel = model.startsWith('seedance');
+  const isVeo3Model = model.startsWith('veo3');
+
+  // Update duration when model changes to respect model-specific constraints
+  useEffect(() => {
+    if (isVeo3Model) {
+      setDuration(8); // VEO 3.1 (both Fast and Quality) only supports 8 seconds
+    } else if (model === 'sora2') {
+      setDuration(10); // SORA 2 defaults to 10 seconds
+    } else if (isSeedanceModel) {
+      setDuration(5); // Seedance defaults to 5 seconds (within range)
+    }
+  }, [model, isSeedanceModel, isVeo3Model]);
 
   const videoMutation = useMutation({
     mutationFn: async (request: VideoGenerationRequest) => {
+      console.log('Making request to /api/generate-video-premium with:', request);
       const response = await fetch('/api/generate-video-premium', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -145,6 +147,8 @@ export default function VideoGeneration() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
+        // Set image mode based on model type
+        setImageMode(model.startsWith('sora') ? 'reference' : 'first-frame');
       };
       reader.readAsDataURL(file);
     }
@@ -160,23 +164,28 @@ export default function VideoGeneration() {
       return;
     }
 
+    // Determine image mode for VEO 3.1 based on whether both images are provided
+    let finalImageMode = imageMode;
+    if (isVeo3Model && imagePreview && endImagePreview) {
+      finalImageMode = 'first+last'; // Use first+last for VEO 3.1 when both images provided
+    }
+
     const request: VideoGenerationRequest = {
       prompt,
-      model,
+      model, // Always send the original model name
       resolution: model.startsWith('seedance') ? resolution : undefined,
       duration,
-      aspectRatio: model.startsWith('veo') || model.startsWith('sora') ? aspectRatio : undefined,
-      imageMode,
+      aspectRatio: isVeo3Model || model.startsWith('sora') ? aspectRatio : undefined,
+      imageMode: finalImageMode,
       ...(imagePreview && { imageData: imagePreview }),
       ...(endImagePreview && { endImageUrl: endImagePreview }),
       ...(seed && { seed }),
-    };
+          };
 
     videoMutation.mutate(request);
   };
 
   const isKIEModel = model.startsWith('veo') || model.startsWith('sora');
-  const isSeedanceModel = model.startsWith('seedance');
 
   return (
     <div className="container mx-auto p-6 max-w-7xl">
@@ -201,21 +210,22 @@ export default function VideoGeneration() {
               {/* Model Selection */}
               <div className="space-y-2">
                 <Label htmlFor="model">AI Model</Label>
-                <Select value={model} onValueChange={(value) => setModel(value as VideoModel)}>
+                <Select value={model} onValueChange={(value) => {
+                  setModel(value as VideoModel);
+                                  }}>
                   <SelectTrigger id="model">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="seedance-lite">Seedance Lite (Fast)</SelectItem>
                     <SelectItem value="seedance-pro">Seedance Pro (High Quality)</SelectItem>
-                    <SelectItem value="veo3_fast">VEO 3 Fast (Premium)</SelectItem>
-                    <SelectItem value="sora2">SORA 2 (Premium)</SelectItem>
-                    <SelectItem value="sora2_pro">SORA 2 Pro (Premium)</SelectItem>
-                    <SelectItem value="sora2_pro_hd">SORA 2 Pro HD (Premium)</SelectItem>
-                  </SelectContent>
+                    <SelectItem value="veo3_fast">VEO 3.1 Fast</SelectItem>
+                    <SelectItem value="sora2">SORA 2</SelectItem>
+                                      </SelectContent>
                 </Select>
               </div>
 
+              
               <Separator />
 
               {/* Prompt Input */}
@@ -276,7 +286,7 @@ export default function VideoGeneration() {
                     <SelectContent>
                       {modelConfig.aspectRatios.map((ratio) => (
                         <SelectItem key={ratio} value={ratio}>
-                          {ratio} {ratio === '16:9' ? '(Landscape)' : ratio === '9:16' ? '(Portrait)' : ratio === '1:1' ? '(Square)' : ratio === '4:3' ? '(Classic)' : '(Ultrawide)'}
+                          {ratio} {ratio === '16:9' ? '(Landscape)' : ratio === '9:16' ? '(Portrait)' : ratio === '1:1' ? '(Square)' : ratio === '4:3' ? '(Classic)' : ratio === '21:9' ? '(Ultrawide)' : ratio === 'auto' ? '(Automatic)' : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -310,7 +320,7 @@ export default function VideoGeneration() {
                 <Label htmlFor="image-upload">
                   Upload Image (Optional)
                   <span className="text-sm text-muted-foreground ml-2">
-                    {modelConfig.imageLabel}
+                    {endImagePreview ? 'First Frame' : modelConfig.imageLabel}
                   </span>
                 </Label>
                 <Input
@@ -326,11 +336,11 @@ export default function VideoGeneration() {
                   <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover rounded-lg" />
                 )}
 
-                {/* Additional image for Seedance first+last mode */}
-                {isSeedanceModel && imagePreview && (
+                {/* Additional image for Seedance first+last mode and VEO 3.1 */}
+                {(isSeedanceModel || isVeo3Model) && imagePreview && (
                   <div className="space-y-2 pt-2">
                     <Label htmlFor="end-image-upload" className="text-sm">
-                      Add End Frame (Optional)
+                      Upload Image (Optional) - Final frame
                       <span className="text-muted-foreground ml-2">- For smoother transitions</span>
                     </Label>
                     <Input
@@ -340,7 +350,7 @@ export default function VideoGeneration() {
                       onChange={(e) => handleImageUpload(e, true)}
                     />
                     {endImagePreview && (
-                      <img src={endImagePreview} alt="End frame" className="w-full h-32 object-cover rounded-lg" />
+                      <img src={endImagePreview} alt="Final frame" className="w-full h-32 object-cover rounded-lg" />
                     )}
                   </div>
                 )}
@@ -467,9 +477,9 @@ export default function VideoGeneration() {
               {model.startsWith('sora2') && (
                 <>
                   <p><strong>Provider:</strong> KIE.ai (OpenAI SORA 2)</p>
-                  <p><strong>Quality:</strong> {model.includes('hd') ? 'Ultra HD' : 'Premium'}</p>
+                  <p><strong>Quality:</strong> Premium</p>
                   <p><strong>Best for:</strong> Professional content</p>
-                </>
+                                  </>
               )}
             </CardContent>
           </Card>

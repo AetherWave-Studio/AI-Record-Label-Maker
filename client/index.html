@@ -1976,9 +1976,7 @@
     <option value="seedance-lite" selected>Seedance Lite (Free - Fastest)</option>
     <option value="seedance-pro" data-plan="studio">Seedance Pro (Studio+)</option>
     <option value="sora2" data-plan="starter">SORA 2 Standard (Starter+ - OpenAI)</option>
-    <option value="sora2_pro" data-plan="creator">SORA 2 Pro (Creator+)</option>
-    <option value="sora2_pro_hd" data-plan="all_access">SORA 2 Pro HD (All Access - 1080p)</option>
-    <option value="veo3_fast" data-plan="creator">VEO 3 Fast (Creator+ - Google)</option>
+    <option value="veo3_fast" data-plan="creator">VEO 3.1 Fast (Creator+ - Google)</option>
     </select>
     </div>
 
@@ -1986,9 +1984,30 @@
     <div class="form-group" id="image-upload-group">
     <label class="form-label">
     <span>Upload Image (Optional)</span>
-    <span id="image-label-hint" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- For style reference</span>
+    <span id="image-label-hint" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- For first frame or Style reference</span>
     </label>
     <input type="file" id="media-image-upload" accept="image/*" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; cursor: pointer;">
+    </div>
+
+    <!-- Image Preview for first uploader -->
+    <div id="media-image-preview" style="display: none; margin-top: 0.5rem;">
+    <img id="media-preview-img" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border-color);" />
+    <button type="button" id="media-clear-image" class="download-btn" style="margin-top: 0.5rem; display: inline-block;">Clear Image</button>
+    </div>
+
+    <!-- Second Image Upload for VEO 3.1 Fast Last Frame (hidden by default) -->
+    <div class="form-group" id="last-frame-upload-group" style="display: none; margin-top: 0.75rem;">
+    <label class="form-label">
+    <span>Upload Image (Optional)</span>
+    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- Last frame</span>
+    </label>
+    <input type="file" id="media-last-frame-upload" accept="image/*" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; cursor: pointer;">
+
+    <!-- Preview for last frame image -->
+    <div id="media-last-frame-preview" style="display: none; margin-top: 0.5rem;">
+    <img id="media-last-frame-preview-img" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border-color);" />
+    <button type="button" id="media-clear-last-frame" class="download-btn" style="margin-top: 0.5rem; display: inline-block;">Clear Last Frame Image</button>
+    </div>
     </div>
 
     <!-- Image Mode Selection (shown only for video when image uploaded) -->
@@ -1999,11 +2018,6 @@
     <option value="first-frame">First Frame</option>
     <option value="last-frame">Last Frame</option>
     </select>
-
-    <div id="media-image-preview" style="display: none; margin-top: 0.5rem;">
-    <img id="media-preview-img" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border-color);" />
-    <button type="button" id="media-clear-image" class="download-btn" style="margin-top: 0.5rem; display: inline-block;">Clear Image</button>
-    </div>
     </div>
 
     <!-- Image Style Selector (only for images, not videos) -->
@@ -2039,9 +2053,10 @@
     <select id="media-aspect-ratio">
     <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
     <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
-    <option value="1:1">1:1 (Square - Instagram)</option>
-    <option value="4:3">4:3 (Classic)</option>
-    <option value="21:9">21:9 (Cinematic)</option>
+    <option value="1:1" data-exclude-veo3>1:1 (Square - Instagram)</option>
+    <option value="4:3" data-exclude-veo3>4:3 (Classic)</option>
+    <option value="21:9" data-exclude-veo3>21:9 (Cinematic)</option>
+    <option value="auto">Auto (Model decides)</option>
     </select>
     </div>
 
@@ -3838,11 +3853,21 @@ window.premiumPlayer = {
     if (selectedMediaType === 'video') {
       const currentModel = mediaVideoModel?.value || 'seedance-lite';
       const isSeedance = currentModel.startsWith('seedance');
+      const isVeo3Fast = currentModel === 'veo3_fast';
+
       // Only show image mode for Seedance (VEO 3 and SORA 2 use reference only)
       if (isSeedance) {
         imageModeSelection.style.display = 'block';
       } else {
         imageModeSelection.style.display = 'none';
+      }
+
+      // Show second uploader (last frame) for VEO 3.1 Fast when first image is uploaded
+      const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
+      if (isVeo3Fast && uploadedImageData) {
+        if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
+      } else {
+        if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
       }
     }
     };
@@ -3863,6 +3888,130 @@ window.premiumPlayer = {
         if (mediaImagePreview) mediaImagePreview.style.display = 'none';
         if (mediaPreviewImg) mediaPreviewImg.src = '';
         if (imageModeSelection) imageModeSelection.style.display = 'none';
+
+        // Hide and clear second uploader (last frame)
+        const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
+        if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
+        const lastFrameUpload = document.getElementById('media-last-frame-upload');
+        if (lastFrameUpload) lastFrameUpload.value = '';
+        const lastFramePreview = document.getElementById('media-last-frame-preview');
+        if (lastFramePreview) lastFramePreview.style.display = 'none';
+
+        // Reset first image label to default
+        const imageLabelHint = document.getElementById('image-label-hint');
+        if (imageLabelHint) {
+          imageLabelHint.textContent = '- For first frame or Style reference';
+        }
+      });
+    }
+
+    // Handle last frame image upload for VEO 3.1 Fast
+    let uploadedLastFrameData = null;
+    const lastFrameUpload = document.getElementById('media-last-frame-upload');
+    const lastFramePreview = document.getElementById('media-last-frame-preview');
+    const lastFramePreviewImg = document.getElementById('media-last-frame-preview-img');
+    const clearLastFrameBtn = document.getElementById('media-clear-last-frame');
+
+    if (lastFrameUpload) {
+      lastFrameUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file type
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+          alert('Invalid image format. Please use JPG, PNG, WEBP, or GIF.');
+          lastFrameUpload.value = '';
+          return;
+        }
+
+        // Check file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          alert('Image file is too large. Please use an image under 5MB.');
+          lastFrameUpload.value = '';
+          return;
+        }
+
+        // Read and preview the last frame image
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            uploadedLastFrameData = event.target.result;
+            lastFramePreviewImg.src = uploadedLastFrameData;
+            lastFramePreview.style.display = 'block';
+
+            // Change first image uploader label to "First frame"
+            const imageLabelHint = document.getElementById('image-label-hint');
+            if (imageLabelHint) {
+              imageLabelHint.textContent = '- First frame';
+            }
+          };
+          img.src = event.target.result;
+        };
+        reader.onerror = () => {
+          alert('Failed to read image file. Please try again.');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Clear last frame image
+    if (clearLastFrameBtn) {
+      clearLastFrameBtn.addEventListener('click', () => {
+        uploadedLastFrameData = null;
+        if (lastFrameUpload) lastFrameUpload.value = '';
+        if (lastFramePreview) lastFramePreview.style.display = 'none';
+        if (lastFramePreviewImg) lastFramePreviewImg.src = '';
+
+        // Change first image uploader label back to default
+        const imageLabelHint = document.getElementById('image-label-hint');
+        if (imageLabelHint) {
+          imageLabelHint.textContent = '- For first frame or Style reference';
+        }
+      });
+    }
+
+    // Handle model change to show/hide last frame uploader and filter aspect ratios
+    if (mediaVideoModel) {
+      mediaVideoModel.addEventListener('change', () => {
+        const currentModel = mediaVideoModel.value;
+        const isVeo3Fast = currentModel === 'veo3_fast';
+        const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
+        const imageLabelHint = document.getElementById('image-label-hint');
+        const aspectRatioSelect = document.getElementById('media-aspect-ratio');
+
+        // Only show last frame uploader for VEO 3.1 Fast when first image is uploaded
+        if (isVeo3Fast && uploadedImageData && selectedMediaType === 'video') {
+          if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
+        } else {
+          if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
+          // Reset label to default when hiding second uploader
+          if (imageLabelHint) {
+            imageLabelHint.textContent = '- For first frame or Style reference';
+          }
+        }
+
+        // Filter aspect ratio options for VEO 3.1 Fast (only 16:9, 9:16, auto)
+        if (aspectRatioSelect) {
+          const options = aspectRatioSelect.querySelectorAll('option');
+          const currentValue = aspectRatioSelect.value;
+
+          options.forEach(option => {
+            if (isVeo3Fast && option.hasAttribute('data-exclude-veo3')) {
+              option.style.display = 'none';
+              option.disabled = true;
+            } else {
+              option.style.display = '';
+              option.disabled = false;
+            }
+          });
+
+          // If current selection is not allowed for VEO 3 Fast, reset to 16:9
+          if (isVeo3Fast && aspectRatioSelect.querySelector(`option[value="${currentValue}"]`)?.hasAttribute('data-exclude-veo3')) {
+            aspectRatioSelect.value = '16:9';
+          }
+        }
       });
     }
 
@@ -4456,6 +4605,10 @@ async function generateMedia() {
             if (uploadedImageData) {
                 requestBody.imageData = uploadedImageData;
                 requestBody.imageMode = document.getElementById('image-mode')?.value || 'reference';
+            }
+            // Add second image data if provided (for VEO 3.1 Fast last frame)
+            if (uploadedLastFrameData) {
+                requestBody.endImageData = uploadedLastFrameData;
             }
 
             const modelName = videoModel.replace('_', ' ').toUpperCase();

@@ -474,5 +474,7 @@ export class DbStorage implements IStorage {
   }
 }
 
-// Export database storage instance instead of memory storage
-export const storage = new DbStorage();
+// Use memory storage in development or when DATABASE_URL is not available
+export const storage = process.env.DATABASE_URL && !process.env.NODE_ENV?.includes('development')
+  ? new DbStorage()
+  : new MemStorage();

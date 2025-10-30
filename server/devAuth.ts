@@ -16,6 +16,7 @@ const DEV_USER: User = {
   credits: 10000,
   subscriptionPlan: 'all_access',
   lastCreditReset: new Date(),
+  welcomeBonusClaimed: 1,
   stripeCustomerId: null,
   stripeSubscriptionId: null,
   createdAt: new Date(),
