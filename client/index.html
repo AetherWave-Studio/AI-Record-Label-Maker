@@ -3032,15 +3032,88 @@
       `;
       notification.textContent = message;
       document.body.appendChild(notification);
-      
+
       setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease-out';
         setTimeout(() => notification.remove(), 300);
       }, 3000);
     }
-    
-    
-    
+
+    // Show confirmation dialog that requires acknowledgment
+    function showConfirmationDialog(message, type = 'warning') {
+      return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          backdrop-filter: blur(4px);
+          z-index: 10001;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          animation: fadeIn 0.2s ease-out;
+        `;
+
+        // Create dialog
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+          border: 1px solid rgba(139, 92, 246, 0.3);
+          border-radius: 16px;
+          padding: 2rem;
+          max-width: 500px;
+          width: 90%;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+          backdrop-filter: blur(20px);
+        `;
+
+        // Warning icon and message
+        dialog.innerHTML = `
+          <div style="display: flex; align-items: start; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="font-size: 2rem; flex-shrink: 0;">⚠️</div>
+            <div>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--text-primary); font-size: 1.25rem;">Important Notice</h3>
+              <p style="margin: 0; color: var(--text-secondary); line-height: 1.6;">${message}</p>
+            </div>
+          </div>
+          <button id="confirm-dialog-btn" style="
+            width: 100%;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(59, 130, 246, 0.8));
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+          " onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+            I Understand
+          </button>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        // Handle confirmation
+        const confirmBtn = dialog.querySelector('#confirm-dialog-btn');
+        confirmBtn.addEventListener('click', () => {
+          overlay.style.animation = 'fadeOut 0.2s ease-out';
+          setTimeout(() => {
+            overlay.remove();
+            resolve(true);
+          }, 200);
+        });
+      });
+    }
+
+
+
     // Fetch credits on page load
     setTimeout(() => {
       fetchUserCredits();
@@ -5097,7 +5170,7 @@ const resolutionSelect = document.getElementById('media-resolution');
 const durationSelect = document.getElementById('media-duration');
 
 if (videoModelSelect) {
-  videoModelSelect.addEventListener('change', () => {
+  videoModelSelect.addEventListener('change', async () => {
     const model = videoModelSelect.value;
     const isSeedance = model.startsWith('seedance');
     const isVEO = model.startsWith('veo');
@@ -5113,10 +5186,8 @@ if (videoModelSelect) {
 
     // Show warning for SORA 2 Pro HD about long generation times
     if (model === 'sora2_pro_hd') {
-      showNotification(
-        '⚠️ SORA 2 Pro HD has very long generation times: 10-second videos typically take 10-20 minutes, and 15-second videos can take around 30 minutes. This reflects OpenAI\'s native delivery speed. We strongly recommend using 15-second HD with caution.',
-        'warning',
-        15000 // Show for 15 seconds
+      await showConfirmationDialog(
+        'SORA 2 Pro HD has very long generation times: 10-second videos typically take 10-20 minutes, and 15-second videos can take around 30 minutes. This reflects OpenAI\'s native delivery speed. We strongly recommend using 15-second HD with caution.'
       );
     }
 
