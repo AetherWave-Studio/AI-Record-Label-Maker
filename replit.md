@@ -27,6 +27,10 @@ The application provides a creative tool interface for generating AI-created mus
   - Seedance Lite: 480p, 720p, 1080p only (4K hidden)
   - Seedance Pro: 480p, 720p, 1080p, 4K
   - Changed default from 512p to 480p across entire application
+- **Duration Options:**
+  - Seedance Lite: 5 seconds, 10 seconds only (3s removed)
+  - Seedance Pro: 3 seconds, 5 seconds, 10 seconds
+  - Free account default changed from 3s to 5s
 
 **Custom Video Generation Button Styling:**
 - Added custom button styling for video generation with background images

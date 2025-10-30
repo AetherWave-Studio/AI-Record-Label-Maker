@@ -2142,16 +2142,16 @@
     <div class="form-group" id="video-duration-group" style="display: none;">
     <label class="form-label">Duration</label>
     <select id="media-duration">
-    <option value="3" selected>3 seconds</option>
-    <option value="5">5 seconds</option>
+    <option value="3" data-exclude-lite>3 seconds</option>
+    <option value="5" selected>5 seconds</option>
     <option value="8">8 seconds</option>
     <option value="10">10 seconds</option>
     </select>
     <div id="credit-cost-preview" style="font-size: 0.85rem; color: var(--accent-color); margin-top: 0.5rem; font-weight: 600;"></div>
     </div>
 
-    <!-- Advanced Settings (collapsible) -->
-    <div class="form-group">
+    <!-- Advanced Settings (collapsible) - HIDDEN -->
+    <div class="form-group" style="display: none;">
     <details>
     <summary style="cursor: pointer; font-weight: 600; color: var(--accent-color); margin-bottom: 1rem;">⚙️ Advanced Settings</summary>
 
@@ -2572,7 +2572,7 @@
         // Free accounts can only use lowest settings
         videoModel.value = 'seedance-lite';
         resolution.value = '480p';
-        duration.value = '3';
+        duration.value = '5';
 
         // Disable all dropdowns
         videoModel.disabled = true;
@@ -5209,10 +5209,10 @@ async function generateMedia() {
             <div style="margin-bottom: 1.5rem;">
               <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Duration</label>
               <select id="album-video-duration" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 0.9rem;" ${isFree ? 'disabled' : ''}>
-                <option value="3" selected>3 seconds (3 credits)</option>
-                <option value="5">5 seconds (5 credits)</option>
+                <option value="5" selected>5 seconds (8 credits)</option>
+                <option value="10">10 seconds (15 credits)</option>
               </select>
-              ${isFree ? `<p style="color: #fbbf24; font-size: 0.75rem; margin-top: 0.5rem;">⚠️ Free accounts limited to 3 seconds</p>` : ''}
+              ${isFree ? `<p style="color: #fbbf24; font-size: 0.75rem; margin-top: 0.5rem;">⚠️ Free accounts limited to 5 seconds</p>` : ''}
             </div>
             
             <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);">
@@ -5493,13 +5493,21 @@ if (videoModelSelect) {
       if (resolutionGroup) resolutionGroup.style.display = 'block';
       if (aspectRatioGroup) aspectRatioGroup.style.display = 'none';
       if (durationGroup) durationGroup.style.display = 'block';
-      // Seedance: 3s, 5s, 10s durations
+      // Seedance durations: Lite (5s, 10s only), Pro (3s, 5s, 10s)
       if (durationSelect) {
-        durationSelect.innerHTML = `
-          <option value="3" selected>3 seconds</option>
-          <option value="5">5 seconds</option>
-          <option value="10">10 seconds</option>
-        `;
+        const isLite = model.includes('lite');
+        if (isLite) {
+          durationSelect.innerHTML = `
+            <option value="5" selected>5 seconds</option>
+            <option value="10">10 seconds</option>
+          `;
+        } else {
+          durationSelect.innerHTML = `
+            <option value="3">3 seconds</option>
+            <option value="5" selected>5 seconds</option>
+            <option value="10">10 seconds</option>
+          `;
+        }
       }
       // Hide image mode selection (Seedance now uses same workflow as VEO - first+last frame)
       if (imageModeSelection) {

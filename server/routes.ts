@@ -1439,9 +1439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate quality settings for free accounts
       if (user.subscriptionPlan === 'free') {
-        if (modelVersion !== 'lite' || resolution !== '480p' || parseInt(duration) !== 3) {
+        if (modelVersion !== 'lite' || resolution !== '480p' || parseInt(duration) !== 5) {
           return res.status(403).json({
-            error: 'Free accounts can only use default settings (Lite model, 480p, 3 seconds)',
+            error: 'Free accounts can only use default settings (Lite model, 480p, 5 seconds)',
             message: 'Please upgrade your plan to access higher quality video generation settings.'
           });
         }
@@ -1623,10 +1623,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate plan restrictions for free accounts
       if (user.subscriptionPlan === 'free') {
-        // Free users can only use Seedance Lite 480p 3s
-        if (model !== 'seedance-lite' || resolution !== '480p' || duration !== 3) {
+        // Free users can only use Seedance Lite 480p 5s
+        if (model !== 'seedance-lite' || resolution !== '480p' || duration !== 5) {
           return res.status(403).json({
-            error: 'Free accounts can only use Seedance Lite (480p, 3 seconds)',
+            error: 'Free accounts can only use Seedance Lite (480p, 5 seconds)',
             message: 'Please upgrade your plan to access premium models like Veo 3 or Sora 2.'
           });
         }
