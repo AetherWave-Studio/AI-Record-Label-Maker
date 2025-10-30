@@ -27,14 +27,18 @@ export interface TtapiTaskResponse {
 
 export interface TtapiStatusResponse {
   status: string;
+  jobId: string;
   message: string;
   data?: {
+    actions: string;
     jobId: string;
-    status: string;
+    progress: string; // Note: This is a string "0" to "100", not a number
     prompt?: string;
-    imageUrl?: string;
-    imageUrls?: string[];
-    progress?: number;
+    discordImage?: string;
+    cdnImage?: string;
+    images?: string[]; // Array of 4 image URLs
+    width?: number;
+    height?: number;
     failReason?: string;
   };
 }
@@ -142,26 +146,23 @@ export async function generateMidjourneyTtapi(
 
       const statusResult: TtapiStatusResponse = await statusResponse.json();
       
-      // Debug: Log full response to understand structure
-      if (attempt === 1 || (statusResult.data?.progress || 0) >= 100) {
-        console.log('ttapi.io fetch response:', JSON.stringify(statusResult, null, 2));
-      }
-      
-      const status = statusResult.data?.status?.toLowerCase();
-      const progress = statusResult.data?.progress || 0;
+      // ttapi.io uses top-level status and string progress
+      const topLevelStatus = statusResult.status?.toUpperCase();
+      const progressString = statusResult.data?.progress || "0";
+      const progressNum = parseInt(progressString, 10);
 
-      console.log(`[${attempt}/${maxAttempts}] Status: ${status}, Progress: ${progress}%`);
+      console.log(`[${attempt}/${maxAttempts}] Status: ${topLevelStatus}, Progress: ${progressNum}%`);
 
-      if (status === "success" || status === "completed") {
-        const imageUrl = statusResult.data?.imageUrl;
-        const imageUrls = statusResult.data?.imageUrls;
+      // Check for completion: status is SUCCESS and progress is 100
+      if (topLevelStatus === "SUCCESS" && progressNum === 100) {
+        const images = statusResult.data?.images;
 
-        if (imageUrl || (imageUrls && imageUrls.length > 0)) {
-          console.log(`✅ Generation complete! Images: ${imageUrls?.length || 1}`);
+        if (images && images.length > 0) {
+          console.log(`✅ Generation complete! Images: ${images.length}`);
           return {
             success: true,
-            imageUrl: imageUrl || imageUrls?.[0],
-            imageUrls: imageUrls || (imageUrl ? [imageUrl] : []),
+            imageUrl: images[0],
+            imageUrls: images,
             taskId: jobId
           };
         } else {
@@ -173,8 +174,9 @@ export async function generateMidjourneyTtapi(
         }
       }
 
-      if (status === "failed" || status === "error") {
-        const failReason = statusResult.data?.failReason || "Unknown error";
+      // Check for failure
+      if (topLevelStatus === "FAILED") {
+        const failReason = statusResult.data?.failReason || statusResult.message || "Unknown error";
         console.error(`❌ Generation failed: ${failReason}`);
         return {
           success: false,
