@@ -1184,7 +1184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const { prompt, style = 'abstract', referenceImage, useDallE = false } = req.body;
+      const { prompt, style = 'abstract', aspectRatio = '1:1', referenceImage, useDallE = false } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -1231,16 +1231,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
 
         const styleHint = styleDescriptions[style] || styleDescriptions.abstract;
-        const enhancedPrompt = `Professional album cover art: ${prompt}. Style: ${styleHint}. Square format, high quality, artistic composition.`;
+        
+        // Map aspect ratio to DALL-E 3 size parameter
+        let dalleSize: "1024x1024" | "1024x1792" | "1792x1024" = "1024x1024";
+        let formatHint = "Square format";
+        
+        if (aspectRatio === '16:9') {
+          dalleSize = "1792x1024";
+          formatHint = "Landscape format (16:9)";
+        } else if (aspectRatio === '9:16') {
+          dalleSize = "1024x1792";
+          formatHint = "Portrait format (9:16)";
+        } else if (aspectRatio === '4:3') {
+          dalleSize = "1792x1024"; // Use landscape for classic landscape
+          formatHint = "Landscape format (4:3)";
+        } else if (aspectRatio === '3:4') {
+          dalleSize = "1024x1792"; // Use portrait for classic portrait
+          formatHint = "Portrait format (3:4)";
+        }
+        
+        const enhancedPrompt = `Professional album cover art: ${prompt}. Style: ${styleHint}. ${formatHint}, high quality, artistic composition.`;
 
-        console.log('Generating album art with DALL-E 3:', { prompt, style, enhancedPrompt });
+        console.log('Generating album art with DALL-E 3:', { prompt, style, aspectRatio, dalleSize, enhancedPrompt });
 
         try {
           const response = await openai.images.generate({
             model: "dall-e-3",
             prompt: enhancedPrompt,
             n: 1,
-            size: "1024x1024",
+            size: dalleSize,
             quality: "standard",
             style: "vivid"
           });
@@ -1295,19 +1314,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hasReference = referenceImage && referenceImage.trim().length > 0;
       const modelId = hasReference ? 'fal-ai/nano-banana/edit' : 'fal-ai/nano-banana';
       
+      // Get aspect ratio description for prompt
+      const aspectRatioDescriptions: Record<string, string> = {
+        '1:1': 'square 1:1 aspect ratio',
+        '16:9': 'landscape 16:9 aspect ratio',
+        '9:16': 'portrait 9:16 aspect ratio',
+        '4:3': 'classic landscape 4:3 aspect ratio',
+        '3:4': 'classic portrait 3:4 aspect ratio'
+      };
+      const aspectRatioHint = aspectRatioDescriptions[aspectRatio] || 'square 1:1 aspect ratio';
+      
       let enhancedPrompt: string;
       if (hasReference) {
         // For image-to-image: focus on transformation/editing instructions
-        enhancedPrompt = `Transform this into an album cover art. ${prompt}. Apply ${styleHint}. Professional music album cover design with square 1:1 aspect ratio.`;
+        enhancedPrompt = `Transform this into an album cover art. ${prompt}. Apply ${styleHint}. Professional music album cover design with ${aspectRatioHint}.`;
       } else {
         // For text-to-image: full detailed description
-        enhancedPrompt = `Album cover art: ${prompt}. Style: ${styleHint}. Square format, professional music album cover design.`;
+        enhancedPrompt = `Album cover art: ${prompt}. Style: ${styleHint}. ${aspectRatioHint.charAt(0).toUpperCase() + aspectRatioHint.slice(1)}, professional music album cover design.`;
       }
       
       console.log('Generating album art with Fal.ai Nano Banana:', { 
         model: modelId,
         prompt, 
         style, 
+        aspectRatio,
         hasReference,
         enhancedPrompt 
       });
@@ -1317,7 +1347,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         prompt: enhancedPrompt,
         num_images: 1,
         output_format: 'jpeg',
-        aspect_ratio: '1:1'
+        aspect_ratio: aspectRatio
       };
       
       // Add reference image if provided (supports both data URIs and HTTP URLs)
