@@ -806,7 +806,7 @@ export async function generateMidjourney(options: {
     const requestBody: any = {
       taskType,
       prompt: fullPrompt,
-      speed: 'fast',
+      speed: 'Turbo', // Turbo mode: ~15-60 seconds (2x cost but much faster)
       version,
     };
 
