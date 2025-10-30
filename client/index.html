@@ -2629,16 +2629,26 @@
         // Free accounts can only use Nano Banana
         imageEngine.value = 'nano-banana';
         
-        // Disable DALL-E 3 option
+        // Disable DALL-E 3 and Midjourney options
         const dallE3Option = imageEngine.querySelector('option[value="dall-e-3"]');
         if (dallE3Option) {
           dallE3Option.disabled = true;
         }
+        
+        const midjourneyOption = imageEngine.querySelector('option[value="midjourney"]');
+        if (midjourneyOption) {
+          midjourneyOption.disabled = true;
+        }
       } else {
-        // Paid accounts can use all engines
+        // Paid accounts (Studio+) can use all engines
         const dallE3Option = imageEngine.querySelector('option[value="dall-e-3"]');
         if (dallE3Option) {
           dallE3Option.disabled = false;
+        }
+        
+        const midjourneyOption = imageEngine.querySelector('option[value="midjourney"]');
+        if (midjourneyOption) {
+          midjourneyOption.disabled = false;
         }
       }
     }
@@ -4797,10 +4807,73 @@ async function generateMedia() {
             }
 
         } else {
-            // Image generation (DALL-E 3 or Fal.ai Nano Banana)
+            // Image generation (Midjourney, DALL-E 3, or Fal.ai Nano Banana)
             const imageEngine = document.getElementById('media-image-engine').value;
+            const useMidjourney = imageEngine === 'midjourney';
             const useDallE = imageEngine === 'dall-e-3';
             
+            // Midjourney path
+            if (useMidjourney) {
+                const requestBody = {
+                    prompt: prompt,
+                    version: 'v7'
+                };
+
+                // Add reference image if uploaded (works with Midjourney)
+                if (uploadedImageData) {
+                    requestBody.referenceImage = uploadedImageData;
+                    console.log('Using reference image for Midjourney generation');
+                }
+
+                console.log('Generating images with Midjourney via KIE.ai...');
+
+                const response = await fetch('/api/generate-midjourney', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || data.details || 'Failed to generate with Midjourney');
+                }
+
+                // Display all 4 Midjourney variants
+                if (data.imageUrls && data.imageUrls.length > 0) {
+                    const referenceLabel = data.hasReference ? ' (with Reference)' : '';
+                    const imageGrid = data.imageUrls.map((url, idx) => 
+                        `<div style="position: relative;">
+                            <img src="${url}" alt="Midjourney variant ${idx + 1}" style="width: 100%; border-radius: 8px; cursor: pointer;" onclick="window.open('${url}', '_blank')" />
+                            <button onclick="downloadFile('${url}', 'aetherwave-midjourney-${idx + 1}.png')" class="download-btn" style="margin-top: 0.25rem; width: 100%; font-size: 0.8rem; padding: 0.5rem;">Download #${idx + 1}</button>
+                        </div>`
+                    ).join('');
+                    
+                    mediaResult.innerHTML = `
+                        <div class="result-box">
+                            <div class="result-title">✅ 4 Images Generated with Midjourney${referenceLabel}</div>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-top: 0.5rem;">
+                                ${imageGrid}
+                            </div>
+                            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem;">
+                                Use Case: ${selectedUseCase} · Engine: Midjourney v7 · 4 variants generated
+                            </p>
+                            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem; font-style: italic;">
+                                Click any image to view full size
+                            </p>
+                        </div>
+                    `;
+                    mediaResult.style.display = 'block';
+                    return;
+                } else {
+                    throw new Error('Midjourney completed but no images returned');
+                }
+            }
+            
+            // DALL-E 3 or Nano Banana path
             const requestBody = {
                 prompt: prompt,
                 style: document.getElementById('media-image-style').value,
