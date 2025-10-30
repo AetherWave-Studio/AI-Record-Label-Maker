@@ -2191,7 +2191,7 @@
     // Check authentication status and update UI
     async function checkAuth() {
       try {
-        const response = await fetch('/api/auth/user');
+        const response = await fetch('/api/auth/user', { credentials: 'include' });
         if (response.ok) {
           const user = await response.json();
           
@@ -2199,7 +2199,7 @@
           currentUser = user;
           
           // Fetch user credits
-          const creditsResponse = await fetch('/api/user/credits');
+          const creditsResponse = await fetch('/api/user/credits', { credentials: 'include' });
           if (creditsResponse.ok) {
             const creditsData = await creditsResponse.json();
             userCredits = creditsData.credits || 0;
@@ -2326,7 +2326,7 @@
     
     async function fetchUserCredits() {
       try {
-        const response = await fetch('/api/user/credits');
+        const response = await fetch('/api/user/credits', { credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           userCredits = data.credits;
@@ -2359,7 +2359,7 @@
     
     async function checkDailyReset() {
       try {
-        const response = await fetch('/api/user/credits/check-reset', { method: 'POST' });
+        const response = await fetch('/api/user/credits/check-reset', { method: 'POST', credentials: 'include' });
         if (response.ok) {
           const data = await response.json();
           if (data.resetOccurred) {
@@ -2587,6 +2587,7 @@
         const response = await fetch('/api/user/credits/deduct', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ amount })
         });
         
@@ -3706,8 +3707,9 @@ window.premiumPlayer = {
     let selectedUseCase = null;
     let uploadedImageData = null;
     
-    // Initialize button class based on default media type
-    if (generateMediaBtn) {
+    // Initialize button class and label based on default media type
+    if (generateMediaBtn && mediaTypeLabel) {
+        mediaTypeLabel.textContent = selectedMediaType === 'image' ? 'Image' : 'Video';
         generateMediaBtn.className = selectedMediaType === 'video' ? 'btn-video-generate' : 'btn-primary';
         if (selectedMediaType === 'image') {
             generateMediaBtn.style.padding = '1rem';
@@ -4599,6 +4601,7 @@ window.premiumPlayer = {
     headers: {
     'Content-Type': 'application/json'
     },
+    credentials: 'include',
     body: JSON.stringify({
     prompt: prompt,
     style: style
@@ -4702,6 +4705,7 @@ async function generateMedia() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(requestBody)
             });
 
@@ -4739,6 +4743,7 @@ async function generateMedia() {
                 headers: {
                     'Content-Type': 'application/json'
                 },
+                credentials: 'include',
                 body: JSON.stringify(requestBody)
             });
 
@@ -5087,6 +5092,7 @@ async function generateMedia() {
         const response = await fetch('/api/generate-art', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             prompt: artPrompt,
             style: style,
@@ -5238,6 +5244,7 @@ async function generateMedia() {
         const response = await fetch('/api/generate-video-fal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             prompt: `Animated music video for "${trackTitle}", dynamic camera movement, cinematic effects`,
             imageUrl: albumArtUrl,
