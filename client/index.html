@@ -2109,6 +2109,18 @@
     </select>
     </div>
 
+    <!-- Image Aspect Ratio Selector (only for images, not videos) -->
+    <div class="form-group" id="image-aspect-ratio-group" style="display: block;">
+    <label class="form-label">📐 Aspect Ratio</label>
+    <select id="media-image-aspect-ratio" data-testid="select-image-aspect-ratio">
+    <option value="1:1" selected>1:1 (Square)</option>
+    <option value="16:9">16:9 (Landscape)</option>
+    <option value="9:16">9:16 (Portrait)</option>
+    <option value="4:3">4:3 (Classic Landscape)</option>
+    <option value="3:4">3:4 (Classic Portrait)</option>
+    </select>
+    </div>
+
     <!-- Image Style Selector (only for images, not videos) -->
     <div class="form-group" id="image-style-group" style="display: block;">
     <label class="form-label">Image Style</label>
@@ -4809,6 +4821,7 @@ async function generateMedia() {
         } else {
             // Image generation (Midjourney, DALL-E 3, or Fal.ai Nano Banana)
             const imageEngine = document.getElementById('media-image-engine').value;
+            const aspectRatio = document.getElementById('media-image-aspect-ratio')?.value || '1:1';
             const useMidjourney = imageEngine === 'midjourney';
             const useDallE = imageEngine === 'dall-e-3';
             
@@ -4816,7 +4829,8 @@ async function generateMedia() {
             if (useMidjourney) {
                 const requestBody = {
                     prompt: prompt,
-                    version: 'v7'
+                    version: 'v7',
+                    aspectRatio: aspectRatio
                 };
 
                 // Add reference image if uploaded (works with Midjourney)
@@ -4877,6 +4891,7 @@ async function generateMedia() {
             const requestBody = {
                 prompt: prompt,
                 style: document.getElementById('media-image-style').value,
+                aspectRatio: aspectRatio,
                 useDallE: useDallE
             };
 
@@ -5498,15 +5513,17 @@ function updateMediaInputs() {
   const resolutionGroup = document.getElementById('video-resolution-group');
   const durationGroup = document.getElementById('video-duration-group');
   const imageEngineGroup = document.getElementById('image-engine-group');
+  const imageAspectRatioGroup = document.getElementById('image-aspect-ratio-group');
   const imageStyleGroup = document.getElementById('image-style-group');
   const imageUploadGroup = document.getElementById('image-upload-group');
   const imageUploadLabel = document.getElementById('image-upload-label');
   const imageLabelHint = document.getElementById('image-label-hint');
 
-  // For video mode: show model selector, hide image engine/style
-  // For image mode: hide video fields, show image engine/style
+  // For video mode: show model selector, hide image engine/style/aspect ratio
+  // For image mode: hide video fields, show image engine/style/aspect ratio
   if (videoModelGroup) videoModelGroup.style.display = isVideo ? 'block' : 'none';
   if (imageEngineGroup) imageEngineGroup.style.display = isVideo ? 'none' : 'block';
+  if (imageAspectRatioGroup) imageAspectRatioGroup.style.display = isVideo ? 'none' : 'block';
   if (imageStyleGroup) imageStyleGroup.style.display = isVideo ? 'none' : 'block';
 
   // Update image upload label based on mode
