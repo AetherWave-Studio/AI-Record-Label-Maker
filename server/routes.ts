@@ -1419,7 +1419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { prompt, referenceImage, version = 'v7' } = req.body;
+      const { prompt, aspectRatio = '1:1', referenceImage, version = 'v7' } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -1448,7 +1448,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'KIE.ai API key not configured' });
       }
 
-      console.log('Generating images with Midjourney via KIE.ai:', { prompt, version, hasReference: !!referenceImage });
+      console.log('Generating images with Midjourney via KIE.ai:', { prompt, aspectRatio, version, hasReference: !!referenceImage });
 
       let imageUrl: string | undefined;
 
@@ -1472,7 +1472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         apiKey: kieApiKey,
         imageUrl,
         version,
-        aspectRatio: '1:1',
+        aspectRatio,
         onQueueUpdate: (update: any) => {
           console.log('Midjourney queue update:', update.status, update.progress);
         }
