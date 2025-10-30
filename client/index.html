@@ -2103,10 +2103,13 @@
     <div class="form-group" id="image-engine-group" style="display: block;">
     <label class="form-label">🎨 Image Engine</label>
     <select id="media-image-engine" data-testid="select-image-engine">
-    <option value="nano-banana" selected>Nano Banana (Free+)</option>
-    <option value="dall-e-3" data-plan="studio">DALL-E 3 (Studio+)</option>
-    <option value="midjourney" data-plan="studio">Midjourney (Studio+)</option>
+    <option value="nano-banana" selected>⚡ Nano Banana - Fast & Reliable (~5s, Free+)</option>
+    <option value="dall-e-3" data-plan="studio">🎨 DALL-E 3 - High Quality (~10s, Studio+)</option>
+    <option value="midjourney" data-plan="studio">🏆 Midjourney - Premium Quality (may have delays, Studio+)</option>
     </select>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
+      <span id="engine-description">Nano Banana: Lightning-fast generation with professional results</span>
+    </div>
     </div>
 
     <!-- Midjourney Speed Selector (only shown when Midjourney is selected) -->
@@ -2688,10 +2691,35 @@
       }
     }
 
+    function updateEngineDescription() {
+      const imageEngine = document.getElementById('media-image-engine');
+      const descriptionEl = document.getElementById('engine-description');
+      
+      if (!imageEngine || !descriptionEl) return;
+      
+      const descriptions = {
+        'nano-banana': 'Nano Banana: Lightning-fast generation (~5s) with professional results. Best for quick iterations!',
+        'dall-e-3': 'DALL-E 3: High-quality, creative AI images with precise prompt following (~10s)',
+        'midjourney': 'Midjourney: Premium artistic quality, but may experience server delays. Try Nano Banana for instant results!'
+      };
+      
+      descriptionEl.textContent = descriptions[imageEngine.value] || descriptions['nano-banana'];
+      
+      // Highlight warning for Midjourney
+      if (imageEngine.value === 'midjourney') {
+        descriptionEl.style.color = '#ff9500';
+      } else {
+        descriptionEl.style.color = 'var(--text-muted)';
+      }
+    }
+
     // Add event listener for image engine changes
     const imageEngineSelector = document.getElementById('media-image-engine');
     if (imageEngineSelector) {
-      imageEngineSelector.addEventListener('change', updateMidjourneySpeedVisibility);
+      imageEngineSelector.addEventListener('change', function() {
+        updateMidjourneySpeedVisibility();
+        updateEngineDescription();
+      });
     }
     
     
@@ -4856,12 +4884,13 @@ async function generateMedia() {
             
             // Midjourney path
             if (useMidjourney) {
+                const selectedSpeed = document.getElementById('midjourney-speed')?.value || 'fast';
                 const requestBody = {
                     prompt: prompt,
                     style: document.getElementById('media-image-style').value,
                     version: 'v7',
                     aspectRatio: aspectRatio,
-                    speed: document.getElementById('midjourney-speed')?.value || 'Fast'
+                    speed: selectedSpeed
                 };
 
                 // Add reference image if uploaded (works with Midjourney)
@@ -4869,6 +4898,55 @@ async function generateMedia() {
                     requestBody.referenceImage = uploadedImageData;
                     console.log('Using reference image for Midjourney generation');
                 }
+
+                // Show status message with estimated time
+                const estimatedTime = selectedSpeed === 'turbo' ? '15-60 seconds' : '60-90 seconds';
+                const timeoutTime = selectedSpeed === 'turbo' ? '120 seconds' : '180 seconds';
+                const creditCost = selectedSpeed === 'turbo' ? 6 : 3;
+                
+                mediaResult.innerHTML = `
+                    <div class="result-box" style="border-left: 4px solid #8b5cf6;">
+                        <div class="result-title" style="color: #8b5cf6;">🎨 Generating with Midjourney ${selectedSpeed === 'turbo' ? 'Turbo' : 'Fast'}</div>
+                        <p style="margin-top: 0.75rem; line-height: 1.6;">
+                            Creating 4 high-quality image variants...
+                        </p>
+                        <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">⏱️ Est. Time:</span>
+                                <span style="font-weight: 600;">${estimatedTime}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">⚡ Speed Mode:</span>
+                                <span style="font-weight: 600;">${selectedSpeed === 'turbo' ? 'Turbo' : 'Fast'}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between;">
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">💰 Credits Used:</span>
+                                <span style="font-weight: 600;">${creditCost} credits</span>
+                            </div>
+                        </div>
+                        <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <div class="loading-spinner" style="width: 16px; height: 16px; border: 2px solid rgba(139, 92, 246, 0.3); border-top-color: #8b5cf6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                <span style="color: var(--text-muted); font-size: 0.85rem;">Processing your request...</span>
+                            </div>
+                            <div style="width: 100%; height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden;">
+                                <div class="progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #8b5cf6, #ec4899); animation: progress-fill ${selectedSpeed === 'turbo' ? '60s' : '90s'} linear forwards;"></div>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.75rem; font-style: italic;">
+                            ⚠️ Auto-timeout after ${timeoutTime} with full refund if delayed
+                        </p>
+                    </div>
+                    <style>
+                        @keyframes spin {
+                            to { transform: rotate(360deg); }
+                        }
+                        @keyframes progress-fill {
+                            to { width: 100%; }
+                        }
+                    </style>
+                `;
+                mediaResult.style.display = 'block';
 
                 console.log('Generating images with Midjourney via KIE.ai...');
 
@@ -4884,6 +4962,51 @@ async function generateMedia() {
                 const data = await response.json();
 
                 if (!response.ok) {
+                    // Handle timeout with credit refund (status 408)
+                    if (response.status === 408 && data.timeout) {
+                        // Build refund message (only show if credits were actually refunded)
+                        const refundBox = data.creditsRefunded > 0 ? `
+                            <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
+                                <p style="color: #22c55e; font-weight: 600; margin: 0;">
+                                    ✅ ${data.creditsRefunded} Credits Refunded
+                                </p>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem; margin-bottom: 0;">
+                                    New balance: ${data.newBalance} credits
+                                </p>
+                            </div>
+                        ` : '';
+                        
+                        mediaResult.innerHTML = `
+                            <div class="result-box" style="border-left: 4px solid #ff9500;">
+                                <div class="result-title" style="color: #ff9500;">⏱️ Generation Timed Out</div>
+                                <p style="margin-top: 0.75rem; line-height: 1.6;">
+                                    Midjourney's servers are experiencing heavy load right now. 
+                                    Your request timed out after ${data.timeoutSeconds} seconds.
+                                </p>
+                                ${refundBox}
+                                <p style="margin-top: 0.75rem; font-weight: 600;">💡 Recommended Next Steps:</p>
+                                <div style="background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem;">
+                                    <p style="margin: 0; line-height: 1.6;">
+                                        <strong>Try Nano Banana</strong> - Our fastest image engine (5 seconds, 1 credit)<br>
+                                        Delivers professional results instantly, perfect when you need speed!
+                                    </p>
+                                    <button onclick="document.getElementById('media-image-engine').value='nano-banana'; this.parentElement.parentElement.style.display='none';" 
+                                            style="margin-top: 0.5rem; padding: 0.5rem 1rem; background: #8b5cf6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                                        Switch to Nano Banana ⚡
+                                    </button>
+                                </div>
+                                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.75rem; font-style: italic;">
+                                    You can also try Midjourney again during off-peak hours when servers are less busy.
+                                </p>
+                            </div>
+                        `;
+                        mediaResult.style.display = 'block';
+                        
+                        // Update credits display
+                        loadCreditsDisplay();
+                        return;
+                    }
+                    
                     throw new Error(data.error || data.details || 'Failed to generate with Midjourney');
                 }
 

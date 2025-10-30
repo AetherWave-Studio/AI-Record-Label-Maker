@@ -16,6 +16,7 @@ export interface IStorage {
   updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
   deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult>;
   checkCredits(userId: string, serviceType: ServiceType): Promise<CreditCheckResult>;
+  refundCredits(userId: string, serviceType: ServiceType): Promise<{ success: boolean; newBalance: number; amountRefunded: number; error?: string }>;
   resetDailyCredits(userId: string): Promise<void>; // Reset credits for free tier users (with 50 cap)
   // Quest operations
   getUserQuests(userId: string): Promise<Quest[]>;
@@ -121,6 +122,47 @@ export class MemStorage implements IStorage {
       newBalance: user.credits,
       amountDeducted: creditCost,
       wasUnlimited: false
+    };
+  }
+
+  async refundCredits(userId: string, serviceType: ServiceType): Promise<{ success: boolean; newBalance: number; amountRefunded: number; error?: string }> {
+    const user = this.users.get(userId);
+    
+    if (!user) {
+      return {
+        success: false,
+        newBalance: 0,
+        amountRefunded: 0,
+        error: 'User not found'
+      };
+    }
+    
+    // CRITICAL: Check if user has unlimited plan for this service
+    // If they do, they never had credits deducted, so don't refund
+    const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
+    const userPlan = user.subscriptionPlan as PlanType;
+    
+    if (unlimitedPlans.includes(userPlan)) {
+      // User has unlimited plan - no credits were deducted, so nothing to refund
+      return {
+        success: true,
+        newBalance: user.credits,
+        amountRefunded: 0 // No refund needed for unlimited users
+      };
+    }
+    
+    // Get credit cost for this service
+    const creditCost = SERVICE_CREDIT_COSTS[serviceType];
+    
+    // Add credits back
+    user.credits += creditCost;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    
+    return {
+      success: true,
+      newBalance: user.credits,
+      amountRefunded: creditCost
     };
   }
 
@@ -325,6 +367,46 @@ export class DbStorage implements IStorage {
       newBalance,
       amountDeducted: creditCost,
       wasUnlimited: false
+    };
+  }
+
+  async refundCredits(userId: string, serviceType: ServiceType): Promise<{ success: boolean; newBalance: number; amountRefunded: number; error?: string }> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      return {
+        success: false,
+        newBalance: 0,
+        amountRefunded: 0,
+        error: 'User not found'
+      };
+    }
+    
+    // CRITICAL: Check if user has unlimited plan for this service
+    // If they do, they never had credits deducted, so don't refund
+    const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
+    const userPlan = user.subscriptionPlan as PlanType;
+    
+    if (unlimitedPlans.includes(userPlan)) {
+      // User has unlimited plan - no credits were deducted, so nothing to refund
+      return {
+        success: true,
+        newBalance: user.credits,
+        amountRefunded: 0 // No refund needed for unlimited users
+      };
+    }
+    
+    // Get credit cost for this service
+    const creditCost = SERVICE_CREDIT_COSTS[serviceType];
+    
+    // Add credits back
+    const newBalance = user.credits + creditCost;
+    await this.updateUserCredits(userId, newBalance);
+    
+    return {
+      success: true,
+      newBalance,
+      amountRefunded: creditCost
     };
   }
 

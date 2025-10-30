@@ -785,9 +785,10 @@ export async function generateMidjourney(options: {
   version?: string; // v7, v6.1, v5.2, niji6
   aspectRatio?: string; // 1:1, 16:9, 9:16, etc.
   speed?: string; // fast or turbo (lowercase)
+  timeoutSeconds?: number; // Custom timeout in seconds (default: 600s / 10 minutes)
   onQueueUpdate?: (update: { status: string; progress?: number }) => void;
 }): Promise<KieResult> {
-  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', speed = 'fast', onQueueUpdate } = options;
+  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', speed = 'fast', timeoutSeconds = 600, onQueueUpdate } = options;
 
   if (!apiKey) {
     throw new Error('KIE.ai API key is required');
@@ -849,8 +850,12 @@ export async function generateMidjourney(options: {
 
     console.log(`Midjourney: Task created with ID ${taskId}, starting polling...`);
 
+    // Calculate max attempts based on timeout
+    const maxAttempts = Math.ceil(timeoutSeconds / (POLL_INTERVAL_MS / 1000));
+    console.log(`Midjourney: Timeout set to ${timeoutSeconds}s (${maxAttempts} polling attempts)`);
+
     // Poll until complete
-    const result = await pollMidjourneyStatus(taskId, apiKey, MAX_POLL_ATTEMPTS, onQueueUpdate);
+    const result = await pollMidjourneyStatus(taskId, apiKey, maxAttempts, onQueueUpdate);
 
     console.log(`Midjourney: Task ${taskId} completed with status ${result.status}`);
 

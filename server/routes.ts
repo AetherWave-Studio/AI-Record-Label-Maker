@@ -1480,6 +1480,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('Generating images with Midjourney via KIE.ai:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, version, speed });
 
+      // Set timeout based on speed mode (turbo = 120s, fast = 180s)
+      const timeoutSeconds = speed === 'turbo' ? 120 : 180;
+
       // Call Midjourney via KIE.ai with styled prompt (text-to-image only)
       const result = await generateMidjourney({
         prompt: styledPrompt,
@@ -1487,7 +1490,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: undefined, // No reference image support
         version,
         aspectRatio,
-        speed, // Pass speed parameter (Fast or Turbo)
+        speed, // Pass speed parameter (fast or turbo)
+        timeoutSeconds, // Timeout: 120s for turbo, 180s for fast
         onQueueUpdate: (update: any) => {
           console.log('Midjourney queue update:', update.status, update.progress);
         }
@@ -1495,6 +1499,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (result.status === 'failed') {
         console.error('Midjourney generation failed:', result.error);
+        
+        // Check if it's a timeout error and refund credits
+        if (result.error && result.error.includes('did not complete within')) {
+          console.log(`⏱️ Midjourney timed out after ${timeoutSeconds}s, refunding ${SERVICE_CREDIT_COSTS[serviceType]} credits to user ${userId}`);
+          
+          const refundResult = await storage.refundCredits(userId, serviceType);
+          
+          if (refundResult.success) {
+            // Only log refund if credits were actually refunded (not unlimited plan)
+            if (refundResult.amountRefunded > 0) {
+              console.log(`✅ Refunded ${refundResult.amountRefunded} credits. New balance: ${refundResult.newBalance}`);
+            } else {
+              console.log(`ℹ️ Timeout for unlimited plan user - no credits to refund`);
+            }
+            
+            // Build appropriate message based on whether credits were refunded
+            const timeoutMessage = refundResult.amountRefunded > 0 
+              ? `Midjourney servers are experiencing delays. Your ${refundResult.amountRefunded} credits have been refunded. Try Nano Banana for instant results, or try Midjourney again later.`
+              : `Midjourney servers are experiencing delays. Try Nano Banana for instant results, or try Midjourney again later.`;
+            
+            return res.status(408).json({
+              error: 'Generation timeout',
+              timeout: true,
+              timeoutSeconds,
+              creditsRefunded: refundResult.amountRefunded,
+              newBalance: refundResult.newBalance,
+              message: timeoutMessage,
+              details: result.error
+            });
+          } else {
+            console.error('❌ Failed to refund credits:', refundResult.error);
+          }
+        }
+        
         return res.status(500).json({
           error: 'Midjourney generation failed',
           details: result.error
