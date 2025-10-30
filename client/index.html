@@ -5438,6 +5438,20 @@ mediaTypeBtns.forEach(btn => {
     mediaTypeBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     selectedMediaType = btn.dataset.type;
+    
+    // Update button text and class immediately
+    if (mediaTypeLabel) {
+      mediaTypeLabel.textContent = selectedMediaType === 'image' ? 'Image' : 'Video';
+    }
+    if (generateMediaBtn) {
+      generateMediaBtn.className = selectedMediaType === 'video' ? 'btn-video-generate' : 'btn-primary';
+      if (selectedMediaType === 'image') {
+        generateMediaBtn.style.padding = '1rem';
+        generateMediaBtn.style.fontSize = '1.1rem';
+        generateMediaBtn.style.fontWeight = '600';
+      }
+    }
+    
     updateMediaInputs();
 
     // Apply video quality restrictions for free accounts
