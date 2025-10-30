@@ -5500,14 +5500,34 @@ if (videoModelSelect) {
       );
     }
 
-    // Seedance models: Show resolution, hide aspect ratio, show image mode
+    // Seedance models: Show resolution, Pro Fast also shows aspect ratio
     if (isSeedance) {
+      const isProFast = model.includes('pro-fast');
+      const isLite = model.includes('lite');
+      
       if (resolutionGroup) resolutionGroup.style.display = 'block';
-      if (aspectRatioGroup) aspectRatioGroup.style.display = 'none';
+      
+      // Pro Fast shows aspect ratio, others hide it
+      if (aspectRatioGroup) {
+        aspectRatioGroup.style.display = isProFast ? 'block' : 'none';
+      }
+      
+      // Set aspect ratio options for Pro Fast
+      if (isProFast && aspectRatioSelect) {
+        aspectRatioSelect.innerHTML = `
+          <option value="auto">auto (default)</option>
+          <option value="21:9">21:9 (Ultra-wide)</option>
+          <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
+          <option value="4:3">4:3 (Classic)</option>
+          <option value="1:1">1:1 (Square)</option>
+          <option value="3:4">3:4 (Vertical Classic)</option>
+          <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
+        `;
+      }
+      
       if (durationGroup) durationGroup.style.display = 'block';
-      // Seedance durations: Lite (5s, 10s only), Pro (3s, 5s, 10s)
+      // Seedance durations: Lite (5s, 10s only), Pro/Pro Fast (3s, 5s, 10s)
       if (durationSelect) {
-        const isLite = model.includes('lite');
         if (isLite) {
           durationSelect.innerHTML = `
             <option value="5" selected>5 seconds</option>

@@ -1416,6 +1416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endImageData, // Support endImageData from frontend
         imageMode = 'first-frame',
         resolution = '720p',
+        aspectRatio, // For Pro Fast only: '16:9', '9:16', '1:1', '4:3', '21:9', '3:4', 'auto'
         duration = '5',
         cameraFixed = false,
         seed = -1,
@@ -1547,6 +1548,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Add resolution (already 480p from frontend)
       input.resolution = resolution;
+
+      // Add aspect ratio for Pro Fast only
+      if (modelVersion === 'pro-fast' && aspectRatio) {
+        input.aspect_ratio = aspectRatio;
+      }
 
       // Add image if provided (support both base64 and URL)
       const imageSource = imageData || finalImageUrl;
