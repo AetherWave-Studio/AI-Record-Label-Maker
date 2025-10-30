@@ -1500,14 +1500,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let modelId;
       if (hasImage) {
-        // Both Pro and Lite use image-to-video for ANY image-based generation
+        // Both Pro Fast and Lite use image-to-video for ANY image-based generation
         // The image-to-video model handles both reference mode and first-frame mode
         modelId = modelVersion === 'pro'
-          ? 'fal-ai/bytedance/seedance/v1/pro/image-to-video'
+          ? 'fal-ai/bytedance/seedance/v1/pro/fast/image-to-video'
           : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
       } else {
         modelId = modelVersion === 'pro'
-          ? 'fal-ai/bytedance/seedance/v1/pro/text-to-video'
+          ? 'fal-ai/bytedance/seedance/v1/pro/fast/text-to-video'
           : 'fal-ai/bytedance/seedance/v1/lite/text-to-video';
       }
 
