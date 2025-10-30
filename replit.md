@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-The frontend is a standalone HTML single-page application (`client/index.html`) built with vanilla JavaScript and inline CSS. It utilizes Vite for serving static assets and development. The design system features a dark-optimized interface with animated gradient backgrounds, custom AetherWave branding, and a pink/purple color palette. It is fully mobile-responsive across desktop, tablet, and mobile breakpoints, using a three-panel layout (Music | Hero/Credits | Chat/Media) on desktop and a single-column layout with a bottom navigation bar on mobile. Key features include real-time credit display, music model selection with plan-based restrictions, an interactive album art style selection modal, an "Album Art to Video" conversion feature with duration options, a premium audio player, and a user profile modal displaying account details, subscription plan, and credit balance.
+The frontend is a standalone HTML single-page application (`client/index.html`) built with vanilla JavaScript and inline CSS. It utilizes Vite for serving static assets and development. The design system features a dark-optimized interface with animated gradient backgrounds, custom AetherWave branding, and a pink/purple color palette. It is fully mobile-responsive across desktop, tablet, and mobile breakpoints, using a three-panel layout (Music | Hero/Credits | Chat/Media) on desktop and a single-column layout with a bottom navigation bar on mobile. Key features include real-time credit display, music model selection with plan-based restrictions, an interactive album art style selection modal, an "Album Art to Video" conversion feature with duration options, a premium audio player, image engine selector (Nano Banana for Free+, DALL-E 3 for Studio+) in Panel 3, and a user profile modal displaying account details, subscription plan, and credit balance.
 
 ### Backend Architecture
 
@@ -32,7 +32,8 @@ Replit Auth provides OIDC-based authentication, with user accounts automatically
 
 -   **Neon Database**: Serverless PostgreSQL hosting.
 -   **KIE.ai SUNO API**: For AI music generation, accessed via a Webshare static proxy to manage IP whitelisting.
--   **OpenAI API**: For DALL-E 3 album art generation.
+-   **OpenAI API**: For DALL-E 3 album art generation (Panel 1) and image generation (Panel 3 for Studio+ users).
+-   **Fal.ai Nano Banana**: For fast image generation in Panel 3, available to all users including Free tier.
 -   **Fal.ai Seedance**: For AI music video generation, supporting text-to-video, image-to-video, and reference-to-video modes with Lite/Pro variants. Features quality-based credit pricing and specific restrictions for free accounts.
 -   **Replit AI Integrations**: For OpenAI chat functionalities.
 -   **Google Fonts**: Used for the Inter font family.

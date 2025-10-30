@@ -2099,6 +2099,15 @@
     </select>
     </div>
 
+    <!-- Image Engine Selector (only for images, not videos) -->
+    <div class="form-group" id="image-engine-group" style="display: block;">
+    <label class="form-label">🎨 Image Engine</label>
+    <select id="media-image-engine" data-testid="select-image-engine">
+    <option value="nano-banana" selected>Nano Banana (Free+ - Fast)</option>
+    <option value="dall-e-3" data-plan="studio">DALL-E 3 (Studio+ - OpenAI)</option>
+    </select>
+    </div>
+
     <!-- Image Style Selector (only for images, not videos) -->
     <div class="form-group" id="image-style-group" style="display: block;">
     <label class="form-label">Image Style</label>
@@ -2357,9 +2366,11 @@
           userPlanType = data.planType;
           updateCreditsDisplay();
           
-          // Apply video quality restrictions if on video tab
+          // Apply quality restrictions based on media type
           if (selectedMediaType === 'video') {
             applyVideoQualityRestrictions();
+          } else {
+            applyImageEngineRestrictions();
           }
           
           // Auto-check for daily reset
@@ -2602,6 +2613,32 @@
         videoModel.title = '';
         resolution.title = '';
         duration.title = '';
+      }
+    }
+
+    function applyImageEngineRestrictions() {
+      const imageEngine = document.getElementById('media-image-engine');
+
+      // Check if element exists
+      if (!imageEngine) {
+        return;
+      }
+
+      if (userPlanType === 'free') {
+        // Free accounts can only use Nano Banana
+        imageEngine.value = 'nano-banana';
+        
+        // Disable DALL-E 3 option
+        const dallE3Option = imageEngine.querySelector('option[value="dall-e-3"]');
+        if (dallE3Option) {
+          dallE3Option.disabled = true;
+        }
+      } else {
+        // Paid accounts can use all engines
+        const dallE3Option = imageEngine.querySelector('option[value="dall-e-3"]');
+        if (dallE3Option) {
+          dallE3Option.disabled = false;
+        }
       }
     }
     
@@ -4759,19 +4796,23 @@ async function generateMedia() {
             }
 
         } else {
-            // Image generation with Fal.ai Nano Banana (supports reference images)
+            // Image generation (DALL-E 3 or Fal.ai Nano Banana)
+            const imageEngine = document.getElementById('media-image-engine').value;
+            const useDallE = imageEngine === 'dall-e-3';
+            
             const requestBody = {
                 prompt: prompt,
-                style: document.getElementById('media-image-style').value
+                style: document.getElementById('media-image-style').value,
+                useDallE: useDallE
             };
 
-            // Add reference image if uploaded
-            if (uploadedImageData) {
+            // Add reference image if uploaded (only works with Nano Banana)
+            if (uploadedImageData && !useDallE) {
                 requestBody.referenceImage = uploadedImageData;
                 console.log('Using reference image for image generation');
             }
 
-            console.log('Generating image with Fal.ai Nano Banana...');
+            console.log(`Generating image with ${useDallE ? 'DALL-E 3' : 'Fal.ai Nano Banana'}...`);
 
             const response = await fetch('/api/generate-art', {
                 method: 'POST',
@@ -4790,17 +4831,18 @@ async function generateMedia() {
 
             // Display image result
             if (data.imageUrl) {
+                const engineName = data.model === 'dall-e-3' ? 'DALL-E 3' : 'Nano Banana';
                 const referenceLabel = data.hasReference ? ' (with Reference)' : '';
                 mediaResult.innerHTML = `
                     <div class="result-box">
-                        <div class="result-title">✅ Image Generated${referenceLabel}</div>
+                        <div class="result-title">✅ Image Generated with ${engineName}${referenceLabel}</div>
                         <img src="${data.imageUrl}" alt="Generated image" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" />
                         ${data.description ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">AI: ${data.description}</p>` : ''}
                         <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
                             <button onclick="downloadFile('${data.imageUrl}', 'aetherwave-${selectedUseCase}.png')" class="download-btn" style="cursor: pointer;">Download Image</button>
                         </div>
                         <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
-                            Use Case: ${selectedUseCase} · Style: ${data.style}
+                            Use Case: ${selectedUseCase} · Engine: ${engineName} · Style: ${data.style}
                         </p>
                         ${data.revisedPrompt ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">Revised: ${data.revisedPrompt}</p>` : ''}
                     </div>
@@ -5381,12 +5423,14 @@ function updateMediaInputs() {
   const aspectRatioGroup = document.getElementById('video-aspect-ratio-group');
   const resolutionGroup = document.getElementById('video-resolution-group');
   const durationGroup = document.getElementById('video-duration-group');
+  const imageEngineGroup = document.getElementById('image-engine-group');
   const imageStyleGroup = document.getElementById('image-style-group');
   const imageUploadGroup = document.getElementById('image-upload-group');
 
-  // For video mode: show model selector, hide image style
-  // For image mode: hide video fields, show image style
+  // For video mode: show model selector, hide image engine/style
+  // For image mode: hide video fields, show image engine/style
   if (videoModelGroup) videoModelGroup.style.display = isVideo ? 'block' : 'none';
+  if (imageEngineGroup) imageEngineGroup.style.display = isVideo ? 'none' : 'block';
   if (imageStyleGroup) imageStyleGroup.style.display = isVideo ? 'none' : 'block';
 
   // Image upload is always visible (used for both images and video reference)
@@ -5471,9 +5515,11 @@ mediaTypeBtns.forEach(btn => {
     
     updateMediaInputs();
 
-    // Apply video quality restrictions for free accounts
+    // Apply quality restrictions for free accounts
     if (selectedMediaType === 'video') {
       applyVideoQualityRestrictions();
+    } else {
+      applyImageEngineRestrictions();
     }
   });
 });
