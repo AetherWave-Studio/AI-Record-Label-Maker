@@ -141,6 +141,12 @@ export async function generateMidjourneyTtapi(
       }
 
       const statusResult: TtapiStatusResponse = await statusResponse.json();
+      
+      // Debug: Log full response to understand structure
+      if (attempt === 1 || (statusResult.data?.progress || 0) >= 100) {
+        console.log('ttapi.io fetch response:', JSON.stringify(statusResult, null, 2));
+      }
+      
       const status = statusResult.data?.status?.toLowerCase();
       const progress = statusResult.data?.progress || 0;
 
