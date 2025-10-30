@@ -86,11 +86,11 @@ function calculateVideoCredits(
     else if (resolution === '1080p') costPerSecond = 0.050;  // 1080p pricing
     else if (resolution === '4k') costPerSecond = 0.100;     // 4k estimate
   } else if (model === 'seedance-pro-fast') {
-    // Pro Fast: $1.0 per million tokens
-    // tokens = (height × width × FPS × duration) / 1024
-    if (resolution === '480p') costPerSecond = 0.00922;   // (854×480×24)/1024 = 9,220 tokens/sec
-    else if (resolution === '720p') costPerSecond = 0.0216;  // (1280×720×24)/1024 = 21,600 tokens/sec
-    else if (resolution === '1080p') costPerSecond = 0.0486; // (1920×1080×24)/1024 = 48,600 tokens/sec
+    // Pro Fast: $1.0 per million tokens (with 50% markup already included)
+    // API cost × 1.5 margin = final cost per second
+    if (resolution === '480p') costPerSecond = 0.01383;   // API: $0.00922 → with markup: $0.01383/sec
+    else if (resolution === '720p') costPerSecond = 0.0324;  // API: $0.0216 → with markup: $0.0324/sec
+    else if (resolution === '1080p') costPerSecond = 0.0729; // API: $0.0486 → with markup: $0.0729/sec
     // No 4K for Pro Fast
   } else if (model === 'seedance-pro') {
     if (resolution === '480p') costPerSecond = 0.020;
