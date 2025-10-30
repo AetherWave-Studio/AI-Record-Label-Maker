@@ -1419,7 +1419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { prompt, style = 'photorealistic', aspectRatio = '1:1', referenceImage, version = 'v7', speed = 'Fast' } = req.body;
+      const { prompt, style = 'photorealistic', aspectRatio = '1:1', referenceImage, version = 'v7', speed = 'fast' } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -1430,13 +1430,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
       }
 
-      // Validate speed parameter
-      if (speed !== 'Fast' && speed !== 'Turbo') {
-        return res.status(400).json({ error: 'Invalid speed. Must be "Fast" or "Turbo"' });
+      // Validate speed parameter (lowercase)
+      if (speed !== 'fast' && speed !== 'turbo') {
+        return res.status(400).json({ error: 'Invalid speed. Must be "fast" or "turbo"' });
       }
 
-      // Determine service type based on speed (Fast = 3 credits, Turbo = 6 credits)
-      const serviceType = speed === 'Turbo' ? 'midjourney_generation_turbo' : 'midjourney_generation';
+      // Determine service type based on speed (fast = 3 credits, turbo = 6 credits)
+      const serviceType = speed === 'turbo' ? 'midjourney_generation_turbo' : 'midjourney_generation';
       
       // Deduct credits for Midjourney generation
       const creditResult = await storage.deductCredits(userId, serviceType);

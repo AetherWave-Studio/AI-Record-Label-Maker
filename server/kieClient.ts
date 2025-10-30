@@ -784,10 +784,10 @@ export async function generateMidjourney(options: {
   imageUrl?: string; // Optional reference image for img2img
   version?: string; // v7, v6.1, v5.2, niji6
   aspectRatio?: string; // 1:1, 16:9, 9:16, etc.
-  speed?: string; // Fast or Turbo
+  speed?: string; // fast or turbo (lowercase)
   onQueueUpdate?: (update: { status: string; progress?: number }) => void;
 }): Promise<KieResult> {
-  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', speed = 'Fast', onQueueUpdate } = options;
+  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', speed = 'fast', onQueueUpdate } = options;
 
   if (!apiKey) {
     throw new Error('KIE.ai API key is required');
