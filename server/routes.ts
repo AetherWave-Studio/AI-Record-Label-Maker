@@ -994,6 +994,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({
         status: 'complete',
         videoUrl: result.videoUrl,
+        model: model,
         creditsUsed: creditCheck.reason === 'unlimited' ? 0 : creditCost
       });
     } catch (error: any) {
