@@ -3191,16 +3191,6 @@
 
         const mediaTypeBtns = document.querySelectorAll('.media-type-btn');
         let selectedMediaType = document.querySelector('.media-type-btn.active').dataset.type;
-        
-        // Initialize button class based on default media type
-        if (generateMediaBtn) {
-            generateMediaBtn.className = selectedMediaType === 'video' ? 'btn-video-generate' : 'btn-primary';
-            if (selectedMediaType === 'image') {
-                generateMediaBtn.style.padding = '1rem';
-                generateMediaBtn.style.fontSize = '1.1rem';
-                generateMediaBtn.style.fontWeight = '600';
-            }
-        }
 
 // ...rest of your code, using mediaTypeBtns...
 
@@ -3715,6 +3705,16 @@ window.premiumPlayer = {
     // State management'
     let selectedUseCase = null;
     let uploadedImageData = null;
+    
+    // Initialize button class based on default media type
+    if (generateMediaBtn) {
+        generateMediaBtn.className = selectedMediaType === 'video' ? 'btn-video-generate' : 'btn-primary';
+        if (selectedMediaType === 'image') {
+            generateMediaBtn.style.padding = '1rem';
+            generateMediaBtn.style.fontSize = '1.1rem';
+            generateMediaBtn.style.fontWeight = '600';
+        }
+    }
 
 
 
