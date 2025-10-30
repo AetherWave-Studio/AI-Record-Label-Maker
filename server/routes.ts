@@ -1572,11 +1572,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Midjourney image generation via ttapi.io
   app.post("/api/media/midjourney-ttapi", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user?.id || req.session?.userId;
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
       const { prompt, style = 'photorealistic', aspectRatio = '1:1', speed = 'fast' } = req.body;
 
-      if (!userId) {
-        return res.status(401).json({ error: 'Not authenticated' });
+      if (!user) {
+        return res.status(401).json({ error: 'User not found' });
       }
 
       // Validate inputs
