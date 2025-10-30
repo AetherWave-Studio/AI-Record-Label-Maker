@@ -2122,7 +2122,7 @@
     <option value="480p" selected>480p (Fastest)</option>
     <option value="720p">720p (Balanced)</option>
     <option value="1080p">1080p (High Quality)</option>
-    <option value="4k" data-exclude-lite data-plan="studio">4K (Ultra Quality, Pro only)</option>
+    <option value="4k" data-exclude-lite data-exclude-pro-fast data-plan="creator">4K (Ultra Quality, Pro only)</option>
     </select>
     </div>
 
@@ -5558,16 +5558,16 @@ if (videoModelSelect) {
         }
       }
       
-      // Filter resolution options based on Lite vs Pro
-      const isLite = model.includes('lite');
+      // Filter resolution options based on Lite/Pro Fast/Pro
       const resolutionSelect = document.getElementById('media-resolution');
       if (resolutionSelect) {
         const options = resolutionSelect.querySelectorAll('option');
         const currentValue = resolutionSelect.value;
         
         options.forEach(option => {
-          // Hide 4K for Seedance Lite (only available in Pro)
-          if (isLite && option.hasAttribute('data-exclude-lite')) {
+          // Hide 4K for Seedance Lite and Pro Fast (only available in regular Pro)
+          if ((isLite && option.hasAttribute('data-exclude-lite')) || 
+              (isProFast && option.hasAttribute('data-exclude-pro-fast'))) {
             option.style.display = 'none';
             option.disabled = true;
           } else {
@@ -5576,8 +5576,8 @@ if (videoModelSelect) {
           }
         });
         
-        // If current selection is 4K and switching to Lite, reset to 480p
-        if (isLite && currentValue === '4k') {
+        // If current selection is 4K and switching to Lite/Pro Fast, reset to 480p
+        if ((isLite || isProFast) && currentValue === '4k') {
           resolutionSelect.value = '480p';
         }
       }
