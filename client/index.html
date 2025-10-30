@@ -5526,12 +5526,26 @@ if (videoModelSelect) {
       }
       
       if (durationGroup) durationGroup.style.display = 'block';
-      // Seedance durations: Lite (5s, 10s only), Pro/Pro Fast (3s, 5s, 10s)
+      // Seedance durations: Lite (5s, 10s only), Pro (3s, 5s, 10s), Pro Fast (2-12s)
       if (durationSelect) {
         if (isLite) {
           durationSelect.innerHTML = `
             <option value="5" selected>5 seconds</option>
             <option value="10">10 seconds</option>
+          `;
+        } else if (isProFast) {
+          durationSelect.innerHTML = `
+            <option value="2">2 seconds</option>
+            <option value="3">3 seconds</option>
+            <option value="4">4 seconds</option>
+            <option value="5" selected>5 seconds</option>
+            <option value="6">6 seconds</option>
+            <option value="7">7 seconds</option>
+            <option value="8">8 seconds</option>
+            <option value="9">9 seconds</option>
+            <option value="10">10 seconds</option>
+            <option value="11">11 seconds</option>
+            <option value="12">12 seconds</option>
           `;
         } else {
           durationSelect.innerHTML = `

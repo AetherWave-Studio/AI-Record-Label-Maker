@@ -1535,10 +1535,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Build request input
-      // Frame calculation: ~24fps + 1 end frame (3s=73, 5s=121, 10s=241)
-      let numFrames = 121; // default 5 seconds
-      if (duration === '3') numFrames = 73;
-      else if (duration === '10') numFrames = 241;
+      // Frame calculation: ~24fps + 1 end frame
+      // Formula: (duration * 24) + 1
+      const durationNum = parseInt(duration);
+      const numFrames = (durationNum * 24) + 1;
       
       const input: any = {
         prompt: prompt,
