@@ -2062,7 +2062,7 @@
     <div class="form-group" id="image-upload-group">
     <label class="form-label">
     <span>Upload Image (Optional)</span>
-    <span id="image-label-hint" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- For first frame or Style reference</span>
+    <span id="image-label-hint" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- First frame or reference</span>
     </label>
     <input type="file" id="media-image-upload" accept="image/*" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; cursor: pointer;">
     </div>
@@ -3996,7 +3996,7 @@ window.premiumPlayer = {
         // Reset first image label to default
         const imageLabelHint = document.getElementById('image-label-hint');
         if (imageLabelHint) {
-          imageLabelHint.textContent = '- For first frame or Style reference';
+          imageLabelHint.textContent = '- First frame or reference';
         }
       });
     }
@@ -4063,7 +4063,7 @@ window.premiumPlayer = {
         // Change first image uploader label back to default
         const imageLabelHint = document.getElementById('image-label-hint');
         if (imageLabelHint) {
-          imageLabelHint.textContent = '- For first frame or Style reference';
+          imageLabelHint.textContent = '- First frame or reference';
         }
       });
     }
@@ -4084,7 +4084,7 @@ window.premiumPlayer = {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
           // Reset label to default when hiding second uploader
           if (imageLabelHint) {
-            imageLabelHint.textContent = '- For first frame or Style reference';
+            imageLabelHint.textContent = '- First frame or reference';
           }
         }
 
@@ -5506,7 +5506,7 @@ if (videoModelSelect) {
         imageModeSelection.style.display = 'block';
       }
       // Update image label for Seedance
-      if (imageLabel) imageLabel.textContent = '- First frame, reference, or first+last';
+      if (imageLabel) imageLabel.textContent = '- First frame or reference';
     }
     // VEO 3: Show aspect ratio (8 secs only), hide resolution, variable duration, hide image mode
     else if (isVEO) {
@@ -5554,7 +5554,7 @@ if (videoModelSelect) {
       // Hide image mode selection for SORA (always reference)
       if (imageModeSelection) imageModeSelection.style.display = 'none';
       // Update image label for SORA 2
-      if (imageLabel) imageLabel.textContent = '- For style reference';
+      if (imageLabel) imageLabel.textContent = '- Reference only';
     }
 
     updateCreditCostPreview();
