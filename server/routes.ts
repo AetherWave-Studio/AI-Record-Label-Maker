@@ -1419,7 +1419,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { prompt, style = 'photorealistic', aspectRatio = '1:1', referenceImage, version = 'v7' } = req.body;
+      const { prompt, style = 'photorealistic', aspectRatio = '1:1', referenceImage, version = 'v7', speed = 'Fast' } = req.body;
       
       // Validate inputs
       if (!prompt || typeof prompt !== 'string') {
@@ -1430,15 +1430,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
       }
 
-      // Deduct credits for Midjourney generation (3 credits for 4 images)
-      const creditResult = await storage.deductCredits(userId, 'midjourney_generation');
+      // Validate speed parameter
+      if (speed !== 'Fast' && speed !== 'Turbo') {
+        return res.status(400).json({ error: 'Invalid speed. Must be "Fast" or "Turbo"' });
+      }
+
+      // Determine service type based on speed (Fast = 3 credits, Turbo = 6 credits)
+      const serviceType = speed === 'Turbo' ? 'midjourney_generation_turbo' : 'midjourney_generation';
+      
+      // Deduct credits for Midjourney generation
+      const creditResult = await storage.deductCredits(userId, serviceType);
       
       if (!creditResult.success) {
         return res.status(403).json({
           error: 'Insufficient credits',
           credits: creditResult.newBalance,
-          required: SERVICE_CREDIT_COSTS.midjourney_generation,
-          message: creditResult.error || 'You need more credits to generate with Midjourney. Upgrade your plan or wait for daily reset.'
+          required: SERVICE_CREDIT_COSTS[serviceType],
+          message: creditResult.error || `You need more credits to generate with Midjourney ${speed} mode. Upgrade your plan or wait for daily reset.`
         });
       }
 
@@ -1470,7 +1478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('⚠️ Reference image ignored - Midjourney only supports text-to-image via KIE.ai');
       }
 
-      console.log('Generating images with Midjourney via KIE.ai:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, version });
+      console.log('Generating images with Midjourney via KIE.ai:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, version, speed });
 
       // Call Midjourney via KIE.ai with styled prompt (text-to-image only)
       const result = await generateMidjourney({
@@ -1479,6 +1487,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: undefined, // No reference image support
         version,
         aspectRatio,
+        speed, // Pass speed parameter (Fast or Turbo)
         onQueueUpdate: (update: any) => {
           console.log('Midjourney queue update:', update.status, update.progress);
         }

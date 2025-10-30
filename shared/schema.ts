@@ -247,6 +247,7 @@ export const ServiceType = z.enum([
   'image_generation',
   'album_art_generation',
   'midjourney_generation',
+  'midjourney_generation_turbo',
   'wav_conversion'
 ]);
 export type ServiceType = z.infer<typeof ServiceType>;
@@ -260,7 +261,8 @@ export const SERVICE_CREDIT_COSTS: Record<ServiceType, number> = {
   video_generation: 5,         // Base for lite 512p 3s (dynamic function calculates actual cost)
   image_generation: 6,         // DALL-E 3: $0.04 API + 50% margin = $0.06
   album_art_generation: 5,     // Seedream: $0.03 API + 50% margin = $0.045
-  midjourney_generation: 3,    // KIE.ai Midjourney: ~$0.04 API cost for 4 images, priced competitively at 3 credits
+  midjourney_generation: 3,    // KIE.ai Midjourney Fast: ~$0.04 API cost for 4 images, priced competitively at 3 credits
+  midjourney_generation_turbo: 6, // KIE.ai Midjourney Turbo: 2x API cost, 2x credits
   wav_conversion: 3,           // $0.02 API + 50% margin = $0.03
 };
 
@@ -270,7 +272,8 @@ export const UNLIMITED_SERVICE_PLANS: Record<ServiceType, PlanType[]> = {
   video_generation: ['all_access'], // Only All Access has unlimited video
   image_generation: ['all_access'], // Only All Access has unlimited images
   album_art_generation: ['all_access'], // Album art unlimited for All Access plan
-  midjourney_generation: ['all_access'], // Midjourney unlimited for All Access plan
+  midjourney_generation: ['all_access'], // Midjourney Fast unlimited for All Access plan
+  midjourney_generation_turbo: ['all_access'], // Midjourney Turbo unlimited for All Access plan
   wav_conversion: ['studio', 'creator', 'all_access'], // WAV conversion free for Studio+ plans
 };
 

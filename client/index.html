@@ -2109,6 +2109,16 @@
     </select>
     </div>
 
+    <!-- Midjourney Speed Selector (only shown when Midjourney is selected) -->
+    <div class="form-group" id="midjourney-speed-group" style="display: none;">
+    <label class="form-label">⚡ Generation Speed</label>
+    <select id="midjourney-speed" data-testid="select-midjourney-speed">
+    <option value="Fast" selected>Fast (~60-90s, 3 credits)</option>
+    <option value="Turbo">Turbo (~15-60s, 6 credits)</option>
+    </select>
+    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Turbo is 2x faster but costs 2x more credits</div>
+    </div>
+
     <!-- Image Aspect Ratio Selector (only for images, not videos) -->
     <div class="form-group" id="image-aspect-ratio-group" style="display: block;">
     <label class="form-label">📐 Aspect Ratio</label>
@@ -2663,6 +2673,25 @@
           midjourneyOption.disabled = false;
         }
       }
+
+      // Trigger visibility update for Midjourney speed selector
+      updateMidjourneySpeedVisibility();
+    }
+
+    function updateMidjourneySpeedVisibility() {
+      const imageEngine = document.getElementById('media-image-engine');
+      const speedGroup = document.getElementById('midjourney-speed-group');
+      
+      if (imageEngine && speedGroup) {
+        const isMidjourney = imageEngine.value === 'midjourney';
+        speedGroup.style.display = isMidjourney ? 'block' : 'none';
+      }
+    }
+
+    // Add event listener for image engine changes
+    const imageEngineSelector = document.getElementById('media-image-engine');
+    if (imageEngineSelector) {
+      imageEngineSelector.addEventListener('change', updateMidjourneySpeedVisibility);
     }
     
     
@@ -4831,7 +4860,8 @@ async function generateMedia() {
                     prompt: prompt,
                     style: document.getElementById('media-image-style').value,
                     version: 'v7',
-                    aspectRatio: aspectRatio
+                    aspectRatio: aspectRatio,
+                    speed: document.getElementById('midjourney-speed')?.value || 'Fast'
                 };
 
                 // Add reference image if uploaded (works with Midjourney)

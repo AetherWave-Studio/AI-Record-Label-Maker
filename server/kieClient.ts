@@ -784,9 +784,10 @@ export async function generateMidjourney(options: {
   imageUrl?: string; // Optional reference image for img2img
   version?: string; // v7, v6.1, v5.2, niji6
   aspectRatio?: string; // 1:1, 16:9, 9:16, etc.
+  speed?: string; // Fast or Turbo
   onQueueUpdate?: (update: { status: string; progress?: number }) => void;
 }): Promise<KieResult> {
-  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', onQueueUpdate } = options;
+  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', speed = 'Fast', onQueueUpdate } = options;
 
   if (!apiKey) {
     throw new Error('KIE.ai API key is required');
@@ -806,7 +807,7 @@ export async function generateMidjourney(options: {
     const requestBody: any = {
       taskType,
       prompt: fullPrompt,
-      speed: 'Fast', // Fast mode: ~60-90 seconds, standard cost
+      speed, // Fast mode (~60-90s) or Turbo mode (~15-60s)
       version,
     };
 
