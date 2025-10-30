@@ -75,6 +75,11 @@ export async function setupDevAuth(app: Express) {
     },
   }));
 
+  // Redirect /api/login to /api/dev/login in dev mode
+  app.get('/api/login', (req: any, res) => {
+    res.redirect('/api/dev/login');
+  });
+
   // Auto-login route for dev
   app.get('/api/dev/login', (req: any, res) => {
     req.session.devUser = {
