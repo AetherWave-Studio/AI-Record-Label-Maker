@@ -796,14 +796,18 @@ export async function generateMidjourney(options: {
   const taskType = imageUrl ? 'mj_img2img' : 'mj_txt2img';
 
   try {
-    console.log(`Midjourney: Creating ${taskType} task with version ${version}`);
+    console.log(`Midjourney: Creating ${taskType} task with version ${version} and aspect ratio ${aspectRatio}`);
+
+    // Midjourney requires aspect ratio as --ar flag in the prompt
+    // Only add --ar flag if aspect ratio is not 1:1 (default)
+    const aspectRatioFlag = aspectRatio && aspectRatio !== '1:1' ? ` --ar ${aspectRatio}` : '';
+    const fullPrompt = `${prompt}${aspectRatioFlag}`;
 
     const requestBody: any = {
       taskType,
-      prompt,
+      prompt: fullPrompt,
       speed: 'fast',
       version,
-      aspectRatio,
     };
 
     // Add image URL for img2img mode
