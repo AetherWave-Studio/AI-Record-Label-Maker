@@ -3951,12 +3951,14 @@ window.premiumPlayer = {
       const isSeedance = currentModel.startsWith('seedance');
       const isVeo3Fast = currentModel === 'veo3_fast';
 
-      // Hide image mode dropdown - Seedance now uses same workflow as VEO (first+last frame)
+      // Hide image mode dropdown - auto-determined by uploaded images
       imageModeSelection.style.display = 'none';
 
-      // Show second uploader (last frame) for both Seedance AND VEO 3.1 Fast
+      // Show second uploader (last frame) for Seedance LITE and VEO 3.1 Fast only
+      // Seedance Pro only supports reference mode (no first/last frame)
+      const isSeedanceLite = currentModel === 'seedance-lite';
       const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
-      if ((isSeedance || isVeo3Fast) && uploadedImageData) {
+      if ((isSeedanceLite || isVeo3Fast) && uploadedImageData) {
         if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
       } else {
         if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
@@ -4069,19 +4071,24 @@ window.premiumPlayer = {
       mediaVideoModel.addEventListener('change', () => {
         const currentModel = mediaVideoModel.value;
         const isVeo3Fast = currentModel === 'veo3_fast';
-        const isSeedance = currentModel.startsWith('seedance');
+        const isSeedanceLite = currentModel === 'seedance-lite';
+        const isSeedancePro = currentModel === 'seedance-pro';
         const lastFrameUploadGroup = document.getElementById('last-frame-upload-group');
         const imageLabelHint = document.getElementById('image-label-hint');
         const aspectRatioSelect = document.getElementById('media-aspect-ratio');
 
-        // Show last frame uploader for VEO 3.1 Fast AND Seedance when first image is uploaded
-        if ((isVeo3Fast || isSeedance) && uploadedImageData && selectedMediaType === 'video') {
+        // Show last frame uploader for VEO 3.1 Fast and Seedance LITE only (Pro doesn't support it)
+        if ((isVeo3Fast || isSeedanceLite) && uploadedImageData && selectedMediaType === 'video') {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
         } else {
           if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
-          // Reset label to default when hiding second uploader
+          // Update label based on model
           if (imageLabelHint) {
-            imageLabelHint.textContent = '- First frame or reference';
+            if (isSeedancePro) {
+              imageLabelHint.textContent = '- Reference only';
+            } else {
+              imageLabelHint.textContent = '- First frame or reference';
+            }
           }
         }
 
@@ -4706,13 +4713,14 @@ async function generateMedia() {
             // Add uploaded image data if provided
             if (uploadedImageData) {
                 requestBody.imageData = uploadedImageData;
-                // Auto-determine imageMode based on workflow (matching VEO):
-                // - One image only: first-frame mode (not reference)
-                // - Two images: first+last frame mode (still first-frame with end image)
-                requestBody.imageMode = 'first-frame';
+                // Seedance Pro: Always reference mode (doesn't support first/last frame)
+                // Seedance Lite & VEO: First-frame mode
+                const isSeedancePro = videoModel === 'seedance-pro';
+                requestBody.imageMode = isSeedancePro ? 'reference' : 'first-frame';
             }
-            // Add second image data if provided (for Seedance/VEO last frame)
-            if (uploadedLastFrameData) {
+            // Add second image data if provided (for Seedance Lite/VEO last frame only)
+            // Seedance Pro doesn't support first/last frame mode
+            if (uploadedLastFrameData && videoModel !== 'seedance-pro') {
                 requestBody.endImageData = uploadedLastFrameData;
             }
 
@@ -5509,12 +5517,15 @@ if (videoModelSelect) {
           `;
         }
       }
-      // Hide image mode selection (Seedance now uses same workflow as VEO - first+last frame)
+      // Hide image mode selection (Seedance auto-determines mode)
       if (imageModeSelection) {
         imageModeSelection.style.display = 'none';
       }
-      // Update image label for Seedance
-      if (imageLabel) imageLabel.textContent = '- First frame or reference';
+      // Update image label for Seedance (Lite: first frame, Pro: reference only)
+      if (imageLabel) {
+        const isPro = model.includes('pro');
+        imageLabel.textContent = isPro ? '- Reference only' : '- First frame or reference';
+      }
       
       // Filter resolution options based on Lite vs Pro
       const isLite = model.includes('lite');

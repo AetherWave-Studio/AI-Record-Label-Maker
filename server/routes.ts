@@ -1484,14 +1484,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let modelId;
       if (hasImage) {
-        if (imageMode === 'reference') {
-          modelId = modelVersion === 'pro'
-            ? 'fal-ai/bytedance/seedance/v1/pro/reference-to-video'
-            : 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
+        // Seedance Pro: Always reference mode (doesn't support first/last frame)
+        // Seedance Lite: Supports both reference and first-frame modes
+        if (modelVersion === 'pro') {
+          modelId = 'fal-ai/bytedance/seedance/v1/pro/reference-to-video';
+        } else if (imageMode === 'reference') {
+          modelId = 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
         } else {
-          modelId = modelVersion === 'pro'
-            ? 'fal-ai/bytedance/seedance/v1/pro/image-to-video'
-            : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
+          modelId = 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
         }
       } else {
         modelId = modelVersion === 'pro'
@@ -1794,14 +1794,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Determine Fal.ai model ID
         let modelId;
         if (hasImage) {
-          if (imageMode === 'reference') {
-            modelId = modelVersion === 'pro'
-              ? 'fal-ai/bytedance/seedance/v1/pro/reference-to-video'
-              : 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
+          // Seedance Pro: Always reference mode (doesn't support first/last frame)
+          // Seedance Lite: Supports both reference and first-frame modes
+          if (modelVersion === 'pro') {
+            modelId = 'fal-ai/bytedance/seedance/v1/pro/reference-to-video';
+          } else if (imageMode === 'reference') {
+            modelId = 'fal-ai/bytedance/seedance/v1/lite/reference-to-video';
           } else {
-            modelId = modelVersion === 'pro'
-              ? 'fal-ai/bytedance/seedance/v1/pro/image-to-video'
-              : 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
+            modelId = 'fal-ai/bytedance/seedance/v1/lite/image-to-video';
           }
         } else {
           modelId = modelVersion === 'pro'

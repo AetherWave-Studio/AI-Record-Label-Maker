@@ -10,18 +10,22 @@ The application provides a creative tool interface for generating AI-created mus
 
 ## Recent Changes (October 30, 2025)
 
-**Unified Video Generation Workflow (Seedance + VEO):**
-- Aligned Seedance workflow with VEO 3.1 Fast - both now support 3 generation types:
+**Unified Video Generation Workflow (Seedance Lite + VEO):**
+- Aligned Seedance Lite workflow with VEO 3.1 Fast - both support 3 generation types:
   1. **Text-to-video** (no image)
   2. **First frame mode** (one image as starting frame)
   3. **First + Last frame mode** (two images for beginning and end)
-- Removed image mode dropdown for Seedance (auto-determined based on uploaded images)
-- Second image uploader now appears for both Seedance AND VEO when first image is uploaded
-- Frontend auto-sets `imageMode: 'first-frame'` for all image-based video generation
-- Backend properly handles `endImageData` for Fal.ai Seedance first+last frame mode
-- Image upload labels standardized across all models:
-  - Default: "- First frame or reference"
-  - When second image uploaded: "- First frame"
+- **Seedance Pro**: Reference mode only (no first/last frame support)
+- Removed image mode dropdown (auto-determined based on model and uploaded images)
+- Second image uploader appears for Seedance Lite and VEO 3.1 Fast only
+- Frontend auto-sets `imageMode` based on model:
+  - Seedance Pro: 'reference' (reference-to-video)
+  - Seedance Lite/VEO: 'first-frame' (image-to-video with optional end frame)
+- Backend properly handles `endImageData` for Fal.ai Seedance Lite first+last frame mode
+- Image upload labels standardized by model:
+  - Seedance Lite: "- First frame or reference"
+  - Seedance Pro: "- Reference only"
+  - VEO 3.1 Fast: "- First frame or reference"
   - SORA 2: "- Reference only"
 - **Resolution Options:**
   - Seedance Lite: 480p, 720p, 1080p only (4K hidden)
