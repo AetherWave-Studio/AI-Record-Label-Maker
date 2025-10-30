@@ -645,6 +645,218 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/**
+ * Poll Midjourney task status until completion
+ * Returns all 4 image variants
+ */
+async function pollMidjourneyStatus(
+  taskId: string,
+  apiKey: string,
+  maxAttempts: number = MAX_POLL_ATTEMPTS,
+  onUpdate?: (update: { status: string; progress?: number }) => void
+): Promise<KieResult> {
+  let attempts = 0;
+
+  while (attempts < maxAttempts) {
+    attempts++;
+
+    try {
+      const statusResponse = await nodeFetch(`${KIE_API_BASE}/mj/record-info?taskId=${taskId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`
+        },
+        agent: proxyAgent as any
+      });
+
+      if (!statusResponse.ok) {
+        const errorText = await statusResponse.text();
+        console.error(`Midjourney status check failed (${statusResponse.status}):`, errorText);
+
+        if (statusResponse.status >= 400 && statusResponse.status < 500) {
+          return {
+            status: 'failed',
+            error: `API error: ${errorText}`
+          };
+        }
+
+        await sleep(POLL_INTERVAL_MS);
+        continue;
+      }
+
+      const statusData: any = await statusResponse.json();
+
+      if (attempts === 1) {
+        console.log('Midjourney API response structure:', JSON.stringify(statusData, null, 2));
+      }
+
+      if (statusData.code !== 200) {
+        console.error('Midjourney returned error code:', statusData);
+
+        const taskStatus = statusData.data?.status || statusData.data?.state;
+        if (taskStatus === 'FAILED' || taskStatus === 'failed') {
+          return {
+            status: 'failed',
+            error: statusData.data.error || statusData.msg || 'Task failed'
+          };
+        }
+
+        await sleep(POLL_INTERVAL_MS);
+        continue;
+      }
+
+      const taskStatus = statusData.data?.status || statusData.data?.state || 'processing';
+      const progress = statusData.data?.progress;
+
+      if (onUpdate) {
+        onUpdate({ status: taskStatus, progress });
+      }
+
+      console.log(`Midjourney task ${taskId} status: ${taskStatus}${progress ? ` (${progress}%)` : ''}, successFlag: ${statusData.data?.successFlag}`);
+
+      // Check for completion (successFlag === 1)
+      const isSuccess = statusData.data?.successFlag === 1;
+      
+      if (isSuccess) {
+        // Midjourney returns 4 image variants in resultInfoJson.resultUrls
+        const resultInfoJson = statusData.data?.resultInfoJson;
+        const resultUrls = resultInfoJson?.resultUrls || [];
+        
+        // Extract all image URLs (Midjourney returns 4 variants)
+        const imageUrls = resultUrls.map((item: any) => item.resultUrl).filter(Boolean);
+
+        if (imageUrls.length === 0) {
+          console.error('Midjourney task completed but no image URLs found:', JSON.stringify(statusData, null, 2));
+          return {
+            status: 'failed',
+            error: 'Task completed but no image URLs found in response',
+            data: statusData.data
+          };
+        }
+
+        console.log(`Midjourney task completed successfully, ${imageUrls.length} images generated`);
+        
+        return {
+          status: 'complete',
+          data: {
+            ...statusData.data,
+            imageUrls // Return all 4 image URLs
+          }
+        };
+      }
+
+      if (taskStatus === 'FAILED' || taskStatus === 'failed') {
+        return {
+          status: 'failed',
+          error: statusData.data.failMsg || statusData.data.error || 'Task failed without error message'
+        };
+      }
+
+      await sleep(POLL_INTERVAL_MS);
+
+    } catch (error: any) {
+      console.error('Error polling Midjourney task status:', error.message);
+
+      if (attempts >= maxAttempts - 3) {
+        return {
+          status: 'failed',
+          error: `Polling failed: ${error.message}`
+        };
+      }
+
+      await sleep(POLL_INTERVAL_MS);
+    }
+  }
+
+  return {
+    status: 'failed',
+    error: `Task did not complete within ${(maxAttempts * POLL_INTERVAL_MS) / 1000}s`
+  };
+}
+
+/**
+ * Generate images using Midjourney via KIE.ai
+ * Returns 4 image variants per request
+ */
+export async function generateMidjourney(options: {
+  prompt: string;
+  apiKey: string;
+  imageUrl?: string; // Optional reference image for img2img
+  version?: string; // v7, v6.1, v5.2, niji6
+  aspectRatio?: string; // 1:1, 16:9, 9:16, etc.
+  onQueueUpdate?: (update: { status: string; progress?: number }) => void;
+}): Promise<KieResult> {
+  const { prompt, apiKey, imageUrl, version = 'v7', aspectRatio = '1:1', onQueueUpdate } = options;
+
+  if (!apiKey) {
+    throw new Error('KIE.ai API key is required');
+  }
+
+  // Determine task type
+  const taskType = imageUrl ? 'mj_img2img' : 'mj_txt2img';
+
+  try {
+    console.log(`Midjourney: Creating ${taskType} task with version ${version}`);
+
+    const requestBody: any = {
+      taskType,
+      prompt,
+      speed: 'fast',
+      version,
+      aspectRatio,
+    };
+
+    // Add image URL for img2img mode
+    if (imageUrl) {
+      requestBody.imageUrl = imageUrl;
+    }
+
+    console.log('Midjourney request body:', JSON.stringify(requestBody, null, 2));
+
+    const createResponse = await nodeFetch(`${KIE_API_BASE}/mj/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(requestBody),
+      agent: proxyAgent as any
+    });
+
+    if (!createResponse.ok) {
+      const errorText = await createResponse.text();
+      console.error(`Midjourney task creation failed (${createResponse.status}):`, errorText);
+      throw new Error(`Failed to create Midjourney task: ${errorText}`);
+    }
+
+    const createData: KieTaskResponse = await createResponse.json();
+
+    if (createData.code !== 200) {
+      throw new Error(`Midjourney API error: ${createData.msg}`);
+    }
+
+    const taskId = createData.data?.taskId;
+
+    if (!taskId) {
+      console.error('No taskId in response:', createData);
+      throw new Error('No taskId returned from Midjourney API');
+    }
+
+    console.log(`Midjourney: Task created with ID ${taskId}, starting polling...`);
+
+    // Poll until complete
+    const result = await pollMidjourneyStatus(taskId, apiKey, MAX_POLL_ATTEMPTS, onQueueUpdate);
+
+    console.log(`Midjourney: Task ${taskId} completed with status ${result.status}`);
+
+    return result;
+
+  } catch (error: any) {
+    console.error('Midjourney generation error:', error);
+    throw error;
+  }
+}
+
 // Export model identifiers as constants for easy reference
 export const KIE_MODELS = {
   // Veo 3 models (Google)
@@ -658,6 +870,9 @@ export const KIE_MODELS = {
   SEEDANCE_LITE_IMAGE2VIDEO: 'bytedance/v1-lite-image-to-video',
   SEEDANCE_PRO_TEXT2VIDEO: 'bytedance/v1-pro-text-to-video',
   SEEDANCE_PRO_IMAGE2VIDEO: 'bytedance/v1-pro-image-to-video',
+
+  // Midjourney models (KIE.ai)
+  MIDJOURNEY: 'midjourney',
 } as const;
 
 // Model pricing (cost per generation in USD - API cost before 50% margin)
