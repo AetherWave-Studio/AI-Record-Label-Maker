@@ -68,7 +68,7 @@ function validateMusicModel(planType: PlanType, model: MusicModel): boolean {
 // All pricing includes 50% margin for infrastructure and profit
 function calculateVideoCredits(
   model: VideoModel,
-  resolution?: '512p' | '720p' | '1080p' | '4k',
+  resolution?: '480p' | '720p' | '1080p' | '4k',
   duration?: number,
   quality?: 'standard' | 'hd'
 ): number {
@@ -81,12 +81,12 @@ function calculateVideoCredits(
     costPerSecond = 0.015; // $0.15/10s via KIE.ai (60% cheaper than OpenAI!)
     // Seedance models (fal.ai) - resolution-dependent pricing
   } else if (model === 'seedance-lite') {
-    if (resolution === '512p') costPerSecond = 0.010;        // 480p pricing
+    if (resolution === '480p') costPerSecond = 0.010;        // 480p pricing
     else if (resolution === '720p') costPerSecond = 0.0225;  // 720p pricing
     else if (resolution === '1080p') costPerSecond = 0.050;  // 1080p pricing
     else if (resolution === '4k') costPerSecond = 0.100;     // 4k estimate
   } else if (model === 'seedance-pro') {
-    if (resolution === '512p') costPerSecond = 0.020;
+    if (resolution === '480p') costPerSecond = 0.020;
     else if (resolution === '720p') costPerSecond = 0.045;
     else if (resolution === '1080p') costPerSecond = 0.100;
     else if (resolution === '4k') costPerSecond = 0.200;
@@ -1439,9 +1439,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate quality settings for free accounts
       if (user.subscriptionPlan === 'free') {
-        if (modelVersion !== 'lite' || resolution !== '512p' || parseInt(duration) !== 3) {
+        if (modelVersion !== 'lite' || resolution !== '480p' || parseInt(duration) !== 3) {
           return res.status(403).json({
-            error: 'Free accounts can only use default settings (Lite model, 512p, 3 seconds)',
+            error: 'Free accounts can only use default settings (Lite model, 480p, 3 seconds)',
             message: 'Please upgrade your plan to access higher quality video generation settings.'
           });
         }
@@ -1450,7 +1450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate credits based on quality settings
       const requiredCredits = calculateVideoCredits(
         `seedance-${modelVersion}` as 'seedance-lite' | 'seedance-pro',
-        resolution as '512p' | '720p' | '1080p' | '4k',
+        resolution as '480p' | '720p' | '1080p' | '4k',
         parseInt(duration)
       );
 
@@ -1522,12 +1522,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         enable_safety_checker: enableSafetyChecker
       };
 
-      // Add resolution
-      if (resolution === '512p') {
-        input.resolution = '480p';
-      } else {
-        input.resolution = resolution;
-      }
+      // Add resolution (already 480p from frontend)
+      input.resolution = resolution;
 
       // Add image if provided (support both base64 and URL)
       const imageSource = imageData || finalImageUrl;
@@ -1627,10 +1623,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Validate plan restrictions for free accounts
       if (user.subscriptionPlan === 'free') {
-        // Free users can only use Seedance Lite 512p 3s
-        if (model !== 'seedance-lite' || resolution !== '512p' || duration !== 3) {
+        // Free users can only use Seedance Lite 480p 3s
+        if (model !== 'seedance-lite' || resolution !== '480p' || duration !== 3) {
           return res.status(403).json({
-            error: 'Free accounts can only use Seedance Lite (512p, 3 seconds)',
+            error: 'Free accounts can only use Seedance Lite (480p, 3 seconds)',
             message: 'Please upgrade your plan to access premium models like Veo 3 or Sora 2.'
           });
         }
@@ -1826,7 +1822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const falInput: any = {
           prompt: prompt,
           num_frames: numFrames,
-          resolution: resolution === '512p' ? '480p' : resolution,
+          resolution: resolution,
           enable_safety_checker: enableSafetyChecker
         };
 
