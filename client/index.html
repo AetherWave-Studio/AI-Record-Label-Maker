@@ -2105,8 +2105,7 @@
     <select id="media-image-engine" data-testid="select-image-engine">
     <option value="nano-banana" selected>⚡ Nano Banana - Fast & Reliable (~5s, Free+)</option>
     <option value="dall-e-3" data-plan="studio">🎨 DALL-E 3 - High Quality (~10s, Studio+)</option>
-    <option value="midjourney" data-plan="studio">🏆 Midjourney (KIE.ai) - Premium Quality (may have delays, Studio+)</option>
-    <option value="midjourney-ttapi" data-plan="studio">🚀 Midjourney (ttapi.io) - NEW! Test Provider (Studio+)</option>
+    <option value="midjourney-ttapi" data-plan="studio">🎨 Midjourney - Premium Artistic Quality (~30-40s, Studio+)</option>
     </select>
     <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
       <span id="engine-description">Nano Banana: Lightning-fast generation with professional results</span>
@@ -2672,7 +2671,7 @@
           dallE3Option.disabled = false;
         }
         
-        const midjourneyOption = imageEngine.querySelector('option[value="midjourney"]');
+        const midjourneyOption = imageEngine.querySelector('option[value="midjourney-ttapi"]');
         if (midjourneyOption) {
           midjourneyOption.disabled = false;
         }
@@ -2687,7 +2686,7 @@
       const speedGroup = document.getElementById('midjourney-speed-group');
       
       if (imageEngine && speedGroup) {
-        const isMidjourney = imageEngine.value === 'midjourney' || imageEngine.value === 'midjourney-ttapi';
+        const isMidjourney = imageEngine.value === 'midjourney-ttapi';
         speedGroup.style.display = isMidjourney ? 'block' : 'none';
       }
     }
@@ -2701,20 +2700,11 @@
       const descriptions = {
         'nano-banana': 'Nano Banana: Lightning-fast generation (~5s) with professional results. Best for quick iterations!',
         'dall-e-3': 'DALL-E 3: High-quality, creative AI images with precise prompt following (~10s)',
-        'midjourney': 'Midjourney (KIE.ai): Premium artistic quality, but may experience server delays. Try Nano Banana for instant results!',
-        'midjourney-ttapi': 'Midjourney (ttapi.io): NEW test provider! Same quality as KIE.ai, compare performance yourself.'
+        'midjourney-ttapi': 'Midjourney: Premium artistic quality with reliable performance (~30-40s). 4 variants per generation!'
       };
       
       descriptionEl.textContent = descriptions[imageEngine.value] || descriptions['nano-banana'];
-      
-      // Highlight warning for Midjourney KIE.ai
-      if (imageEngine.value === 'midjourney') {
-        descriptionEl.style.color = '#ff9500';
-      } else if (imageEngine.value === 'midjourney-ttapi') {
-        descriptionEl.style.color = '#22c55e'; // Green for new/test
-      } else {
-        descriptionEl.style.color = 'var(--text-muted)';
-      }
+      descriptionEl.style.color = 'var(--text-muted)';
     }
 
     // Add event listener for image engine changes
@@ -4883,12 +4873,11 @@ async function generateMedia() {
             // Image generation (Midjourney, DALL-E 3, or Fal.ai Nano Banana)
             const imageEngine = document.getElementById('media-image-engine').value;
             const aspectRatio = document.getElementById('media-image-aspect-ratio')?.value || '1:1';
-            const useMidjourney = imageEngine === 'midjourney';
-            const useMidjourneyTtapi = imageEngine === 'midjourney-ttapi';
+            const useMidjourney = imageEngine === 'midjourney-ttapi';
             const useDallE = imageEngine === 'dall-e-3';
             
-            // Midjourney path (KIE.ai or ttapi.io)
-            if (useMidjourney || useMidjourneyTtapi) {
+            // Midjourney path (ttapi.io)
+            if (useMidjourney) {
                 const selectedSpeed = document.getElementById('midjourney-speed')?.value || 'fast';
                 const requestBody = {
                     prompt: prompt,
@@ -4905,14 +4894,13 @@ async function generateMedia() {
                 }
 
                 // Show status message with estimated time
-                const estimatedTime = selectedSpeed === 'turbo' ? '15-60 seconds' : '60-90 seconds';
+                const estimatedTime = selectedSpeed === 'turbo' ? '15-40 seconds' : selectedSpeed === 'relax' ? '90-180 seconds' : '30-60 seconds';
                 const timeoutTime = selectedSpeed === 'turbo' ? '120 seconds' : '180 seconds';
                 const creditCost = selectedSpeed === 'turbo' ? 6 : 3;
-                const providerName = useMidjourneyTtapi ? 'ttapi.io' : 'KIE.ai';
                 
                 mediaResult.innerHTML = `
-                    <div class="result-box" style="border-left: 4px solid ${useMidjourneyTtapi ? '#22c55e' : '#8b5cf6'};">
-                        <div class="result-title" style="color: ${useMidjourneyTtapi ? '#22c55e' : '#8b5cf6'};">🎨 Generating with Midjourney ${selectedSpeed === 'turbo' ? 'Turbo' : 'Fast'} (${providerName})</div>
+                    <div class="result-box" style="border-left: 4px solid #8b5cf6;">
+                        <div class="result-title" style="color: #8b5cf6;">🎨 Generating with Midjourney ${selectedSpeed === 'turbo' ? 'Turbo' : selectedSpeed === 'relax' ? 'Relax' : 'Fast'}</div>
                         <p style="margin-top: 0.75rem; line-height: 1.6;">
                             Creating high-quality image variants...
                         </p>
@@ -4954,11 +4942,9 @@ async function generateMedia() {
                 `;
                 mediaResult.style.display = 'block';
 
-                const providerLog = useMidjourneyTtapi ? 'ttapi.io' : 'KIE.ai';
-                console.log(`Generating images with Midjourney via ${providerLog}...`);
+                console.log('Generating images with Midjourney via ttapi.io...');
 
-                const endpoint = useMidjourneyTtapi ? '/api/media/midjourney-ttapi' : '/api/generate-midjourney';
-                const response = await fetch(endpoint, {
+                const response = await fetch('/api/media/midjourney-ttapi', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
