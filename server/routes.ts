@@ -1530,10 +1530,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (imageSource) {
         if (imageMode === 'reference') {
-          // Reference mode uses array of image URLs
-          input.image_urls = [imageSource];
+          // Reference mode requires actual URLs, not base64
+          // Upload to KIE.ai storage if base64 data provided
+          let referenceUrl = imageSource;
+          if (imageData && imageData.startsWith('data:image')) {
+            console.log('Reference mode: Uploading base64 image to KIE.ai storage...');
+            try {
+              referenceUrl = await uploadImageToKie(imageData, process.env.KIE_API_KEY!);
+              console.log('Reference image uploaded successfully:', referenceUrl);
+            } catch (uploadError: any) {
+              console.error('Failed to upload reference image:', uploadError);
+              throw new Error(`Failed to upload reference image: ${uploadError.message}`);
+            }
+          }
+          input.image_urls = [referenceUrl];
         } else {
-          // First-frame mode uses single image URL (image-to-video)
+          // First-frame mode accepts base64 data URLs
           input.image_url = imageSource;
           
           // Add end frame if provided (only for image-to-video mode)
