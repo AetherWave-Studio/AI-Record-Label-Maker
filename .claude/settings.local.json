@@ -24,7 +24,8 @@
       "Bash(git commit -m \"Update social media quest links\n\n- Twitter/X: @aetherwave_ai\n- Discord: Real server invite link\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\")",
       "Bash(cmd.exe //C taskkill //PID 33828 //F)",
       "WebFetch(domain:www.technology.org)",
-      "Bash(cmd.exe //C taskkill //PID 13892 //F)"
+      "Bash(cmd.exe //C taskkill //PID 13892 //F)",
+      "Bash(git add client/index.html client/src/App.tsx client/src/pages/video-generation.tsx server/kieClient.ts server/routes.ts docs/)"
     ],
     "deny": [],
     "ask": []

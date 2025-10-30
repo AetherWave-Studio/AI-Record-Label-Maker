@@ -1,9 +1,30 @@
 {
   "company": "AetherWave Studio",
   "tagline": "AI Music • Human Soul • Immersive Sound",
-  "updatedAt": "2025-10-29T07:07:53.407Z",
-  "artists": [],
-  "gallery": [],
+  "updatedAt": "2025-10-29T13:30:01.911Z",
+  "artists": [
+    {
+      "id": 1761744315963,
+      "name": "Ghosts Online",
+      "genre": "Punk  Pop",
+      "bio": "An angsty pop-punk band with a playful defiant streak. Their music captures the frustration\n  and sarcasm of young adulthood with catchy hooks, rebellious energy, and ironic humor.",
+      "heroImage": "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Ghosts%20Online%2FSeed_for_Band_Profile_Vid.png?alt=media&token=9fc638e1-160a-40e5-9acf-bcb4a36823f6",
+      "profileImage": "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Ghosts%20Online%2Fghost_gum_1x1_w_watermark.png?alt=media&token=4f37eca0-c547-4e70-bcf8-b8be72b3bb03",
+      "tracks": "8",
+      "followers": "",
+      "slug": "ghosts-online"
+    }
+  ],
+  "gallery": [
+    {
+      "id": 1761744593118,
+      "title": "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Ghosts%20Online%2F19%2BGhost's%20online%20Profile.png?alt=media&token=83ccc878-c7fd-474e-801f-53f6ecdc7f60",
+      "description": "The dark side of  the band. 18+",
+      "thumb": "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Ghosts%20Online%2F19%2BGhost's%20online%20Profile.png?alt=media&token=83ccc878-c7fd-474e-801f-53f6ecdc7f60",
+      "full": "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Ghosts%20Online%2F19%2BGhost's%20online%20Profile.png?alt=media&token=83ccc878-c7fd-474e-801f-53f6ecdc7f60",
+      "artistSlug": "ghosts-online"
+    }
+  ],
   "merch": [],
   "meta": {
     "source": "admin-panel",

@@ -1980,32 +1980,25 @@
     <option value="sora2_pro_hd" data-plan="all_access">SORA 2 Pro HD (All Access - 1080p)</option>
     <option value="veo3_fast" data-plan="creator">VEO 3 Fast (Creator+ - Google)</option>
     </select>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-    ⚠️ <strong>Important:</strong> Choose your model first - this determines which image options are available below
-    </div>
     </div>
 
     <!-- Image Upload (Optional - shown for images OR for video reference) -->
     <div class="form-group" id="image-upload-group">
     <label class="form-label">
     <span>Upload Image (Optional)</span>
-    <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- For style reference or first/last frame</span>
+    <span id="image-label-hint" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- For style reference</span>
     </label>
     <input type="file" id="media-image-upload" accept="image/*" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem; cursor: pointer;">
     </div>
 
     <!-- Image Mode Selection (shown only for video when image uploaded) -->
     <div id="image-mode-selection" style="display: none; margin-top: 0.75rem;">
-    <label class="form-label">How should the image be used?</label>
+    <label class="form-label">Image Mode</label>
     <select id="image-mode" style="width: 100%; padding: 0.75rem 1rem; background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-size: 0.9rem;">
-    <option value="reference">Style Reference - Use as visual inspiration (All models)</option>
-    <option value="first-frame">First Frame - Start video with this image (Seedance only)</option>
-    <option value="last-frame">Last Frame - End video with this image (Seedance only)</option>
+    <option value="reference">Style Reference</option>
+    <option value="first-frame">First Frame</option>
+    <option value="last-frame">Last Frame</option>
     </select>
-    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">
-    <strong>Style Reference (All models):</strong> AI uses image as style guide but creates new content<br>
-    <strong>First/Last Frame (Seedance only):</strong> Image becomes opening/closing frame, AI animates in between
-    </div>
 
     <div id="media-image-preview" style="display: none; margin-top: 0.5rem;">
     <img id="media-preview-img" style="max-width: 100%; max-height: 200px; border-radius: 8px; border: 1px solid var(--border-color);" />
@@ -2042,7 +2035,7 @@
 
     <!-- VEO/SORA: Aspect Ratio -->
     <div class="form-group" id="video-aspect-ratio-group" style="display: none;">
-    <label class="form-label">Aspect Ratio (VEO 3 & SORA 2 only)</label>
+    <label class="form-label">Aspect Ratio</label>
     <select id="media-aspect-ratio">
     <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
     <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
@@ -3768,9 +3761,16 @@ window.premiumPlayer = {
     mediaPreviewImg.src = uploadedImageData;
     mediaImagePreview.style.display = 'block';
 
-    // Show image mode selection only for video
+    // Show image mode selection only for video and only for Seedance models
     if (selectedMediaType === 'video') {
-    imageModeSelection.style.display = 'block';
+      const currentModel = mediaVideoModel?.value || 'seedance-lite';
+      const isSeedance = currentModel.startsWith('seedance');
+      // Only show image mode for Seedance (VEO 3 and SORA 2 use reference only)
+      if (isSeedance) {
+        imageModeSelection.style.display = 'block';
+      } else {
+        imageModeSelection.style.display = 'none';
+      }
     }
     };
     img.src = event.target.result;
@@ -5107,9 +5107,20 @@ if (videoModelSelect) {
     const aspectRatioGroup = document.getElementById('video-aspect-ratio-group');
     const durationGroup = document.getElementById('video-duration-group');
     const durationSelect = document.getElementById('media-duration');
-    const imageModeSelect = document.getElementById('image-mode');
+    const aspectRatioSelect = document.getElementById('media-aspect-ratio');
+    const imageModeSelection = document.getElementById('image-mode-selection');
+    const imageLabel = document.getElementById('image-label-hint');
 
-    // Seedance models: Show resolution, hide aspect ratio
+    // Show warning for SORA 2 Pro HD about long generation times
+    if (model === 'sora2_pro_hd') {
+      showNotification(
+        '⚠️ SORA 2 Pro HD has very long generation times: 10-second videos typically take 10-20 minutes, and 15-second videos can take around 30 minutes. This reflects OpenAI\'s native delivery speed. We strongly recommend using 15-second HD with caution.',
+        'warning',
+        15000 // Show for 15 seconds
+      );
+    }
+
+    // Seedance models: Show resolution, hide aspect ratio, show image mode
     if (isSeedance) {
       if (resolutionGroup) resolutionGroup.style.display = 'block';
       if (aspectRatioGroup) aspectRatioGroup.style.display = 'none';
@@ -5122,64 +5133,67 @@ if (videoModelSelect) {
           <option value="10">10 seconds</option>
         `;
       }
-      // Enable first/last frame options for Seedance
-      if (imageModeSelect) {
-        Array.from(imageModeSelect.options).forEach(opt => {
-          opt.disabled = false;
-        });
+      // Show image mode selection if image is uploaded (Seedance only)
+      if (imageModeSelection && uploadedImageData) {
+        imageModeSelection.style.display = 'block';
       }
+      // Update image label for Seedance
+      if (imageLabel) imageLabel.textContent = '- First frame, reference, or first+last';
     }
-    // VEO 3: Show aspect ratio, hide resolution, fixed 8s duration
+    // VEO 3: Show aspect ratio (all options), hide resolution, variable duration, hide image mode
     else if (isVEO) {
       if (resolutionGroup) resolutionGroup.style.display = 'none';
       if (aspectRatioGroup) aspectRatioGroup.style.display = 'block';
       if (durationGroup) durationGroup.style.display = 'block';
-      // VEO 3: Fixed 8s duration
+      // VEO 3: 5-10s variable duration
       if (durationSelect) {
-        durationSelect.innerHTML = `<option value="8" selected>8 seconds (VEO 3 fixed duration)</option>`;
+        durationSelect.innerHTML = `
+          <option value="5">5 seconds</option>
+          <option value="6">6 seconds</option>
+          <option value="7">7 seconds</option>
+          <option value="8" selected>8 seconds</option>
+          <option value="9">9 seconds</option>
+          <option value="10">10 seconds</option>
+        `;
       }
-      // Disable first/last frame options for VEO (only reference allowed)
-      if (imageModeSelect) {
-        Array.from(imageModeSelect.options).forEach(opt => {
-          if (opt.value === 'first-frame' || opt.value === 'last-frame') {
-            opt.disabled = true;
-          } else {
-            opt.disabled = false;
-          }
-        });
-        // Switch to reference if first/last frame was selected
-        if (imageModeSelect.value !== 'reference') {
-          imageModeSelect.value = 'reference';
-        }
+      // VEO 3: All aspect ratios available
+      if (aspectRatioSelect) {
+        aspectRatioSelect.innerHTML = `
+          <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
+          <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
+          <option value="1:1">1:1 (Square - Instagram)</option>
+          <option value="4:3">4:3 (Classic)</option>
+          <option value="21:9">21:9 (Cinematic)</option>
+        `;
       }
+      // Hide image mode selection for VEO (always reference)
+      if (imageModeSelection) imageModeSelection.style.display = 'none';
+      // Update image label for VEO 3
+      if (imageLabel) imageLabel.textContent = '- First frame or reference';
     }
-    // SORA 2: Show aspect ratio, hide resolution
+    // SORA 2: Show aspect ratio (16:9/9:16 ONLY), hide resolution, 10s or 15s only, hide image mode
     else if (isSORA) {
       if (resolutionGroup) resolutionGroup.style.display = 'none';
       if (aspectRatioGroup) aspectRatioGroup.style.display = 'block';
       if (durationGroup) durationGroup.style.display = 'block';
-      // SORA 2: 3s, 5s, 10s durations
+      // SORA 2: ONLY 10s or 15s durations
       if (durationSelect) {
         durationSelect.innerHTML = `
-          <option value="3" selected>3 seconds</option>
-          <option value="5">5 seconds</option>
-          <option value="10">10 seconds</option>
+          <option value="10" selected>10 seconds</option>
+          <option value="15">15 seconds</option>
         `;
       }
-      // Disable first/last frame options for SORA (only reference allowed)
-      if (imageModeSelect) {
-        Array.from(imageModeSelect.options).forEach(opt => {
-          if (opt.value === 'first-frame' || opt.value === 'last-frame') {
-            opt.disabled = true;
-          } else {
-            opt.disabled = false;
-          }
-        });
-        // Switch to reference if first/last frame was selected
-        if (imageModeSelect.value !== 'reference') {
-          imageModeSelect.value = 'reference';
-        }
+      // SORA 2: ONLY 16:9 and 9:16 aspect ratios
+      if (aspectRatioSelect) {
+        aspectRatioSelect.innerHTML = `
+          <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
+          <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
+        `;
       }
+      // Hide image mode selection for SORA (always reference)
+      if (imageModeSelection) imageModeSelection.style.display = 'none';
+      // Update image label for SORA 2
+      if (imageLabel) imageLabel.textContent = '- For style reference';
     }
 
     updateCreditCostPreview();

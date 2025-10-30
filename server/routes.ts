@@ -10,7 +10,7 @@ import OpenAI from "openai";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
-import { kieSubscribe, KIE_MODELS } from "./kieClient";
+import { kieSubscribe, uploadImageToKie, KIE_MODELS } from "./kieClient";
 import {
   uploadedAudio,
   PLAN_FEATURES,
@@ -913,20 +913,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Prepare KIE.ai input
       const kieInput: any = {
-        prompt,
-        aspect_ratio: aspectRatio,
-        duration
+        prompt
       };
+
+      // SORA 2 uses different parameter names and values
+      if (model.startsWith('sora')) {
+        // SORA 2: aspect_ratio must be 'landscape' or 'portrait'
+        kieInput.aspect_ratio = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '9:16' ? 'portrait' : 'landscape';
+        // SORA 2: duration is passed as n_frames (string)
+        kieInput.n_frames = duration.toString();
+        // SORA 2: Always remove watermark (Starter+ plan required)
+        kieInput.remove_watermark = true;
+      } else {
+        // Seedance and VEO 3 use standard format
+        kieInput.aspect_ratio = aspectRatio;
+        kieInput.duration = duration;
+      }
 
       // Add image if provided
       if (imageData) {
-        kieInput.image_url = imageData; // KIE.ai accepts base64 data URLs
-        if (imageMode === 'first-frame') {
-          kieInput.image_end = false; // Image at start
-        } else if (imageMode === 'last-frame') {
-          kieInput.image_end = true; // Image at end
+        // SORA 2 requires publicly accessible URLs, not base64 data
+        if (model.startsWith('sora')) {
+          console.log('SORA 2: Uploading base64 image to KIE.ai file storage...');
+          try {
+            const publicUrl = await uploadImageToKie(imageData, process.env.KIE_API_KEY!);
+            console.log(`SORA 2: Image uploaded successfully: ${publicUrl}`);
+            kieInput.image_urls = [publicUrl];
+          } catch (uploadError: any) {
+            console.error('SORA 2: Image upload failed:', uploadError);
+            throw new Error(`Failed to upload image for SORA 2: ${uploadError.message}`);
+          }
+        } else {
+          // Seedance and VEO 3 accept base64 data URLs
+          kieInput.image_url = imageData;
+          if (imageMode === 'first-frame') {
+            kieInput.image_end = false; // Image at start
+          } else if (imageMode === 'last-frame') {
+            kieInput.image_end = true; // Image at end
+          }
+          // For 'reference' mode, just include the image_url
         }
-        // For 'reference' mode, just include the image_url
       }
 
       // Call KIE.ai API
@@ -1643,17 +1669,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
 
         // SORA 2 uses different parameter names than VEO 3
+        console.log(`DEBUG: Checking model.startsWith('sora'): model="${model}", result=${model.startsWith('sora')}`);
         if (model.startsWith('sora')) {
+          console.log('DEBUG: Inside SORA 2 block');
           // SORA 2 API parameters
           kieInput.aspect_ratio = aspectRatio === '16:9' ? 'landscape' : aspectRatio === '9:16' ? 'portrait' : 'landscape';
           kieInput.n_frames = duration.toString(); // "10" or "15" as string
 
-          // Watermark removal based on subscription (free users get watermark, paid users don't)
-          const isPaidUser = user.subscriptionPlan !== 'free';
-          kieInput.remove_watermark = isPaidUser;
+          // SORA 2 requires Starter+ plan, so all SORA 2 users are paid users
+          // Always remove watermark for SORA 2 (free users can't access it)
+          kieInput.remove_watermark = true;
 
-          console.log(`SORA 2 watermark removal: ${isPaidUser} (plan: ${user.subscriptionPlan})`);
+          console.log(`SORA 2 watermark removal: true (plan: ${user.subscriptionPlan})`);
+          console.log(`SORA 2 kieInput after format:`, JSON.stringify(kieInput, null, 2));
         } else {
+          console.log('DEBUG: Inside VEO 3 block');
           // VEO 3 API parameters (keep existing format)
           kieInput.aspect_ratio = aspectRatio;
           kieInput.duration = duration;
@@ -1661,14 +1691,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Add image if provided (different format for SORA 2 vs VEO 3)
         if (imageData || imageUrl) {
+          const imageSource = imageData || imageUrl;
+          console.log(`DEBUG: Adding image. model="${model}", startsWith sora=${model.startsWith('sora')}`);
+
           if (model.startsWith('sora')) {
-            // SORA 2 uses image_urls as an array
-            kieInput.image_urls = [imageData || imageUrl];
+            // SORA 2 requires publicly accessible URLs, not base64 data
+            // Upload base64 images to KIE.ai's file storage first
+            console.log('SORA 2: Checking if image needs upload...');
+
+            if (imageSource.startsWith('data:')) {
+              console.log('SORA 2: Image is base64, uploading to KIE.ai file storage...');
+              try {
+                const publicUrl = await uploadImageToKie(imageSource, kieApiKey);
+                console.log(`SORA 2: Image uploaded successfully: ${publicUrl}`);
+                kieInput.image_urls = [publicUrl];
+              } catch (uploadError: any) {
+                console.error('SORA 2: Image upload failed:', uploadError);
+                throw new Error(`Failed to upload image for SORA 2: ${uploadError.message}`);
+              }
+            } else {
+              // Already a URL, use it directly
+              console.log('SORA 2: Image is already a URL, using directly');
+              kieInput.image_urls = [imageSource];
+            }
+            console.log(`SORA 2: image_urls set, length=${kieInput.image_urls.length}`);
           } else {
-            // VEO 3 uses image_url as a single string
-            kieInput.image_url = imageData || imageUrl;
+            // VEO 3 uses image_url as a single string (also needs public URL but we'll handle that separately)
+            console.log('VEO 3: Setting image_url as string');
+            kieInput.image_url = imageSource;
           }
         }
+
+        console.log('DEBUG: Final kieInput before calling kieSubscribe:', JSON.stringify(kieInput, null, 2));
 
         if (seed) {
           kieInput.seed = seed;

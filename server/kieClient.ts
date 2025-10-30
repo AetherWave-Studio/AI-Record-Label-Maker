@@ -4,6 +4,7 @@
 
 import nodeFetch from "node-fetch";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import FormData from "form-data";
 
 // KIE.ai API configuration
 const KIE_API_BASE = "https://api.kie.ai/api/v1";
@@ -14,6 +15,72 @@ const MAX_POLL_ATTEMPTS = 200; // ~10 minutes max (200 * 3s = 600s)
 // Set WEBSHARE_PROXY env var to: http://username:password@proxy.webshare.io:80
 const PROXY_URL = process.env.WEBSHARE_PROXY;
 const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
+
+/**
+ * Upload a base64 image to ImgBB (free image hosting)
+ * Returns a publicly accessible URL that can be used with SORA 2
+ *
+ * @param base64Data Base64-encoded image data (with or without data:image prefix)
+ * @param apiKey Not used for ImgBB, but kept for compatibility
+ * @returns Public URL of the uploaded image
+ */
+export async function uploadImageToKie(base64Data: string, apiKey: string): Promise<string> {
+  try {
+    console.log('Uploading image to ImgBB (free hosting)...');
+
+    // Remove data URL prefix if present
+    const base64Content = base64Data.replace(/^data:image\/\w+;base64,/, '');
+
+    console.log(`Image size: ${base64Content.length} chars (base64)`);
+
+    // ImgBB API - free tier, no IP restrictions
+    // Get API key from environment (free key from https://api.imgbb.com/)
+    const imgbbApiKey = process.env.IMGBB_API_KEY;
+    if (!imgbbApiKey) {
+      throw new Error('IMGBB_API_KEY environment variable not set. Get a free key from https://api.imgbb.com/');
+    }
+    const uploadUrl = `https://api.imgbb.com/1/upload?key=${imgbbApiKey}`;
+
+    const formData = new URLSearchParams();
+    formData.append('image', base64Content);
+    formData.append('name', `sora2-${Date.now()}`);
+
+    console.log(`Uploading to ImgBB...`);
+
+    const uploadResponse = await nodeFetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData.toString(),
+      agent: proxyAgent as any,
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error(`ImgBB upload failed (${uploadResponse.status}):`, errorText);
+      throw new Error(`Failed to upload image to ImgBB: ${errorText}`);
+    }
+
+    const uploadResult: any = await uploadResponse.json();
+    console.log('Upload response status:', uploadResult.success);
+
+    // Extract the public URL from the response
+    const publicUrl = uploadResult.data?.url || uploadResult.data?.display_url;
+
+    if (!publicUrl) {
+      console.error('No public URL in upload response:', uploadResult);
+      throw new Error('No public URL returned from ImgBB upload');
+    }
+
+    console.log(`✅ Image uploaded successfully: ${publicUrl}`);
+    return publicUrl;
+
+  } catch (error: any) {
+    console.error('Image upload error:', error);
+    throw error;
+  }
+}
 
 export interface KieTaskResponse {
   code: number;
@@ -26,10 +93,20 @@ export interface KieTaskResponse {
 
 export interface KieStatusResponse {
   code: number;
-  msg: string;
+  message?: string;
+  msg?: string;
   data: {
     taskId: string;
-    status: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
+    model?: string;
+    state?: 'pending' | 'processing' | 'success' | 'failed';
+    status?: 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED';
+    param?: string;
+    resultJson?: string; // JSON string containing resultUrls array
+    failCode?: string;
+    failMsg?: string;
+    completeTime?: number;
+    createTime?: number;
+    updateTime?: number;
     videoUrl?: string;
     video_url?: string;
     imageUrl?: string;
@@ -77,13 +154,12 @@ async function pollTaskStatus(
     attempts++;
 
     try {
-      const statusResponse = await nodeFetch(`${KIE_API_BASE}${endpoint}`, {
-        method: 'POST',
+      // /jobs/recordInfo uses GET with taskId as query parameter
+      const statusResponse = await nodeFetch(`${KIE_API_BASE}${endpoint}?taskId=${taskId}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
-        body: JSON.stringify({ taskId }),
         agent: proxyAgent as any
       });
 
@@ -104,13 +180,19 @@ async function pollTaskStatus(
         continue;
       }
 
-      const statusData: KieStatusResponse = await statusResponse.json();
+      const statusData: any = await statusResponse.json();
+
+      // Debug: Log the full response structure once
+      if (attempts === 1) {
+        console.log('KIE.ai API response structure:', JSON.stringify(statusData, null, 2));
+      }
 
       if (statusData.code !== 200) {
         console.error('KIE.ai returned error code:', statusData);
 
-        // If status is FAILED, stop polling
-        if (statusData.data?.status === 'FAILED') {
+        // Check for FAILED in both status and state fields
+        const taskState = statusData.data?.status || statusData.data?.state;
+        if (taskState === 'FAILED' || taskState === 'failed') {
           return {
             status: 'failed',
             error: statusData.data.error || statusData.msg || 'Task failed'
@@ -122,8 +204,9 @@ async function pollTaskStatus(
         continue;
       }
 
-      const taskStatus = statusData.data.status;
-      const progress = statusData.data.progress;
+      // Check both 'status' and 'state' fields (KIE.ai might use either)
+      const taskStatus = statusData.data?.status || statusData.data?.state;
+      const progress = statusData.data?.progress;
 
       // Call update callback if provided
       if (onUpdate) {
@@ -132,15 +215,28 @@ async function pollTaskStatus(
 
       console.log(`KIE.ai task ${taskId} status: ${taskStatus}${progress ? ` (${progress}%)` : ''}`);
 
-      // Check if task is complete
-      if (taskStatus === 'SUCCESS') {
+      // Check if task is complete (check both uppercase and lowercase)
+      if (taskStatus === 'SUCCESS' || taskStatus === 'success') {
+        // Parse resultJson if it exists (it's a JSON string)
+        let resultData = null;
+        if (statusData.data.resultJson) {
+          try {
+            resultData = JSON.parse(statusData.data.resultJson);
+          } catch (e) {
+            console.error('Failed to parse resultJson:', e);
+          }
+        }
+
         // Extract video/image URL from response
-        const videoUrl = statusData.data.videoUrl ||
+        // Priority: resultUrls > videoUrl > video_url
+        const videoUrl = resultData?.resultUrls?.[0] ||
+                        statusData.data.videoUrl ||
                         statusData.data.video_url ||
                         statusData.data.result?.videoUrl ||
                         statusData.data.result?.video_url;
 
-        const imageUrl = statusData.data.imageUrl ||
+        const imageUrl = resultData?.resultUrls?.[0] ||
+                        statusData.data.imageUrl ||
                         statusData.data.image_url ||
                         statusData.data.result?.imageUrl ||
                         statusData.data.result?.image_url;
@@ -162,10 +258,10 @@ async function pollTaskStatus(
         };
       }
 
-      if (taskStatus === 'FAILED') {
+      if (taskStatus === 'FAILED' || taskStatus === 'failed') {
         return {
           status: 'failed',
-          error: statusData.data.error || 'Task failed without error message'
+          error: statusData.data.failMsg || statusData.data.error || 'Task failed without error message'
         };
       }
 
@@ -213,7 +309,7 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
   // All KIE.ai models use the same /jobs endpoints
   // The model parameter in the request body determines which model is used
   const createEndpoint = '/jobs/createTask';
-  const statusEndpoint = '/jobs/query';
+  const statusEndpoint = '/jobs/recordInfo';
 
   // Map our internal model names to KIE.ai's expected format
   // Different models have different naming conventions:
@@ -248,6 +344,19 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
     const hasImageInput = input.image_urls || input.image_url || input.imageUrl || input.first_frame_image;
     const modelSuffix = hasImageInput ? 'image-to-video' : 'text-to-video';
     kieModelName = `${modelBase}-${modelSuffix}`;
+
+    // CRITICAL FIX: SORA 2 requires image_urls as an array, not image_url as string
+    // Normalize image_url to image_urls array for SORA 2
+    if (hasImageInput && !input.image_urls) {
+      const imageValue = input.image_url || input.imageUrl;
+      if (imageValue) {
+        console.log('SORA 2 FIX: Converting image_url to image_urls array');
+        input.image_urls = [imageValue];
+        // Remove the singular forms
+        delete input.image_url;
+        delete input.imageUrl;
+      }
+    }
   }
 
   try {
@@ -343,12 +452,12 @@ export const KIE_MODELS = {
   SEEDANCE_PRO_IMAGE2VIDEO: 'bytedance/v1-pro-image-to-video',
 } as const;
 
-// Model pricing (cost per second in USD)
+// Model pricing (cost per second in USD - API cost before 50% margin)
 export const KIE_MODEL_PRICING = {
   veo3_fast: 0.0375, // $0.30/8s
   sora2: 0.015, // $0.15/10s
-  sora2_pro: 0.045, // $0.45/10s
-  sora2_pro_hd: 0.10, // $1/10s
+  sora2_pro: 0.06, // $0.60/10s API cost → 90 credits ($0.90) after 50% margin
+  sora2_pro_hd: 0.13333, // $1.3333/10s API cost → 200 credits ($2.00) after 50% margin
   seedance_lite_480p: 0.010,
   seedance_lite_720p: 0.0225,
   seedance_lite_1080p: 0.050,
