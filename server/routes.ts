@@ -11,6 +11,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
 import { kieSubscribe, uploadImageToKie, generateMidjourney, KIE_MODELS } from "./kieClient";
+import { generateMidjourneyTtapi } from "./ttapiClient";
 import {
   uploadedAudio,
   PLAN_FEATURES,
@@ -1563,6 +1564,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Midjourney generation error:', error);
       res.status(500).json({
         error: 'Failed to generate with Midjourney',
+        details: error.message
+      });
+    }
+  });
+
+  // Midjourney image generation via ttapi.io
+  app.post("/api/media/midjourney-ttapi", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user?.id || req.session?.userId;
+      const { prompt, style = 'photorealistic', aspectRatio = '1:1', speed = 'fast' } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({ error: 'Not authenticated' });
+      }
+
+      // Validate inputs
+      if (!prompt || typeof prompt !== 'string') {
+        return res.status(400).json({ error: 'Invalid prompt' });
+      }
+      
+      if (prompt.length > 1000) {
+        return res.status(400).json({ error: 'Prompt too long (max 1000 characters)' });
+      }
+
+      // Validate speed parameter (lowercase)
+      if (speed !== 'fast' && speed !== 'turbo' && speed !== 'relax') {
+        return res.status(400).json({ error: 'Invalid speed. Must be "fast", "turbo", or "relax"' });
+      }
+
+      // Determine service type based on speed (same credit costs as KIE.ai Midjourney)
+      const serviceType = speed === 'turbo' ? 'midjourney_generation_turbo' : 'midjourney_generation';
+      
+      // Deduct credits for Midjourney generation
+      const creditResult = await storage.deductCredits(userId, serviceType);
+      
+      if (!creditResult.success) {
+        return res.status(403).json({
+          error: 'Insufficient credits',
+          credits: creditResult.newBalance,
+          required: SERVICE_CREDIT_COSTS[serviceType],
+          message: creditResult.error || `You need more credits to generate with Midjourney ${speed} mode. Upgrade your plan or wait for daily reset.`
+        });
+      }
+
+      // Style prefixes for Midjourney prompts
+      const styleNames: Record<string, string> = {
+        photorealistic: 'photorealistic',
+        abstract: 'abstract art',
+        cyberpunk: 'cyberpunk',
+        retro: 'retro vaporwave',
+        minimal: 'minimalist',
+        surreal: 'surrealist',
+        cinematic: 'cinematic',
+        artistic: 'artistic'
+      };
+
+      const styleName = styleNames[style] || 'photorealistic';
+      const styledPrompt = `In the style of ${styleName}, ${prompt}`;
+
+      console.log('Generating images with Midjourney via ttapi.io:', { originalPrompt: prompt, styledPrompt, style, aspectRatio, speed });
+
+      // Set timeout based on speed mode (turbo = 120s, fast = 180s, relax = 300s)
+      const timeoutSeconds = speed === 'turbo' ? 120 : speed === 'relax' ? 300 : 180;
+
+      // Call Midjourney via ttapi.io with styled prompt
+      const result = await generateMidjourneyTtapi(
+        styledPrompt,
+        speed as "fast" | "turbo" | "relax",
+        aspectRatio,
+        timeoutSeconds
+      );
+
+      if (!result.success) {
+        console.error('ttapi.io Midjourney generation failed:', result.error);
+        
+        // Check if it's a timeout error and refund credits
+        if (result.error && result.error.includes('did not complete within')) {
+          console.log(`⏱️ ttapi.io Midjourney timed out after ${timeoutSeconds}s, refunding ${SERVICE_CREDIT_COSTS[serviceType]} credits to user ${userId}`);
+          
+          const refundResult = await storage.refundCredits(userId, serviceType);
+          
+          if (refundResult.success) {
+            // Only log refund if credits were actually refunded (not unlimited plan)
+            if (refundResult.amountRefunded > 0) {
+              console.log(`✅ Refunded ${refundResult.amountRefunded} credits. New balance: ${refundResult.newBalance}`);
+            } else {
+              console.log(`ℹ️ Timeout for unlimited plan user - no credits to refund`);
+            }
+            
+            // Build appropriate message based on whether credits were refunded
+            const timeoutMessage = refundResult.amountRefunded > 0 
+              ? `ttapi.io Midjourney servers are experiencing delays. Your ${refundResult.amountRefunded} credits have been refunded. Try Nano Banana for instant results, or try again later.`
+              : `ttapi.io Midjourney servers are experiencing delays. Try Nano Banana for instant results, or try again later.`;
+            
+            return res.status(408).json({
+              error: 'Generation timeout',
+              timeout: true,
+              timeoutSeconds,
+              creditsRefunded: refundResult.amountRefunded,
+              newBalance: refundResult.newBalance,
+              message: timeoutMessage,
+              details: result.error
+            });
+          } else {
+            console.error('❌ Failed to refund credits:', refundResult.error);
+          }
+        }
+        
+        return res.status(500).json({
+          error: 'ttapi.io Midjourney generation failed',
+          details: result.error
+        });
+      }
+
+      // Extract image URLs from result
+      const imageUrls = result.imageUrls || (result.imageUrl ? [result.imageUrl] : []);
+
+      if (imageUrls.length === 0) {
+        console.error('No images returned from ttapi.io Midjourney');
+        return res.status(500).json({
+          error: 'ttapi.io Midjourney generation completed but no images found'
+        });
+      }
+
+      console.log(`✅ ttapi.io Midjourney generated ${imageUrls.length} images successfully`);
+      
+      return res.status(200).json({
+        imageUrls,
+        prompt,
+        hasReference: false,
+        model: 'midjourney-ttapi'
+      });
+
+    } catch (error: any) {
+      console.error('ttapi.io Midjourney generation error:', error);
+      res.status(500).json({
+        error: 'Failed to generate with ttapi.io Midjourney',
         details: error.message
       });
     }
