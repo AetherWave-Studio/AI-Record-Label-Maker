@@ -5364,7 +5364,7 @@ if (videoModelSelect) {
       // Update image label for Seedance
       if (imageLabel) imageLabel.textContent = '- First frame, reference, or first+last';
     }
-    // VEO 3: Show aspect ratio (all options), hide resolution, variable duration, hide image mode
+    // VEO 3: Show aspect ratio (8 secs only), hide resolution, variable duration, hide image mode
     else if (isVEO) {
       if (resolutionGroup) resolutionGroup.style.display = 'none';
       if (aspectRatioGroup) aspectRatioGroup.style.display = 'block';
@@ -5372,12 +5372,7 @@ if (videoModelSelect) {
       // VEO 3: 5-10s variable duration
       if (durationSelect) {
         durationSelect.innerHTML = `
-          <option value="5">5 seconds</option>
-          <option value="6">6 seconds</option>
-          <option value="7">7 seconds</option>
           <option value="8" selected>8 seconds</option>
-          <option value="9">9 seconds</option>
-          <option value="10">10 seconds</option>
         `;
       }
       // VEO 3: All aspect ratios available
@@ -5385,9 +5380,7 @@ if (videoModelSelect) {
         aspectRatioSelect.innerHTML = `
           <option value="16:9" selected>16:9 (Landscape - YouTube)</option>
           <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
-          <option value="1:1">1:1 (Square - Instagram)</option>
-          <option value="4:3">4:3 (Classic)</option>
-          <option value="21:9">21:9 (Cinematic)</option>
+          <option value="1:1">auto (matches reference image)</option>        
         `;
       }
       // Hide image mode selection for VEO (always reference)

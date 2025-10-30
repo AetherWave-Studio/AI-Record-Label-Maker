@@ -619,7 +619,7 @@ export async function kieSubscribe(options: KieSubscribeOptions): Promise<KieRes
       console.log(`KIE.ai: Task ${taskId} completed with status ${result.status}`);
     }
 
-    return result;
+    return resultUrls;
 
   } catch (error: any) {
     console.error('KIE.ai subscribe error:', error);
