@@ -1409,18 +1409,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const {
         prompt,
+        model, // Frontend sends model like 'seedance-lite' or 'seedance-pro'
         imageData,
         imageUrl,
         image_url,
-        end_image_url,
+        endImageData, // Support endImageData from frontend
         imageMode = 'first-frame',
-        modelVersion = 'lite',
         resolution = '720p',
         duration = '5',
         cameraFixed = false,
         seed = -1,
         enableSafetyChecker = true
       } = req.body;
+      
+      // Extract model version from model name (e.g., 'seedance-lite' -> 'lite')
+      const modelVersion = model ? model.split('-')[1] || 'lite' : 'lite';
+      
+      // Support end_image_url field (endImageData is the new frontend field)
+      const end_image_url = endImageData;
+      
+      console.log('📦 Received request body:', {
+        model: model,
+        modelVersion: modelVersion,
+        hasImage: !!imageData || !!imageUrl || !!image_url,
+        hasEndImage: !!end_image_url,
+        imageMode: imageMode,
+        resolution: resolution,
+        duration: duration
+      });
 
       if (!prompt) {
         return res.status(400).json({
