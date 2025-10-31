@@ -68,6 +68,19 @@ function validateMusicModel(planType: PlanType, model: MusicModel): boolean {
   return allowedModels.includes(model);
 }
 
+// Authentication helper - works for both dev and production auth
+function getUserId(req: any): string {
+  // Production (Replit OIDC): req.user.claims.sub
+  // Development: req.user.id
+  if (req.user?.claims?.sub) {
+    return req.user.claims.sub;
+  }
+  if (req.user?.id) {
+    return req.user.id;
+  }
+  throw new Error('User ID not found in request');
+}
+
 // Calculate video generation credits based on model and quality settings
 // Updated 2025-01 with KIE.ai premium models (Veo 3, Sora 2)
 // All pricing includes 50% margin for infrastructure and profit
@@ -177,7 +190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         amount: Math.round(bundle.priceUSD * 100), // Convert to cents
         currency: "usd",
         metadata: {
-          userId: req.user.id,
+          userId: getUserId(req),
           bundleId: bundle.id,
           credits: bundle.credits,
           bonusCredits: bundle.bonusCredits,
@@ -212,7 +225,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify the user matches
-      if (paymentIntent.metadata.userId !== req.user.id) {
+      const userId = getUserId(req);
+      if (paymentIntent.metadata.userId !== userId) {
         return res.status(403).json({ message: "Payment user mismatch" });
       }
 
@@ -222,9 +236,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalCredits = credits + bonusCredits;
 
       // Add credits to user account
-      const updatedUser = await storage.addCredits(req.user.id, totalCredits);
+      const updatedUser = await storage.addCredits(userId, totalCredits);
 
-      console.log(`✅ Payment confirmed: User ${req.user.id} purchased ${credits} credits + ${bonusCredits} bonus = ${totalCredits} total`);
+      console.log(`✅ Payment confirmed: User ${userId} purchased ${credits} credits + ${bonusCredits} bonus = ${totalCredits} total`);
 
       res.json({ 
         success: true, 
@@ -239,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth user route
   app.get('/api/auth/user', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       console.log('Auth check for user ID:', userId);
       let user = await storage.getUser(userId);
       
@@ -268,7 +282,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
   });
 
-        
+  // Logout endpoint
+  app.post('/api/auth/logout', (req: any, res) => {
+    req.logout((err: any) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: "Logout failed" });
+      }
+      req.session.destroy((destroyErr: any) => {
+        if (destroyErr) {
+          console.error('Session destroy error:', destroyErr);
+          return res.status(500).json({ message: "Session cleanup failed" });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ success: true, message: "Logged out successfully" });
+      });
+    });
+  });
+
+
   // Chat endpoint using OpenAI (via Replit AI Integrations)
   // Note: Authenticated to prevent abuse of OpenAI integration credits
   app.post("/api/chat", authMiddleware, async (req: any, res) => {
@@ -318,7 +350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Music generation route with vocal gender support (KIE.ai API)
   app.post("/api/generate-music", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -452,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Upload & Cover Audio route (KIE.ai API)
   app.post("/api/upload-cover-music", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -615,7 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get music generation status (for KIE.ai polling)
-  app.get("/api/music-status/:taskId", async (req, res) => {
+  app.get("/api/music-status/:taskId", authMiddleware, async (req, res) => {
     try {
       const { taskId } = req.params;
       const sunoApiKey = process.env.SUNO_API_KEY;
@@ -796,15 +828,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Serve audio file by ID
-  app.get("/api/audio/:id", async (req, res) => {
+  app.get("/api/audio/:id", authMiddleware, async (req: any, res) => {
     try {
       const { id } = req.params;
+      const userId = getUserId(req);
 
       const [audio] = await db.select().from(uploadedAudio).where(eq(uploadedAudio.id, id));
 
       if (!audio) {
         return res.status(404).json({
           error: 'Audio file not found'
+        });
+      }
+
+      // Verify ownership
+      if (audio.userId && audio.userId !== userId) {
+        return res.status(403).json({
+          error: 'Access denied'
         });
       }
 
@@ -859,7 +899,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's current credits
   app.get('/api/user/credits', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -880,7 +920,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check and reset daily credits if needed
   app.post('/api/user/credits/check-reset', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -924,7 +964,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check if user has sufficient credits for a service (pre-validation)
   app.post('/api/user/credits/check', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const { serviceType } = req.body;
       
       if (!serviceType || !SERVICE_CREDIT_COSTS[serviceType as keyof typeof SERVICE_CREDIT_COSTS]) {
@@ -953,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Deduct credits for a specific service (used internally by generation endpoints)
   app.post('/api/user/credits/deduct', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const { serviceType } = req.body;
       
       if (!serviceType || !SERVICE_CREDIT_COSTS[serviceType as keyof typeof SERVICE_CREDIT_COSTS]) {
@@ -989,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // This demonstrates server-side plan validation for video resolution
   app.post("/api/generate-video", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -1120,7 +1160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Convert audio to WAV format (paid users only)
   app.post("/api/convert-to-wav", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -1284,7 +1324,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Album Art Generation with DALL-E 3 (Panel 1) or Fal.ai Nano Banana (Panel 3)
   app.post("/api/generate-art", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -1511,7 +1551,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Midjourney image generation via ttapi.io
   app.post("/api/media/midjourney-ttapi", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       const { prompt, style = 'photorealistic', aspectRatio = '1:1', speed = 'fast' } = req.body;
 
@@ -1682,7 +1722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Music Video Generation with Fal.ai Seedance
   app.post("/api/generate-video-fal", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -1906,7 +1946,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Unified Video Generation with Premium Models (Veo 3, Sora 2, Seedance)
   app.post("/api/generate-video-premium", authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -2205,7 +2245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's quests (completed and available)
   app.get('/api/quests', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
 
       // Get user's completed quests
       const userQuests = await storage.getUserQuests(userId);
@@ -2257,7 +2297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Complete a quest and award credits
   app.post('/api/quests/complete', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { questType } = req.body;
 
       if (!questType) {
@@ -2298,7 +2338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Record daily login and award credits
   app.post('/api/daily-login', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
 
       // Record login and check if credits should be awarded
       const result = await storage.recordDailyLogin(userId);
@@ -2376,7 +2416,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's RPG stats (total bands, limits, credits, plan)
   app.get('/api/rpg/stats', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -2411,7 +2451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new virtual band
   app.post('/api/rpg/bands', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       
       // Validate request body FIRST (before any credit operations)
       const bandSchema = z.object({
@@ -2589,7 +2629,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all bands for the authenticated user
   app.get('/api/rpg/bands', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bands = await storage.getUserBands(userId);
       
       res.status(200).json({ bands });
@@ -2602,7 +2642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get a specific band by ID
   app.get('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bandId = req.params.id;
       
       const band = await storage.getBand(bandId);
@@ -2628,7 +2668,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update a band
   app.put('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bandId = req.params.id;
       
       const band = await storage.getBand(bandId);
@@ -2654,7 +2694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Delete a band
   app.delete('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bandId = req.params.id;
       
       const band = await storage.getBand(bandId);
@@ -2683,7 +2723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Apply daily growth to a band
   app.post('/api/rpg/bands/:id/daily-growth', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bandId = req.params.id;
 
       const result = await storage.applyDailyGrowth(userId, bandId);
@@ -2727,7 +2767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get band achievements
   app.get('/api/rpg/bands/:id/achievements', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bandId = req.params.id;
       
       const band = await storage.getBand(bandId);
@@ -2778,7 +2818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get card designs owned by the authenticated user
   app.get('/api/card-designs/owned', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const ownedDesigns = await storage.getOwnedCardDesigns(userId);
       
       res.json({ ownedDesigns });
@@ -2791,7 +2831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Purchase a card design with credits
   app.post('/api/card-designs/purchase', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { designId } = req.body;
 
       if (!designId || typeof designId !== 'string') {
@@ -2834,7 +2874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Equip a card design to a band
   app.post('/api/rpg/bands/:id/equip-design', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bandId = req.params.id;
       const { designId } = req.body;
 
@@ -2895,7 +2935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Purchase a product from the store
   app.post('/api/store/purchase', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const { productId, quantity = 1 } = req.body;
 
       if (!productId || typeof productId !== 'string') {
@@ -2928,7 +2968,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user's inventory
   app.get('/api/inventory', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const inventory = await storage.getUserInventory(userId);
       
       res.json(inventory);
@@ -2945,7 +2985,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   app.get('/api/artist-cards', authMiddleware, async (req: any, res) => {
     try {
-      const userId = req.user.id;
+      const userId = getUserId(req);
       const bands = await storage.getUserBands(userId);
       
       // Transform band data to match Ghost-Musician's expected format

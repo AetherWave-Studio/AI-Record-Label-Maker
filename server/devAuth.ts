@@ -52,6 +52,11 @@ async function initializeDevUser() {
 
 // Setup dev authentication
 export async function setupDevAuth(app: Express) {
+  // SAFETY CHECK: Ensure this is never used in production
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('🚨 CRITICAL: devAuth cannot be used in production! Use Replit OIDC authentication.');
+  }
+
   console.log('🔧 Setting up development authentication...');
 
   // Initialize dev user
@@ -61,8 +66,11 @@ export async function setupDevAuth(app: Express) {
   const MemStore = MemoryStore(session);
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
 
+  // Use fallback secret for dev (this is safe since we check NODE_ENV above)
+  const sessionSecret = process.env.SESSION_SECRET || 'dev-secret-only-for-local-development';
+
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production',
+    secret: sessionSecret,
     store: new MemStore({
       checkPeriod: sessionTtl,
     }),
