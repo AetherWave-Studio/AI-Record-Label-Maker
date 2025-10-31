@@ -12,6 +12,7 @@ import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
 import { kieSubscribe, uploadImageToKie, generateMidjourney, KIE_MODELS } from "./kieClient";
 import { generateMidjourneyTtapi } from "./ttapiClient";
+import Stripe from "stripe";
 import {
   uploadedAudio,
   PLAN_FEATURES,
@@ -24,7 +25,8 @@ import {
   type QuestType,
   QUEST_REWARDS,
   CARD_DESIGNS,
-  type CardDesignType
+  type CardDesignType,
+  CREDIT_BUNDLES
 } from "@shared/schema";
 import { eq, lt } from "drizzle-orm";
 import virtualArtistsRouter from './VirtualArtistsRoutes.js';
@@ -116,6 +118,14 @@ function calculateVideoCredits(
   return totalCredits;
 }
 
+// Initialize Stripe (from blueprint:javascript_stripe)
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2024-11-20.acacia",
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Determine if we're in development mode
   const isDevelopment = process.env.NODE_ENV === 'development';
@@ -132,6 +142,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Use appropriate auth middleware based on environment
   const authMiddleware = isDevelopment ? isDevAuthenticated : isAuthenticated;
         app.use(virtualArtistsRouter);
+
+  // ============================================================================
+  // STRIPE PAYMENT ROUTES (from blueprint:javascript_stripe)
+  // ============================================================================
+
+  // Get available credit bundles
+  app.get("/api/credit-bundles", authMiddleware, async (req, res) => {
+    try {
+      res.json(CREDIT_BUNDLES);
+    } catch (error: any) {
+      console.error('Error fetching credit bundles:', error);
+      res.status(500).json({ message: "Error fetching credit bundles: " + error.message });
+    }
+  });
+
+  // Create payment intent for credit purchase
+  app.post("/api/create-payment-intent", authMiddleware, async (req: any, res) => {
+    try {
+      const { bundleId } = req.body;
+      
+      if (!bundleId) {
+        return res.status(400).json({ message: "Bundle ID is required" });
+      }
+
+      // Find the bundle
+      const bundle = CREDIT_BUNDLES.find(b => b.id === bundleId);
+      if (!bundle) {
+        return res.status(400).json({ message: "Invalid bundle ID" });
+      }
+
+      // Create payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(bundle.priceUSD * 100), // Convert to cents
+        currency: "usd",
+        metadata: {
+          userId: req.user.id,
+          bundleId: bundle.id,
+          credits: bundle.credits,
+          bonusCredits: bundle.bonusCredits,
+        },
+      });
+
+      res.json({ 
+        clientSecret: paymentIntent.client_secret,
+        bundle 
+      });
+    } catch (error: any) {
+      console.error('Error creating payment intent:', error);
+      res.status(500).json({ message: "Error creating payment intent: " + error.message });
+    }
+  });
+
+  // Confirm payment and add credits to user account
+  app.post("/api/confirm-payment", authMiddleware, async (req: any, res) => {
+    try {
+      const { paymentIntentId } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: "Payment intent ID is required" });
+      }
+
+      // Retrieve the payment intent from Stripe
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+      // Verify payment succeeded
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ message: "Payment not successful" });
+      }
+
+      // Verify the user matches
+      if (paymentIntent.metadata.userId !== req.user.id) {
+        return res.status(403).json({ message: "Payment user mismatch" });
+      }
+
+      // Calculate total credits
+      const credits = parseInt(paymentIntent.metadata.credits || '0');
+      const bonusCredits = parseInt(paymentIntent.metadata.bonusCredits || '0');
+      const totalCredits = credits + bonusCredits;
+
+      // Add credits to user account
+      const updatedUser = await storage.addCredits(req.user.id, totalCredits);
+
+      console.log(`✅ Payment confirmed: User ${req.user.id} purchased ${credits} credits + ${bonusCredits} bonus = ${totalCredits} total`);
+
+      res.json({ 
+        success: true, 
+        creditsAdded: totalCredits,
+        newBalance: updatedUser.credits 
+      });
+    } catch (error: any) {
+      console.error('Error confirming payment:', error);
+      res.status(500).json({ message: "Error confirming payment: " + error.message });
+    }
+  });
   // Auth user route
   app.get('/api/auth/user', authMiddleware, async (req: any, res) => {
     try {
