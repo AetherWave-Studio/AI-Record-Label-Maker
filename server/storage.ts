@@ -74,6 +74,26 @@ export interface IStorage {
   
   // Band limit check
   checkBandLimit(userId: string): Promise<{ allowed: boolean; current: number; limit: number | 'unlimited'; error?: string }>;
+  
+  // ============================================================================
+  // CARD DESIGN OPERATIONS
+  // ============================================================================
+  
+  // Get all card designs owned by a user
+  getOwnedCardDesigns(userId: string): Promise<string[]>; // Returns array of CardDesignType IDs
+  
+  // Purchase a card design with credits
+  purchaseCardDesign(userId: string, designId: string, price: number): Promise<{
+    success: boolean;
+    newBalance?: number;
+    error?: string;
+  }>;
+  
+  // Equip a card design to a specific band
+  equipCardDesign(bandId: string, designId: string): Promise<{
+    success: boolean;
+    error?: string;
+  }>;
 }
 
 export class MemStorage implements IStorage {
