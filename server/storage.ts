@@ -1406,6 +1406,26 @@ export class DbStorage implements IStorage {
           .where(eq(products.id, productId));
       }
       
+      // Special handling for card_themes: Also add to ownedCardDesigns
+      if (product.category === 'card_themes' && product.productData) {
+        try {
+          const designId = (product.productData as any).designId;
+          if (designId) {
+            // Check if user already owns this design
+            const ownedDesigns = await this.getOwnedCardDesigns(userId);
+            if (!ownedDesigns.includes(designId)) {
+              await this.db.insert(ownedCardDesigns).values({
+                userId,
+                designId,
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error adding card design to owned:', error);
+          // Don't fail the whole purchase if this fails
+        }
+      }
+      
       return {
         success: true,
         product,
