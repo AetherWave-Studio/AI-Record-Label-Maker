@@ -2367,6 +2367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create the band (with auto-refund on failure, matching AetherWave refund pattern)
       let band;
       try {
+        // First create the band without the trading card
         band = await storage.createBand({
           userId,
           bandName,
@@ -2378,7 +2379,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
           members,
           audioFileId,
           songTitle,
+          equippedCardDesign: 'ghosts_online', // Default design
         });
+
+        // Generate trading card image with DALL-E using equipped card design
+        try {
+          const { generateCardPrompt } = await import('./cardDesignPrompts');
+          const cardDesign = band.equippedCardDesign || 'ghosts_online';
+          
+          // Build band data for card prompt
+          const bandData = {
+            bandName: band.bandName,
+            genre: band.genre,
+            tagline: band.philosophy?.substring(0, 80),
+            members: typeof band.members === 'string' 
+              ? JSON.parse(band.members) 
+              : (band.members || [])
+          };
+
+          const cardPrompt = generateCardPrompt(cardDesign as any, bandData);
+          
+          // Call DALL-E 3 to generate the trading card
+          const openaiApiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+          if (openaiApiKey) {
+            const openai = new OpenAI({
+              apiKey: openaiApiKey,
+              baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+            });
+
+            const imageResponse = await openai.images.generate({
+              model: "dall-e-3",
+              prompt: cardPrompt,
+              n: 1,
+              size: "1024x1792", // Portrait format for trading card
+              quality: "standard",
+              style: "vivid"
+            });
+
+            const tradingCardUrl = imageResponse.data?.[0]?.url;
+            
+            if (tradingCardUrl) {
+              // Update band with trading card URL
+              await storage.updateBand(band.id, { tradingCardUrl });
+              band = await storage.getBand(band.id) as any;
+              console.log(`✅ Generated trading card for band ${band.bandName} with ${cardDesign} design`);
+            }
+          }
+        } catch (cardError) {
+          console.error('Failed to generate trading card, but band was created:', cardError);
+          // Don't fail band creation if card generation fails
+        }
       } catch (createError: any) {
         // CRITICAL: Refund on failure
         if (usedFreeBand) {
