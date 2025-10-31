@@ -84,6 +84,7 @@ export class MemStorage implements IStorage {
       vocalGenderPreference: userData.vocalGenderPreference || existingUser?.vocalGenderPreference || 'm',
       subscriptionPlan: userData.subscriptionPlan || existingUser?.subscriptionPlan || 'free',
       credits: existingUser?.credits ?? userData.credits ?? FREE_TIER_WELCOME_BONUS,
+      freeBandGenerations: existingUser?.freeBandGenerations ?? userData.freeBandGenerations ?? 3, // 3 free band generations for all users
       welcomeBonusClaimed: existingUser?.welcomeBonusClaimed ?? 1, // Automatically claim for new users
       lastCreditReset: userData.lastCreditReset || existingUser?.lastCreditReset || new Date(),
       stripeCustomerId: userData.stripeCustomerId || existingUser?.stripeCustomerId || null,
@@ -355,6 +356,7 @@ export class DbStorage implements IStorage {
         vocalGenderPreference: userData.vocalGenderPreference || 'm',
         subscriptionPlan: userData.subscriptionPlan || 'free',
         credits: userData.credits ?? FREE_TIER_WELCOME_BONUS, // New users get 50 welcome bonus
+        freeBandGenerations: userData.freeBandGenerations ?? 3, // New users get 3 free band generations
         welcomeBonusClaimed: 1, // Auto-claim for new users
         lastCreditReset: userData.lastCreditReset || new Date(),
         stripeCustomerId: userData.stripeCustomerId || null,

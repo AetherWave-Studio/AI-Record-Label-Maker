@@ -24,6 +24,7 @@ export const users = pgTable("users", {
   username: varchar("username").unique(),
   vocalGenderPreference: varchar("vocal_gender_preference").default('m'),
   credits: integer("credits").default(50).notNull(),
+  freeBandGenerations: integer("free_band_generations").default(3).notNull(), // 3 free band creations for all users
   subscriptionPlan: varchar("subscription_plan").default('free').notNull(), // 'free', 'studio', 'creator', 'producer', 'mogul'
   lastCreditReset: timestamp("last_credit_reset").defaultNow().notNull(),
   welcomeBonusClaimed: integer("welcome_bonus_claimed").default(0), // 1 if claimed, 0 if not (50 credits one-time bonus) - optional for backward compat
