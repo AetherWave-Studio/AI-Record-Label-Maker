@@ -486,6 +486,8 @@ export interface CardDesignInfo {
   price: number; // Credits cost (0 = free default)
   rarity: 'common' | 'premium' | 'special' | 'legendary';
   available: boolean; // False for limited-time designs not currently available
+  previewUrl?: string; // URL to preview image (optional for now, can be generated later)
+  unlockedByDefault: boolean; // True for free designs like ghosts_online
 }
 
 // Card design catalog with pricing
@@ -497,6 +499,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 0, // Free default
     rarity: 'common',
     available: true,
+    unlockedByDefault: true, // Everyone gets this
   },
   cyberpunk_holo: {
     id: 'cyberpunk_holo',
@@ -505,6 +508,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 2000,
     rarity: 'legendary',
     available: true,
+    unlockedByDefault: false,
   },
   vintage_weathered: {
     id: 'vintage_weathered',
@@ -513,6 +517,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 800,
     rarity: 'premium',
     available: true,
+    unlockedByDefault: false,
   },
   modern_sleek: {
     id: 'modern_sleek',
@@ -521,6 +526,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 1200,
     rarity: 'premium',
     available: true,
+    unlockedByDefault: false,
   },
   neon_arcade: {
     id: 'neon_arcade',
@@ -529,6 +535,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 1000,
     rarity: 'premium',
     available: true,
+    unlockedByDefault: false,
   },
   dark_carnival: {
     id: 'dark_carnival',
@@ -537,6 +544,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 500,
     rarity: 'special',
     available: false, // Only available in October
+    unlockedByDefault: false,
   },
   winter_frost: {
     id: 'winter_frost',
@@ -545,6 +553,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 500,
     rarity: 'special',
     available: false, // Only available in December
+    unlockedByDefault: false,
   },
   gold_anniversary: {
     id: 'gold_anniversary',
@@ -553,6 +562,7 @@ export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
     price: 0, // Free during anniversary week
     rarity: 'special',
     available: false, // Only available during platform anniversary
+    unlockedByDefault: false,
   },
 };
 
