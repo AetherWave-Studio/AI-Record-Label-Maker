@@ -14,6 +14,7 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   // Credit operations
   updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
+  addCredits(userId: string, amount: number): Promise<User>; // Add credits to user (for purchases)
   decrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }>;
   incrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }>;
   deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult>;
@@ -198,6 +199,19 @@ export class MemStorage implements IStorage {
     this.users.set(userId, user);
     
     return { success: true, remaining: user.freeBandGenerations };
+  }
+
+  async addCredits(userId: string, amount: number): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    user.credits += amount;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    
+    return user;
   }
 
   async deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult> {
@@ -585,6 +599,25 @@ export class DbStorage implements IStorage {
       .returning();
     
     return { success: true, remaining: result[0].freeBandGenerations };
+  }
+
+  async addCredits(userId: string, amount: number): Promise<User> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    const result = await this.db
+      .update(users)
+      .set({ 
+        credits: user.credits + amount,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return result[0];
   }
 
   async deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult> {

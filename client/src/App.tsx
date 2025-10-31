@@ -14,6 +14,7 @@ import { ArtistPage } from "@/pages/ArtistPage";
 import { UserProfile } from "@/pages/user-profile";
 import PlaylistPage from "@/pages/playlist";
 import Upgrade from "@/pages/upgrade";
+import BuyCredits from "@/pages/buy-credits";
 
 function Router() {
   return (
@@ -32,6 +33,8 @@ function Router() {
       <Route path="/store" component={Store} />
       <Route path="/ghost-musician/playlist/:playlistId" component={PlaylistPage} />
       <Route path="/ghost-musician/upgrade" component={Upgrade} />
+      <Route path="/ghost-musician/buy-credits" component={BuyCredits} />
+      <Route path="/buy-credits" component={BuyCredits} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
