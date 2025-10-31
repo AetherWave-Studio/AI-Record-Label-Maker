@@ -1304,9 +1304,10 @@
       justify-content: space-around;
       align-items: center;
       width: 100%;
-      max-width: 600px;
+      max-width: 500px;
       margin: 0 auto;
-      padding: 0 0.5rem;
+      padding: 0 1rem;
+      gap: 0.5rem;
     }
     
     .mobile-nav-btn {
@@ -1314,7 +1315,7 @@
       flex-direction: column;
       align-items: center;
       gap: 0.25rem;
-      padding: 0.5rem 0.5rem;
+      padding: 0.5rem 0.75rem;
       background: transparent;
       border: none;
       color: var(--text-muted);
@@ -1322,10 +1323,12 @@
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s;
-      flex: 1;
-      max-width: 120px;
+      flex: 0 1 auto;
+      max-width: 100px;
+      min-width: 60px;
       min-height: 44px;
       touch-action: manipulation;
+      border-radius: 8px;
     }
     
     .mobile-nav-btn img {
@@ -1474,8 +1477,25 @@
       .mobile-bottom-nav {
         display: block;
       }
-      
-      
+
+      /* Mobile navigation adjustments for small screens */
+      .mobile-bottom-nav-items {
+        padding: 0 0.75rem;
+        gap: 0.25rem;
+      }
+
+      .mobile-nav-btn {
+        padding: 0.4rem 0.5rem;
+        max-width: 90px;
+        min-width: 50px;
+        font-size: 0.65rem;
+      }
+
+      .mobile-nav-btn img {
+        width: 20px;
+        height: 20px;
+      }
+
       /* Header adjustments */
       header {
         padding: 0.5rem 0.75rem;
@@ -2529,7 +2549,10 @@
               </div>
               ${completed ?
                 `<button style="padding: 0.5rem 1rem; background: rgba(46, 213, 115, 0.2); border: 1px solid rgba(46, 213, 115, 0.5); border-radius: 8px; color: #2ed573; font-weight: 600; font-size: 0.85rem; cursor: not-allowed;" disabled>${buttonText}</button>` :
-                `<a href="${questUrl}" target="_blank" onclick="setTimeout(() => completeQuest('${quest.type}'), 2000)" style="display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border: none; border-radius: 8px; color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(255, 46, 166, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">${buttonText}</a>`
+                `<div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <a href="${questUrl}" target="_blank" style="display: inline-block; padding: 0.5rem 1rem; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 8px; color: white; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; transition: all 0.2s; text-align: center;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">1. Follow/Join</a>
+                  <button onclick="confirmQuestCompletion('${quest.type}')" style="padding: 0.4rem 0.8rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border: none; border-radius: 8px; color: white; font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(255, 46, 166, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">2. Claim Credits</button>
+                </div>`
               }
             </div>
           </div>
@@ -2540,6 +2563,30 @@
     function closeQuestModal() {
       const modal = document.getElementById('quest-modal');
       modal.style.display = 'none';
+    }
+
+    function confirmQuestCompletion(questType) {
+      const questNames = {
+        twitter_follow: 'Follow us on X.com',
+        discord_join: 'Join our Discord server',
+        facebook_follow: 'Follow us on Facebook',
+        tiktok_follow: 'Follow us on TikTok'
+      };
+
+      const questName = questNames[questType] || 'Complete quest';
+
+      // Show confirmation dialog
+      const confirmed = confirm(
+        `Have you actually completed the quest?\n\n` +
+        `Quest: ${questName}\n` +
+        `Reward: 10 credits\n\n` +
+        `Please confirm that you have completed this action. ` +
+        `False claims may affect your account status.`
+      );
+
+      if (confirmed) {
+        completeQuest(questType);
+      }
     }
 
     function getQuestIcon(type) {
@@ -2564,6 +2611,8 @@
 
     async function completeQuest(questType) {
       try {
+        showNotification('Completing quest...', 'info');
+
         const response = await fetch('/api/quests/complete', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2581,8 +2630,9 @@
         updateCreditsDisplay();
         showNotification(data.message, 'success');
 
-        // Reload quest modal
-        showQuestModal();
+        // Reload quest modal to show updated completion status
+        await loadQuests(); // Reload quests first
+        showQuestModal(); // Then refresh modal
 
       } catch (error) {
         console.error('Error completing quest:', error);
@@ -2755,17 +2805,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 2rem;
+        padding: 1rem;
         animation: fadeIn 0.3s ease-out;
       `;
       
       modal.innerHTML = `
         <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8); animation: slideUp 0.4s ease-out; overflow: hidden;">
-          <div style="padding: 2rem; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
-            <h2 style="font-size: 1.75rem; font-weight: 700; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;">
+          <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); flex-shrink: 0;">
+            <h2 style="font-size: clamp(1.5rem, 5vw, 1.75rem); font-weight: 700; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0;">
               Upgrade Your Plan
             </h2>
-            <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: 0.95rem;">
+            <p style="color: var(--text-muted); margin-top: 0.5rem; font-size: clamp(0.85rem, 2.5vw, 0.95rem);">
               You've run out of credits! Choose a plan to continue creating amazing content.
             </p>
           </div>
@@ -2773,25 +2823,25 @@
           <div style="flex: 1; overflow-y: auto; overflow-x: hidden;">
           
           
-          <div style="padding: 2rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem;">
+          <div style="padding: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem;">
             
             <!-- Free Plan -->
-            <div style="background: rgba(255, 255, 255, 0.02); border: 2px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
-              <div style="text-align: center; margin-bottom: 1.25rem;">
-                <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/music-icon.png" style="width: 48px; height: 48px;"></div>
-                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Free</h3>
-                <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$0<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 2px solid var(--border-color); border-radius: 16px; padding: 1rem; display: flex; flex-direction: column;">
+              <div style="text-align: center; margin-bottom: 1rem;">
+                <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/music-icon.png" style="width: 40px; height: 40px;"></div>
+                <h3 style="font-size: clamp(1rem, 3vw, 1.1rem); font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Free</h3>
+                <div style="font-size: clamp(1.5rem, 4vw, 1.75rem); font-weight: 700; color: var(--text-primary);">$0<span style="font-size: clamp(0.75rem, 2vw, 0.85rem); font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>50 credits/day</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>Basic music gen</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>Standard quality</span>
                 </li>
@@ -2809,28 +2859,28 @@
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$9.99<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span><strong style="color: var(--text-primary);">200</strong> media credits/mo</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span><strong style="color: var(--text-primary);">SORA 2</strong> video access</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>No watermarks</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>Basic music gen</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>WAV conversion</span>
                 </li>
               </ul>
-              <button onclick="contactSupport('Starter')" style="width: 100%; padding: 0.75rem; background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
+              <button onclick="contactSupport('Starter')" style="width: 100%; padding: clamp(0.6rem, 2vw, 0.75rem); background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: clamp(0.8rem, 2.5vw, 0.9rem); transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
                 Upgrade
               </button>
             </div>
@@ -2843,28 +2893,28 @@
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$19<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span><strong style="color: var(--text-primary);">Unlimited</strong> music (all models)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span><strong style="color: var(--text-primary);">Unlimited</strong> WAV conversion</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>500 media credits/mo</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>Lite videos (all resolutions)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span>Commercial license</span>
                 </li>
               </ul>
-              <button onclick="contactSupport('Studio')" style="width: 100%; padding: 0.75rem; background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
+              <button onclick="contactSupport('Studio')" style="width: 100%; padding: clamp(0.6rem, 2vw, 0.75rem); background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: clamp(0.8rem, 2.5vw, 0.9rem); transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
                 Upgrade
               </button>
             </div>
@@ -2878,32 +2928,32 @@
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$49<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span><strong style="color: var(--text-primary);">Unlimited</strong> music (all models)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
                   <span><strong style="color: var(--text-primary);">Unlimited</strong> WAV conversion</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span><strong style="color: var(--text-primary);">2000</strong> media credits/mo</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>Lite & Pro videos (all resolutions)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>All image engines</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>Commercial license</span>
                 </li>
               </ul>
-              <button onclick="contactSupport('Creator')" style="width: 100%; padding: 0.75rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(255, 46, 166, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
+              <button onclick="contactSupport('Creator')" style="width: 100%; padding: clamp(0.6rem, 2vw, 0.75rem); background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: clamp(0.8rem, 2.5vw, 0.9rem); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 24px rgba(255, 46, 166, 0.4)'" onmouseout="this.style.transform=''; this.style.boxShadow=''">
                 Upgrade
               </button>
             </div>
@@ -2916,36 +2966,36 @@
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$99<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span><strong style="color: var(--text-primary);">Unlimited</strong> music (all models)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span><strong style="color: var(--text-primary);">Unlimited</strong> WAV conversion</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span><strong style="color: var(--text-primary);">5000</strong> media credits/mo (rate-limited)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>Lite & Pro videos (all resolutions including 4K)</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>All image engines</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span>Commercial license</span>
                 </li>
-                <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
                   <span><strong style="color: var(--text-primary);">API access</strong> & priority support</span>
                 </li>
               </ul>
-              <button onclick="contactSupport('All Access')" style="width: 100%; padding: 0.75rem; background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
+              <button onclick="contactSupport('All Access')" style="width: 100%; padding: clamp(0.6rem, 2vw, 0.75rem); background: rgba(139, 92, 246, 0.2); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; font-size: clamp(0.8rem, 2.5vw, 0.9rem); transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.3)'; this.style.borderColor='var(--aetherwave-purple)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.2)'; this.style.borderColor='var(--border-color)'">
                 Upgrade
               </button>
             </div>
@@ -2968,19 +3018,19 @@
                   <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$10<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);"> one-time</span></div>
                 </div>
                 <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span><strong style="color: var(--text-primary);">250</strong> credits</span>
                   </li>
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span>Never expires</span>
                   </li>
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span>50 music generations</span>
                   </li>
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span>$0.04 per credit</span>
                   </li>
@@ -2999,19 +3049,19 @@
                   <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$25<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);"> one-time</span></div>
                 </div>
                 <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span><strong style="color: var(--text-primary);">750</strong> credits</span>
                   </li>
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span>Never expires</span>
                   </li>
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span>150 music generations</span>
                   </li>
-                  <li style="color: var(--text-muted); font-size: 0.85rem; padding: 0.4rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                  <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                     <span style="color: var(--aetherwave-cyan);">✓</span>
                     <span><strong style="color: var(--text-primary);">$0.033</strong> per credit</span>
                   </li>
@@ -6107,7 +6157,7 @@ updateMediaInputs();
     <div class="modal-content" style="max-width: 600px;">
       <div class="modal-header">
         <div class="modal-title">🎁 Earn Free Credits!</div>
-        <div class="modal-subtitle">Complete quests to earn bonus credits</div>
+        <div class="modal-subtitle">Complete quests to earn 10 credits each (40 credits total)</div>
       </div>
 
       <div id="quest-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">

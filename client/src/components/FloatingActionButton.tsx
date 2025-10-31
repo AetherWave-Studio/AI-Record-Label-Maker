@@ -33,52 +33,52 @@ export function FloatingActionButton({ readyBandsCount = 0 }: FloatingActionButt
 
       {/* Modal (placeholder for now) */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-charcoal border border-sky-glint rounded-2xl p-8 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <Zap size={32} className="text-sky-glint" />
-                <h2 className="text-2xl font-bold text-white-smoke">Daily Growth</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+          <div className="bg-charcoal border border-sky-glint rounded-2xl p-4 sm:p-6 md:p-8 max-w-2xl w-full max-h-[85vh] overflow-y-auto mx-2 sm:mx-0">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Zap size={24} className="text-sky-glint sm:size-28 md:size-32" />
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white-smoke">Daily Growth</h2>
               </div>
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-soft-gray hover:text-white-smoke text-2xl"
+                className="text-soft-gray hover:text-white-smoke text-xl sm:text-2xl p-1 sm:p-0"
               >
                 ×
               </button>
             </div>
 
-            <p className="text-soft-gray mb-6">
+            <p className="text-soft-gray text-sm sm:text-base mb-4 sm:mb-6">
               {readyBandsCount} bands are ready to receive their daily growth bonuses!
             </p>
 
             {/* Placeholder content - will be replaced with actual band list */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
               {Array.from({ length: Math.min(readyBandsCount, 5) }).map((_, i) => (
-                <div key={i} className="bg-deep-slate/50 rounded-lg p-4 flex items-center justify-between">
+                <div key={i} className="bg-deep-slate/50 rounded-lg p-3 sm:p-4 flex items-center justify-between">
                   <div>
-                    <div className="text-white-smoke font-semibold">Band {i + 1}</div>
-                    <div className="text-soft-gray text-sm">Ready for growth</div>
+                    <div className="text-white-smoke font-semibold text-sm sm:text-base">Band {i + 1}</div>
+                    <div className="text-soft-gray text-xs sm:text-sm">Ready for growth</div>
                   </div>
-                  <div className="text-sky-glint text-sm">+streams, +sales</div>
+                  <div className="text-sky-glint text-xs sm:text-sm">+streams, +sales</div>
                 </div>
               ))}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button
                 onClick={() => {
                   // TODO: Implement apply growth to all
                   setIsOpen(false);
                 }}
-                className="flex-1 px-6 py-4 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-bold hover:shadow-lg transition-all"
+                className="flex-1 px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-bold hover:shadow-lg transition-all text-sm sm:text-base"
               >
-                <Zap className="inline mr-2" size={20} />
+                <Zap className="inline mr-1 sm:mr-2" size={16} />
                 APPLY GROWTH TO ALL
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="px-6 py-4 border border-soft-gray/30 text-soft-gray rounded-lg hover:border-sky-glint hover:text-white-smoke transition-colors"
+                className="px-4 sm:px-6 py-3 sm:py-4 border border-soft-gray/30 text-soft-gray rounded-lg hover:border-sky-glint hover:text-white-smoke transition-colors text-sm sm:text-base"
               >
                 Cancel
               </button>
