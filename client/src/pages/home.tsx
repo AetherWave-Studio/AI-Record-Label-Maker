@@ -141,8 +141,11 @@ export default function Home() {
             {/* Right Side - User Actions */}
             <div className="flex items-center gap-4">
               {/* Credits */}
-              <Link href="/store">
-                <button className="flex items-center gap-2 px-3 py-2 bg-deep-slate border border-sky-glint/30 rounded-lg hover:border-sky-glint transition-colors">
+              <Link href="/buy-credits">
+                <button 
+                  className="flex items-center gap-2 px-3 py-2 bg-deep-slate border border-sky-glint/30 rounded-lg hover:border-sky-glint transition-colors"
+                  data-testid="button-buy-credits"
+                >
                   <CreditCard size={18} className="text-sky-glint" />
                   <span className="font-semibold text-white-smoke">{user?.credits || 0}</span>
                 </button>
