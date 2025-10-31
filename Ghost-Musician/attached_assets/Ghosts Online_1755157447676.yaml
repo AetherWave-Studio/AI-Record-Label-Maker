@@ -1,0 +1,50 @@
+artist_type: band
+band_name: Ghosts Online
+
+genre: Emo Pop-Punk / Post-Punk Revival
+
+influences:
+  - Blink-182
+  - Sum 41
+  - Green Day
+  - Lit
+  - Arctic Monkeys
+
+band_concept: |
+  An angsty pop-punk band with a playful defiant streak. Their music captures the frustration
+  and sarcasm of young adulthood with catchy hooks, rebellious energy, and ironic humor.
+
+lyrical_themes: |
+  The awkward moments of growing up, heartbreak, self-deprecating wit, and the absurdity
+  of social scenes.
+
+signature_sound: |
+  Crunchy guitars, driving punk drums, melodic basslines, gang-vocal choruses, and raw
+  yet melodic vocals.
+
+live_visuals: |
+  Neon street signs, graffiti backdrops, DIY stage setups, and audience sing-alongs.
+
+philosophy: "Irony is Alive and Well"
+
+members:
+  - name: Eddie VHS
+    role: Vocals / Riffs
+  - name: Dave
+    role: Lead Guitar / Chill
+  - name: Jet
+    role: Bass / Brood
+  - name: Kells
+    role: Drums
+
+color_palette:
+  background: "#1E1E2F"    # Deep Slate
+  text_primary: "#F4F4F4"   # White Smoke
+  highlight: "#A6EFFF"      # Sky Glint
+
+image_spec:
+  portrait_file: "Ghosts_Online_Portrait.png"
+  size: "650x600"
+  position:
+    x: 55
+    y: 125

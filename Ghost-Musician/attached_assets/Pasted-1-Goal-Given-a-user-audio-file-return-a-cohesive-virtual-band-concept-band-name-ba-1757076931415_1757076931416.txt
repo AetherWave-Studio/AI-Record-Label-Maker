@@ -1,0 +1,85 @@
+1) Goal
+Given a user audio file, return a cohesive virtual band concept:
+    • band_name
+    • band_motto
+    • band_identity (short positioning statement)
+    • band_lore (150–250 words)
+    • members[] (1–5 names + role + 1-line trait)
+    • image_prompt (for image generator)
+    • tags[] (genres/moods/visual cues)
+2) Two presets (query param mode)
+    • mode=explore (ideate broadly): temperature 0.9, top_p 0.95, n 4
+    • mode=refine (polish one): temperature 0.4, top_p 0.9, n 1
+3) Prompt shape (system/dev/user)
+    • system: “You are a creative music world-builder. Tone: gothic-futurist, evocative, commercially usable. Avoid real artist name-drops.”
+    • developer: “Stay concise. Respect JSON schema. Use original names. No copyrighted bands. Keep lore 150–250 words.”
+    • user (variables): includes audio URL + optional descriptors.
+{
+  "audio_url": "https://example.com/user_uploads/track.mp3",
+  "artist_intent": "dark pop + cyber goth, cinematic",
+  "mood_words": ["neon", "haunted", "uplifting"],
+  "use_audio_features": true
+}
+4) OpenAI / xAI request templates
+OpenAI (chat completions)
+{
+  "model": "gpt-5-thinking",
+  "temperature": 0.9,
+  "top_p": 0.95,
+  "n": 4,
+  "messages": [
+    {"role":"system","content":"You are a creative music world-builder. Tone: gothic-futurist, evocative, commercially usable. Avoid real artist name-drops."},
+    {"role":"developer","content":"Return strict JSON matching the schema. Original names only. Lore 150–250 words. Include an image_prompt for a cover/poster. No extra text."},
+    {"role":"user","content":"Audio: https://example.com/user_uploads/track.mp3\nIntent: dark pop + cyber goth, cinematic\nMoods: neon, haunted, uplifting\nTask: Generate band_name, band_motto, band_identity, band_lore, 3–5 members (name, role, trait), tags[], image_prompt. The track may start a new band or join an existing one; lean into world-building."}
+  ],
+  "response_format": {"type":"json_object"}
+}
+xAI (Grok) — same idea; map params accordingly
+{
+  "model": "grok-2",
+  "temperature": 0.9,
+  "top_p": 0.95,
+  "messages": [
+    {"role":"system","content":"You are a creative music world-builder..."},
+    {"role":"user","content":"(same user block as above)"}
+  ]
+}
+If you’re actually analyzing audio features, do that app-side (tempo/key/timbre via a lightweight DSP lib) and pass extracted features into the user message. Don’t rely on the LLM to “hear” the file.
+5) Response schema (contract)
+Have the model return exactly this shape:
+{
+  "band_name": "string",
+  "band_motto": "string",
+  "band_identity": "string",
+  "band_lore": "string",
+  "members": [
+    {"name":"string","role":"string","trait":"string"}
+  ],
+  "tags": ["string","string"],
+  "image_prompt": "string"
+}
+6) Simple auto-selector (only when mode=explore)
+Ask for n=4, then pick the best one with a tiny rubric:
+Scores (0–1 each):
+    • Novelty (penalize near-duplicate names across candidates)
+    • Clarity (short, readable sentences)
+    • BrandFit (hits life/ghost/world-building vibes; no banned phrases)
+    • ConstraintFit (schema valid; lore length ok)
+Weighted sum:
+Score = 0.35*BrandFit + 0.25*ConstraintFit + 0.25*Novelty + 0.15*Clarity
+Return: winner + alternates (with scores) for A/B.
+7) Image generation (second call)
+Use image_prompt from the winner to call your image model (OpenAI Images, Flux, SDXL, etc.). Example style for the model prompt:
+“Album cover, gothic-futurist neon, cinematic lighting, [band_name] emblem motif, [tags], high contrast, clean typography space, 1:1”
+8) Banned/guardrails (env-driven)
+    • No real artist/band name references.
+    • No explicit claims like “guaranteed fame”.
+    • Max lore length 250 words.
+    • Names must be unique per user (app-side check).
+9) One-liner dev tasks
+    1. Add mode param → set gen params (temperature, n).
+    2. Send chat with system/dev/user blocks; request json_object.
+    3. If mode=explore, score 4 candidates → pick winner.
+    4. Return { winner, alternates, image_prompt }.
+    5. Fire image call with image_prompt.
+If you want, I can also give you a 30-line JS helper that wraps this (OpenAI SDK), runs the scoring, and returns the winner + prompt for the image call.

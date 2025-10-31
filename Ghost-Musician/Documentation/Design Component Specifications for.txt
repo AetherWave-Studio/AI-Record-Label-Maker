@@ -1,0 +1,85 @@
+Design Component Specifications for Asset Generation
+
+  Priority 1: Feed Cards (Most Important)
+
+  1. Text Post Card - 600x300px - Glass morphism with text content
+  2. New Release Card - 600x400px - With album art thumbnail (192x256px)
+  3. Achievement Card - 600x350px - Gold/amber accent for milestones
+  4. Rank Change Card - 600x300px - Green accent, chart visualization
+  5. Daily Growth Reminder Card - 600x400px - Sky-glint accent, animated
+  6. New Artist Card - 600x450px - With artist card preview
+
+  Priority 2: Audio & Media
+
+  7. Audio Player (Expanded) - 800x200px - Waveform, controls, progress bar
+  8. Audio Player (Compact) - 400x80px - Mini player for cards
+  9. Artist Trading Card - 288x384px (3:4 ratio) - Full card design
+  10. Album Art Frame - 256x256px - Square with depth effects
+
+  Priority 3: Profile Components
+
+  11. User Avatar (Large) - 128x128px - Gradient ring, hover state
+  12. User Avatar (Small) - 40x40px - For feed items
+  13. Profile Header - 1200x300px - Banner with stats overlay
+  14. Stats Widget - 300x200px - Fame, streams, sales display
+
+  Priority 4: Data Visualization
+
+  15. Chart Position Badge - 80x80px - Circular rank indicator
+  16. Progress Bar - 400x40px - For growth/leveling
+  17. Mini Graph - 200x100px - Sparkline for trends
+  18. Achievement Badge - 64x64px - Gold, Platinum, Diamond variants
+
+  Priority 5: Navigation & Actions
+
+  19. Primary Button - 200x48px - Pink gradient with glow
+  20. Secondary Button - 200x48px - Glass border style
+  21. Icon Button - 48x48px - Circular with hover state
+  22. Search Bar - 600x48px - Glass with icon
+
+  Priority 6: Notifications & Modals
+
+  23. Notification Badge - 24x24px - Red pill with count
+  24. Toast Notification - 400x80px - Slide-in style
+  25. Modal Window - 800x600px - Centered glass panel
+  26. Floating Action Button (FAB) - 200x64px - Animated pulse
+
+  Priority 7: Mobile Responsive
+
+  27. Mobile Feed Card - 360x variable - Stacked layout
+
+  Design Specifications to Apply
+
+  Glass Morphism:
+  - Background: rgba(20, 20, 20, 0.7) with backdrop-blur(24px)
+  - Border: 1px solid rgba(255, 255, 255, 0.05)
+
+  3D Depth Shadows:
+  - Resting: 0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)
+  - Hover: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(225, 90, 253, 0.15)
+  - Transform on hover: translateY(-4px)
+
+  Colors:
+  - Background: #0a0a0a (pure black)
+  - Cards: #141414 (subtle black)
+  - Text Primary: #F4F4F4 (white smoke)
+  - Text Secondary: #9ca3af (soft gray)
+  - Accent Pink: #e15afd (AetherWave signature)
+  - Accent Cyan: #A6EFFF (sky glint)
+  - Accent Green: #00F5A0 (electric neon)
+
+  Typography:
+  - Headlines: Orbitron (weights: 400, 500, 600, 700, 800, 900)
+  - Body: Inter (weights: 300, 400, 500, 600, 700, 800)
+
+Compare AetherWave Pink options:L
+#e15afd
+:root {
+      --aetherwave-pink: #ff2ea6;
+      --aetherwave-purple: #8b5cf6;
+      --dark-bg: #0d0b15;
+      --card-bg: #1a1625;
+      --text-primary: #e9e8ff;
+      --text-muted: #b7b3d9;
+      --border-color: #2d2640;
+    }

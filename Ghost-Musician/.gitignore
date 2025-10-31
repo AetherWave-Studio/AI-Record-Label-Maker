@@ -1,0 +1,36 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+
+# Environment variables (NEVER commit!)
+.env
+.env.local
+.env.*.local
+
+# Uploads (local file storage)
+server/uploads/
+
+# Google Cloud credentials
+service-account-key.json
+*-service-account.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/

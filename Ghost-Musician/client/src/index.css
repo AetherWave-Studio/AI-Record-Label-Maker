@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(210 25% 7.8431%);
+  --card: hsl(180 6.6667% 97.0588%);
+  --card-foreground: hsl(210 25% 7.8431%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(210 25% 7.8431%);
+  --primary: hsl(203.8863 88.2845% 53.1373%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 25% 7.8431%);
+  --secondary-foreground: hsl(0 0% 100%);
+  --muted: hsl(240 1.9608% 90%);
+  --muted-foreground: hsl(210 25% 7.8431%);
+  --accent: hsl(211.5789 51.3514% 92.7451%);
+  --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --border: hsl(201.4286 30.4348% 90.9804%);
+  --input: hsl(200 23.0769% 97.4510%);
+  --ring: hsl(202.8169 89.1213% 53.1373%);
+  /* Premium Black Glass Design - Inspired by Modern UI */
+  --midnight-violet: #0a0a0a;      /* Deep black background */
+  --aetherwave-pink: #e15afd;      /* SIGNATURE brand color */
+  --deep-slate: #141414;           /* Card backgrounds - subtle lighter black */
+  --white-smoke: #F4F4F4;          /* Primary text */
+  --electric-neon: #00F5A0;        /* Accent green */
+  --sky-glint: #A6EFFF;            /* Accent cyan */
+
+  /* Glass morphism & depth */
+  --glass-bg: rgba(20, 20, 20, 0.7);     /* Semi-transparent black */
+  --glass-border: rgba(255, 255, 255, 0.05); /* Subtle white border */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(225, 90, 253, 0.3);
+
+  /* UI elements */
+  --charcoal: #1a1a1a;             /* Slightly lighter than deep-slate */
+  --soft-gray: #9ca3af;            /* Muted text */
+  --border-color: rgba(255, 255, 255, 0.08);  /* Minimal borders */
+
+  /* Legacy aliases for compatibility */
+  --electric-blue: #e15afd;        /* Maps to AetherWave Pink */
+
+  /* Typography - Official Brand Fonts */
+  --font-sans: 'Inter', sans-serif;
+  --font-headline: 'Orbitron', sans-serif;
+  --font-serif: Georgia, serif;
+  --font-mono: Menlo, monospace;
+  --radius: 1rem;
+}
+
+.dark {
+  --background: #0a0a0a;             /* Pure black */
+  --foreground: #F4F4F4;             /* White Smoke */
+  --card: #141414;                   /* Subtle black card */
+  --card-foreground: #F4F4F4;
+  --popover: #141414;
+  --popover-foreground: #F4F4F4;
+  --primary: #e15afd;                /* AetherWave Pink - SIGNATURE */
+  --primary-foreground: #ffffff;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #F4F4F4;
+  --muted: #262626;
+  --muted-foreground: #9ca3af;
+  --accent: #00F5A0;                 /* Electric Neon */
+  --accent-foreground: #0a0a0a;
+  --destructive: hsl(356.3033 90.5579% 54.3137%);
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: #1a1a1a;
+  --ring: #e15afd;                   /* AetherWave Pink */
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: var(--midnight-violet);
+    color: var(--white-smoke);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headline);
+  }
+}
+
+@layer components {
+  .card-flip {
+    perspective: 1000px;
+  }
+  
+  .card-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.8s;
+    transform-style: preserve-3d;
+  }
+  
+  .card-flip.flipped .card-flip-inner {
+    transform: rotateY(180deg);
+  }
+  
+  .card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 1rem;
+  }
+  
+  .card-back {
+    transform: rotateY(180deg);
+  }
+  
+  .upload-area {
+    transition: all 0.3s ease;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .upload-area.dragover {
+    background: linear-gradient(45deg, rgba(166, 239, 255, 0.1), rgba(78, 205, 196, 0.1));
+    border-color: var(--sky-glint);
+    transform: scale(1.02);
+  }
+  
+  .scale-102 {
+    transform: scale(1.02);
+  }
+
+  .waveform-bar {
+    animation: waveform 1.5s ease-in-out infinite;
+  }
+
+  @keyframes waveform {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.5); }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(166, 239, 255, 0.3); }
+    50% { box-shadow: 0 0 30px rgba(166, 239, 255, 0.6); }
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Premium modular design animations */
+  @keyframes gridMove {
+    0% { transform: translate(0, 0); }
+    100% { transform: translate(60px, 60px); }
+  }
+
+  @keyframes float-slow {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -30px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+  }
+
+  @keyframes float-delayed {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(-25px, 25px) scale(0.95); }
+    66% { transform: translate(25px, -15px) scale(1.05); }
+  }
+
+  .animate-grid-move {
+    animation: gridMove 20s linear infinite;
+  }
+
+  .animate-float-slow {
+    animation: float-slow 15s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: float-delayed 15s ease-in-out infinite 5s;
+  }
+
+  /* Enhanced hover animations for band member cards */
+  .member-avatar-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .member-avatar-hover:hover {
+    transform: scale(1.15);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Tooltip animation */
+  @keyframes slide-up-fade-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 20px);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .member-tooltip {
+    animation: slide-up-fade-in 0.2s ease-out forwards;
+  }
+}

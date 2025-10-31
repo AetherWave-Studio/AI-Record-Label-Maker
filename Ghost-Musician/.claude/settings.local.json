@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev)",
+      "Bash(npm install --save-dev dotenv)",
+      "Bash(npm install --save-dev dotenv --legacy-peer-deps)",
+      "Bash(curl -s http://localhost:5000/api/health)",
+      "Bash(start http://localhost:5000)",
+      "Bash(curl -s http://localhost:5000/)",
+      "Bash(curl -s \"https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faetherwave-banner-90.png?alt=media&token=502eb691-8cec-4625-a8a4-ddb801b14f50\" -o E:GitsGhostMusicianclientpublicaetherwave-banner.png)",
+      "Read(//e/_AETHERWAVE_STUDIO_OFFICIAL_EXT/_BRAND MEDIA/**)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :5000)",
+      "Bash(git add client/src/index.css client/src/App.tsx client/src/pages/home.tsx client/src/components/ActivityFeed.tsx client/src/components/FeedItem.tsx client/src/components/FloatingActionButton.tsx client/src/types/feed.ts tailwind.config.ts)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nImplement premium black glass design with 3D depth effects\n\nComplete visual redesign from purple theme to premium black modular UI:\n- Replace Midnight Violet (#2C003E) with pure black (#0a0a0a) background\n- Implement glass morphism cards with backdrop-blur and subtle transparency\n- Add 3D depth with layered shadows and hover animations (translateY, scale)\n- Keep AetherWave Pink (#e15afd) as signature brand accent color\n- Add Orbitron font for headlines alongside Inter for body text\n- Create feed-first social homepage with ActivityFeed component\n- Build FeedItem cards for releases, achievements, rank changes, daily growth\n- Add FloatingActionButton for daily growth mechanic\n- Update CSS variables for glass effects and shadow depths\n- Temporarily expose Home page for development preview\n\nDesign inspired by modern premium black modular dashboards with floating \nglass windows and minimal borders.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Read(//e/Gits/AetherWaveStudio/**)",
+      "Bash(git add index.html VIDEO_GENERATION_README.md TESTING_INSTRUCTIONS.md test-video-generation.html)",
+      "Bash(git push origin master)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

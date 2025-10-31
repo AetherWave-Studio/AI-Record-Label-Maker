@@ -1,0 +1,48 @@
+                                       Table "public.artist_cards"
+        Column         |            Type             | Collation | Nullable |           Default           
+-----------------------+-----------------------------+-----------+----------+-----------------------------
+ id                    | character varying           |           | not null | gen_random_uuid()
+ user_id               | character varying           |           |          | 
+ file_name             | text                        |           | not null | 
+ file_size             | real                        |           | not null | 
+ duration              | real                        |           |          | 
+ genre                 | text                        |           |          | 
+ tempo                 | real                        |           |          | 
+ key                   | text                        |           |          | 
+ energy                | text                        |           |          | 
+ artist_data           | jsonb                       |           | not null | 
+ image_url             | text                        |           |          | 
+ card_image_url        | text                        |           |          | 
+ processing_time       | real                        |           |          | 
+ confidence            | real                        |           |          | 
+ art_style             | text                        |           |          | 
+ card_theme            | text                        |           |          | 
+ created_at            | timestamp without time zone |           |          | now()
+ rarity                | character varying           |           |          | 'Common'::character varying
+ experience_awarded    | integer                     |           |          | 10
+ influence_awarded     | integer                     |           |          | 5
+ is_copyrighted        | boolean                     |           |          | false
+ streaming_platforms   | jsonb                       |           |          | 
+ music_quality         | real                        |           |          | 0.5
+ release_impact        | integer                     |           |          | 0
+ physical_copies       | integer                     |           |          | 0
+ digital_downloads     | integer                     |           |          | 0
+ total_streams         | integer                     |           |          | 0
+ current_fame          | integer                     |           |          | 5
+ last_daily_update     | timestamp without time zone |           |          | now()
+ daily_growth_streak   | integer                     |           |          | 0
+ vocal_range           | character varying           |           |          | 
+ fundamental_freq      | real                        |           |          | 
+ spectral_centroid     | real                        |           |          | 
+ female_indicator      | real                        |           |          | 
+ instrument_complexity | text                        |           |          | 
+Indexes:
+    "artist_cards_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "artist_cards_user_id_users_id_fk" FOREIGN KEY (user_id) REFERENCES users(id)
+Referenced by:
+    TABLE "artist_evolution" CONSTRAINT "artist_evolution_artist_card_id_artist_cards_id_fk" FOREIGN KEY (artist_card_id) REFERENCES artist_cards(id)
+    TABLE "band_achievements" CONSTRAINT "band_achievements_artist_card_id_artist_cards_id_fk" FOREIGN KEY (artist_card_id) REFERENCES artist_cards(id)
+    TABLE "band_media" CONSTRAINT "band_media_artist_card_id_artist_cards_id_fk" FOREIGN KEY (artist_card_id) REFERENCES artist_cards(id)
+    TABLE "releases" CONSTRAINT "releases_artist_card_id_artist_cards_id_fk" FOREIGN KEY (artist_card_id) REFERENCES artist_cards(id)
+
