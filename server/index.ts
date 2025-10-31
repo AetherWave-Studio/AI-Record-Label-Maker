@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import path from "path";
 
 const app = express();
 
@@ -60,10 +61,11 @@ app.use((req, res, next) => {
   });
 
   // Serve static HTML directories before the SPA catch-all
-  app.use('/virtual-artists', express.static('virtual-artists'));
-  app.use('/creators-lounge', express.static('creators-lounge'));
-  app.use('/playlists', express.static('playlists'));
-  app.use('/featured-artist', express.static('featured-artist'));
+  const rootDir = path.resolve(import.meta.dirname, '..');
+  app.use('/virtual-artists', express.static(path.join(rootDir, 'virtual-artists')));
+  app.use('/creators-lounge', express.static(path.join(rootDir, 'creators-lounge')));
+  app.use('/playlists', express.static(path.join(rootDir, 'Playlists')));
+  app.use('/featured-artist', express.static(path.join(rootDir, 'Featured Artist')));
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
