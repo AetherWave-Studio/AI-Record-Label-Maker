@@ -2772,6 +2772,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // =====================================================
+  // MARKETPLACE ROUTES
+  // =====================================================
+
+  // Get all products from the store (optionally filter by category)
+  app.get('/api/store/products', authMiddleware, async (req: any, res) => {
+    try {
+      const category = req.query.category;
+      const products = await storage.getProducts(category);
+      
+      res.json(products);
+    } catch (error: any) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ error: 'Failed to fetch products' });
+    }
+  });
+
+  // Purchase a product from the store
+  app.post('/api/store/purchase', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { productId, quantity = 1 } = req.body;
+
+      if (!productId || typeof productId !== 'string') {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+
+      if (quantity < 1) {
+        return res.status(400).json({ error: 'Quantity must be at least 1' });
+      }
+
+      // Attempt purchase
+      const result = await storage.purchaseProduct(userId, productId, quantity);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          product: result.product,
+          totalCost: result.totalCost,
+          newBalance: result.newBalance
+        });
+      } else {
+        res.status(400).json({ error: result.error || 'Purchase failed' });
+      }
+    } catch (error: any) {
+      console.error('Error purchasing product:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get user's inventory
+  app.get('/api/inventory', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const inventory = await storage.getUserInventory(userId);
+      
+      res.json(inventory);
+    } catch (error: any) {
+      console.error('Error fetching inventory:', error);
+      res.status(500).json({ error: 'Failed to fetch inventory' });
+    }
+  });
+
+  // =====================================================
   // Ghost-Musician Compatibility Routes (Alias routes)
   // Map /api/artist-cards to /api/rpg/bands
   // =====================================================
