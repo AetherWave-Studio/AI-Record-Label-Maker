@@ -22,7 +22,9 @@ import {
   type ImageEngine,
   type MusicModel,
   type QuestType,
-  QUEST_REWARDS
+  QUEST_REWARDS,
+  CARD_DESIGNS,
+  type CardDesignType
 } from "@shared/schema";
 import { eq, lt } from "drizzle-orm";
 import virtualArtistsRouter from './VirtualArtistsRoutes.js';
@@ -2590,6 +2592,132 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error fetching achievements:', error);
       res.status(500).json({ error: 'Failed to fetch achievements' });
+    }
+  });
+
+  // =====================================================
+  // CARD DESIGN SYSTEM ROUTES
+  // Trading card design marketplace and ownership
+  // =====================================================
+
+  // Get all available card designs in the catalog
+  app.get('/api/card-designs', authMiddleware, async (req: any, res) => {
+    try {
+      // Return the complete catalog of designs from schema
+      const catalog = Object.values(CARD_DESIGNS).map(design => ({
+        id: design.id,
+        name: design.name,
+        description: design.description,
+        rarity: design.rarity,
+        price: design.price,
+        previewUrl: design.previewUrl,
+        unlockedByDefault: design.unlockedByDefault
+      }));
+
+      res.json({ designs: catalog });
+    } catch (error: any) {
+      console.error('Error fetching card designs:', error);
+      res.status(500).json({ error: 'Failed to fetch card designs' });
+    }
+  });
+
+  // Get card designs owned by the authenticated user
+  app.get('/api/card-designs/owned', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const ownedDesigns = await storage.getOwnedCardDesigns(userId);
+      
+      res.json({ ownedDesigns });
+    } catch (error: any) {
+      console.error('Error fetching owned card designs:', error);
+      res.status(500).json({ error: 'Failed to fetch owned designs' });
+    }
+  });
+
+  // Purchase a card design with credits
+  app.post('/api/card-designs/purchase', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { designId } = req.body;
+
+      if (!designId || typeof designId !== 'string') {
+        return res.status(400).json({ error: 'Invalid design ID' });
+      }
+
+      // Validate design exists
+      const design = CARD_DESIGNS[designId as CardDesignType];
+      if (!design) {
+        return res.status(404).json({ error: 'Card design not found' });
+      }
+
+      // Cannot purchase designs that are unlocked by default
+      if (design.unlockedByDefault) {
+        return res.status(400).json({ error: 'This design is already available to everyone' });
+      }
+
+      // Attempt purchase
+      const result = await storage.purchaseCardDesign(userId, designId, design.price);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          design: {
+            id: design.id,
+            name: design.name,
+            description: design.description
+          },
+          newBalance: result.newBalance
+        });
+      } else {
+        res.status(400).json({ error: result.error || 'Purchase failed' });
+      }
+    } catch (error: any) {
+      console.error('Error purchasing card design:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Equip a card design to a band
+  app.post('/api/rpg/bands/:id/equip-design', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bandId = req.params.id;
+      const { designId } = req.body;
+
+      if (!designId || typeof designId !== 'string') {
+        return res.status(400).json({ error: 'Invalid design ID' });
+      }
+
+      // Validate design exists
+      const design = CARD_DESIGNS[designId as CardDesignType];
+      if (!design) {
+        return res.status(404).json({ error: 'Card design not found' });
+      }
+
+      // Verify band belongs to user
+      const band = await storage.getBand(bandId);
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Equip the design
+      const result = await storage.equipCardDesign(bandId, designId);
+
+      if (result.success) {
+        const updatedBand = await storage.getBand(bandId);
+        res.json({
+          success: true,
+          band: updatedBand
+        });
+      } else {
+        res.status(400).json({ error: result.error || 'Failed to equip design' });
+      }
+    } catch (error: any) {
+      console.error('Error equipping card design:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
