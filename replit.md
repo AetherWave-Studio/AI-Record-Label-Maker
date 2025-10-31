@@ -1,8 +1,8 @@
-# AetherWave Studio - AI Music and Media Maker
+# AetherWave Studio - Unified AI Music, Media & RPG Platform
 
 ## Overview
 
-AetherWave Studio is an AI-powered application designed for music and media creation. It leverages AI for music generation (via SUNO through KIE.ai API), image generation with ttapi.io Midjourney, DALL-E 3, and Fal.ai Nano Banana, and AI video generation with Fal.ai Seedance. The platform features a 4-tier monetization model (Free, Studio, Creator, All Access) and a centralized credit system for resource consumption, with options for bundled credit purchases. The application aims to provide a professional-grade creative tool experience, drawing inspiration from platforms like Runway ML, Midjourney, and ElevenLabs.
+AetherWave Studio is a comprehensive creative platform combining AI-powered music and media creation with an immersive music industry simulation RPG (GhostMusician). The platform leverages AI for music generation (via SUNO through KIE.ai API), image generation with ttapi.io Midjourney, DALL-E 3, and Fal.ai Nano Banana, and AI video generation with Fal.ai Seedance. The integrated GhostMusician RPG allows users to create virtual artists/bands, build a record label empire, track metrics (FAME, streams, sales), and experience daily growth mechanics. The platform features a unified 5-tier monetization model (Free/$0, Studio/$9.99, Creator/$19.99, Producer/$49, Mogul/$99) with a shared credit system that powers both AI media generation and RPG gameplay actions. The application aims to provide a professional-grade creative tool experience with gamified progression, drawing inspiration from platforms like Runway ML, Midjourney, ElevenLabs, and music industry tycoon games.
 
 ## User Preferences
 
@@ -20,11 +20,54 @@ The backend is an Express.js application written in TypeScript, running on Node.
 
 ### Data Storage
 
-The project utilizes a serverless PostgreSQL database hosted on Neon, accessed via Drizzle ORM. The schema is defined in `shared/schema.ts` and managed with Drizzle Kit. Key tables include `users` (storing UUID, username, subscription plan, credits, vocal preferences, Stripe data) and `uploadedAudio`. Plan-based features and service credit costs are centrally defined.
+The project utilizes a serverless PostgreSQL database hosted on Neon, accessed via Drizzle ORM. The schema is defined in `shared/schema.ts` and managed with Drizzle Kit. 
+
+**Core Tables:**
+- `users`: UUID, username, subscription plan (free/studio/creator/producer/mogul), credits, vocal preferences, Stripe data
+- `uploadedAudio`: User-uploaded music files for RPG band creation
+- `quests`: Social media quest tracking for bonus credits
+
+**GhostMusician RPG Tables:**
+- `bands`: Virtual artist/band profiles with FAME, streams, sales metrics, trading card URLs, member details
+- `bandAchievements`: Gold/Platinum/Diamond record achievements
+- `dailyGrowthLog`: Historical growth tracking for each band
+
+Plan-based features, service credit costs, and RPG credit costs are centrally defined in `shared/schema.ts`.
 
 ### Authentication & Authorization
 
 Replit Auth provides OIDC-based authentication, with user accounts automatically created on first login. Session management is handled by `express-session` and `connect-pg-simple`, storing sessions in PostgreSQL. An `isAuthenticated` middleware protects all API routes, ensuring only authenticated users can access resources.
+
+### GhostMusician RPG System
+
+**Concept:**
+Users create virtual artists and bands, building a music industry empire with realistic metrics and gamified progression.
+
+**Core Features:**
+- **Band Creation** (15 credits): Create virtual artists with AI-generated profiles, backstories, and member details
+- **Daily Growth Mechanics**: Apply daily growth to bands (24-hour cooldown) to increase FAME, streams, and sales
+- **FAME System** (1-100 scale): Primary stat affecting growth rates and chart position
+- **Metrics Tracking**: Physical copies, digital downloads, total streams, chart position (0-100)
+- **Achievement System**: Gold (500K sales), Platinum (2M sales), Diamond (10M sales) - each provides FAME bonuses
+- **Tier-Based Multipliers**: Growth rates scale with subscription tier (1.0x Free → 3.0x Mogul)
+
+**Band Limits by Tier:**
+- Free: 2 bands
+- Studio: 7 bands
+- Creator: 17 bands
+- Producer/Mogul: Unlimited bands
+
+**RPG Credit Costs:**
+- Band Creation: 15 credits
+- Marketing Campaign: 10 credits
+- FAME Boost: 5 credits
+- Collaboration: 8 credits
+
+**Shared Credit System:**
+All credits work across both AI media generation and RPG features. Users can:
+- Generate AI music/images/videos with credits
+- Create and manage virtual bands with the same credits
+- Seamlessly switch between creative tools and RPG gameplay
 
 ## External Dependencies
 

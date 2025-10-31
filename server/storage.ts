@@ -1,4 +1,4 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { eq, and } from "drizzle-orm";
@@ -23,6 +23,41 @@ export interface IStorage {
   completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }>;
   // User preference operations
   updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined>;
+  
+  // ============================================================================
+  // GHOSTMUSICIAN RPG OPERATIONS
+  // ============================================================================
+  
+  // Band operations
+  createBand(band: InsertBand): Promise<Band>;
+  getUserBands(userId: string): Promise<Band[]>;
+  getBand(bandId: string): Promise<Band | undefined>;
+  updateBand(bandId: string, updates: Partial<Band>): Promise<Band | undefined>;
+  deleteBand(bandId: string): Promise<boolean>;
+  
+  // Daily growth operations
+  applyDailyGrowth(userId: string, bandId: string): Promise<{
+    success: boolean;
+    band?: Band;
+    growthApplied?: {
+      fameGrowth: number;
+      streamsAdded: number;
+      digitalAdded: number;
+      physicalAdded: number;
+    };
+    error?: string;
+  }>;
+  
+  // Achievement operations
+  checkAndAwardAchievements(bandId: string): Promise<BandAchievement[]>;
+  getBandAchievements(bandId: string): Promise<BandAchievement[]>;
+  
+  // RPG credit operations
+  deductRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditDeductionResult>;
+  checkRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditCheckResult>;
+  
+  // Band limit check
+  checkBandLimit(userId: string): Promise<{ allowed: boolean; current: number; limit: number | 'unlimited'; error?: string }>;
 }
 
 export class MemStorage implements IStorage {
@@ -244,6 +279,51 @@ export class MemStorage implements IStorage {
   async completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }> {
     // Stub implementation for MemStorage
     return { success: false, creditsAwarded: 0, error: 'Quest system not available in memory storage' };
+  }
+
+  // GhostMusician RPG stub implementations
+  async createBand(band: InsertBand): Promise<Band> {
+    throw new Error('GhostMusician RPG not available in memory storage');
+  }
+
+  async getUserBands(userId: string): Promise<Band[]> {
+    return [];
+  }
+
+  async getBand(bandId: string): Promise<Band | undefined> {
+    return undefined;
+  }
+
+  async updateBand(bandId: string, updates: Partial<Band>): Promise<Band | undefined> {
+    return undefined;
+  }
+
+  async deleteBand(bandId: string): Promise<boolean> {
+    return false;
+  }
+
+  async applyDailyGrowth(userId: string, bandId: string): Promise<{ success: boolean; band?: Band; growthApplied?: { fameGrowth: number; streamsAdded: number; digitalAdded: number; physicalAdded: number; }; error?: string; }> {
+    return { success: false, error: 'GhostMusician RPG not available in memory storage' };
+  }
+
+  async checkAndAwardAchievements(bandId: string): Promise<BandAchievement[]> {
+    return [];
+  }
+
+  async getBandAchievements(bandId: string): Promise<BandAchievement[]> {
+    return [];
+  }
+
+  async deductRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditDeductionResult> {
+    return { success: false, newBalance: 0, amountDeducted: 0, wasUnlimited: false, error: 'GhostMusician RPG not available in memory storage' };
+  }
+
+  async checkRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditCheckResult> {
+    return { allowed: false, reason: 'insufficient_credits', currentCredits: 0, requiredCredits: 0 };
+  }
+
+  async checkBandLimit(userId: string): Promise<{ allowed: boolean; current: number; limit: number | 'unlimited'; error?: string; }> {
+    return { allowed: false, current: 0, limit: 0, error: 'GhostMusician RPG not available in memory storage' };
   }
 }
 
@@ -552,6 +632,295 @@ export class DbStorage implements IStorage {
     return {
       success: true,
       creditsAwarded: creditsToAward
+    };
+  }
+
+  // ============================================================================
+  // GHOSTMUSICIAN RPG IMPLEMENTATIONS
+  // ============================================================================
+
+  async createBand(band: InsertBand): Promise<Band> {
+    const result = await this.db
+      .insert(bands)
+      .values(band)
+      .returning();
+    
+    return result[0];
+  }
+
+  async getUserBands(userId: string): Promise<Band[]> {
+    const result = await this.db
+      .select()
+      .from(bands)
+      .where(eq(bands.userId, userId));
+    
+    return result;
+  }
+
+  async getBand(bandId: string): Promise<Band | undefined> {
+    const result = await this.db
+      .select()
+      .from(bands)
+      .where(eq(bands.id, bandId))
+      .limit(1);
+    
+    return result[0];
+  }
+
+  async updateBand(bandId: string, updates: Partial<Band>): Promise<Band | undefined> {
+    const result = await this.db
+      .update(bands)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(bands.id, bandId))
+      .returning();
+    
+    return result[0];
+  }
+
+  async deleteBand(bandId: string): Promise<boolean> {
+    try {
+      await this.db
+        .delete(bands)
+        .where(eq(bands.id, bandId));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async applyDailyGrowth(userId: string, bandId: string): Promise<{
+    success: boolean;
+    band?: Band;
+    growthApplied?: {
+      fameGrowth: number;
+      streamsAdded: number;
+      digitalAdded: number;
+      physicalAdded: number;
+    };
+    error?: string;
+  }> {
+    const band = await this.getBand(bandId);
+    if (!band) {
+      return { success: false, error: 'Band not found' };
+    }
+
+    if (band.userId !== userId) {
+      return { success: false, error: 'Band does not belong to user' };
+    }
+
+    // Check if growth was already applied today
+    if (band.lastGrowthApplied) {
+      const lastGrowth = new Date(band.lastGrowthApplied);
+      const now = new Date();
+      const hoursSinceLastGrowth = (now.getTime() - lastGrowth.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursSinceLastGrowth < 24) {
+        return { success: false, error: 'Daily growth already applied today' };
+      }
+    }
+
+    // Get user to check subscription tier
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+
+    // Calculate growth based on FAME and tier multiplier
+    const { FAME_GROWTH_MULTIPLIERS, ACHIEVEMENT_MILESTONES } = await import('@shared/schema');
+    const tierMultiplier = FAME_GROWTH_MULTIPLIERS[user.subscriptionPlan as PlanType] || 1.0;
+    
+    // Check for achievement bonuses
+    const achievements = await this.getBandAchievements(bandId);
+    let achievementBonus = 0;
+    
+    const totalSales = band.physicalCopies + band.digitalDownloads + band.totalStreams;
+    if (totalSales >= ACHIEVEMENT_MILESTONES.diamond.salesRequired) {
+      achievementBonus = ACHIEVEMENT_MILESTONES.diamond.fameBonus;
+    } else if (totalSales >= ACHIEVEMENT_MILESTONES.platinum.salesRequired) {
+      achievementBonus = ACHIEVEMENT_MILESTONES.platinum.fameBonus;
+    } else if (totalSales >= ACHIEVEMENT_MILESTONES.gold.salesRequired) {
+      achievementBonus = ACHIEVEMENT_MILESTONES.gold.fameBonus;
+    }
+
+    const baseFameGrowth = tierMultiplier * (1 + achievementBonus);
+    const fameGrowth = Math.round(band.fame * 0.1 * baseFameGrowth); // 10% FAME growth per day, modified by tier and achievements
+    
+    // Calculate sales growth based on FAME (20x for streams, 1x for digital, 0.1x for physical)
+    const streamsAdded = Math.round(band.fame * 20 * tierMultiplier);
+    const digitalAdded = Math.round(band.fame * 1 * tierMultiplier);
+    const physicalAdded = Math.round(band.fame * 0.1 * tierMultiplier);
+
+    // Update band with growth
+    const updatedBand = await this.updateBand(bandId, {
+      fame: Math.min(band.fame + fameGrowth, 100), // Cap at 100
+      totalStreams: band.totalStreams + streamsAdded,
+      digitalDownloads: band.digitalDownloads + digitalAdded,
+      physicalCopies: band.physicalCopies + physicalAdded,
+      lastGrowthApplied: new Date(),
+    });
+
+    // Log the growth
+    await this.db.insert(dailyGrowthLog).values({
+      bandId,
+      userId,
+      fameGrowth,
+      streamsAdded,
+      digitalAdded,
+      physicalAdded,
+    });
+
+    // Check and award new achievements
+    await this.checkAndAwardAchievements(bandId);
+
+    return {
+      success: true,
+      band: updatedBand,
+      growthApplied: {
+        fameGrowth,
+        streamsAdded,
+        digitalAdded,
+        physicalAdded,
+      },
+    };
+  }
+
+  async checkAndAwardAchievements(bandId: string): Promise<BandAchievement[]> {
+    const band = await this.getBand(bandId);
+    if (!band) return [];
+
+    const existingAchievements = await this.getBandAchievements(bandId);
+    const existingTypes = new Set(existingAchievements.map(a => a.achievementType));
+    
+    const { ACHIEVEMENT_MILESTONES } = await import('@shared/schema');
+    const totalSales = band.physicalCopies + band.digitalDownloads + band.totalStreams;
+    
+    const newAchievements: BandAchievement[] = [];
+
+    // Check for Diamond
+    if (totalSales >= ACHIEVEMENT_MILESTONES.diamond.salesRequired && !existingTypes.has('diamond')) {
+      const result = await this.db
+        .insert(bandAchievements)
+        .values({ bandId, achievementType: 'diamond' })
+        .returning();
+      newAchievements.push(result[0]);
+    }
+    // Check for Platinum
+    else if (totalSales >= ACHIEVEMENT_MILESTONES.platinum.salesRequired && !existingTypes.has('platinum')) {
+      const result = await this.db
+        .insert(bandAchievements)
+        .values({ bandId, achievementType: 'platinum' })
+        .returning();
+      newAchievements.push(result[0]);
+    }
+    // Check for Gold
+    else if (totalSales >= ACHIEVEMENT_MILESTONES.gold.salesRequired && !existingTypes.has('gold')) {
+      const result = await this.db
+        .insert(bandAchievements)
+        .values({ bandId, achievementType: 'gold' })
+        .returning();
+      newAchievements.push(result[0]);
+    }
+
+    return newAchievements;
+  }
+
+  async getBandAchievements(bandId: string): Promise<BandAchievement[]> {
+    const result = await this.db
+      .select()
+      .from(bandAchievements)
+      .where(eq(bandAchievements.bandId, bandId));
+    
+    return result;
+  }
+
+  async deductRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditDeductionResult> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      return {
+        success: false,
+        newBalance: 0,
+        amountDeducted: 0,
+        wasUnlimited: false,
+        error: 'User not found'
+      };
+    }
+    
+    // Check if user has enough credits
+    const creditCost = RPG_CREDIT_COSTS[serviceType];
+    if (user.credits < creditCost) {
+      return {
+        success: false,
+        newBalance: user.credits,
+        amountDeducted: 0,
+        wasUnlimited: false,
+        error: `Insufficient credits. Need ${creditCost}, have ${user.credits}`
+      };
+    }
+    
+    // Deduct credits
+    const newBalance = user.credits - creditCost;
+    await this.updateUserCredits(userId, newBalance);
+    
+    return {
+      success: true,
+      newBalance,
+      amountDeducted: creditCost,
+      wasUnlimited: false
+    };
+  }
+
+  async checkRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditCheckResult> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      return {
+        allowed: false,
+        reason: 'insufficient_credits',
+        currentCredits: 0,
+        requiredCredits: RPG_CREDIT_COSTS[serviceType]
+      };
+    }
+    
+    const creditCost = RPG_CREDIT_COSTS[serviceType];
+    if (user.credits < creditCost) {
+      return {
+        allowed: false,
+        reason: 'insufficient_credits',
+        currentCredits: user.credits,
+        requiredCredits: creditCost,
+        planType: user.subscriptionPlan as PlanType
+      };
+    }
+    
+    return {
+      allowed: true,
+      reason: 'success',
+      currentCredits: user.credits,
+      requiredCredits: creditCost,
+      planType: user.subscriptionPlan as PlanType
+    };
+  }
+
+  async checkBandLimit(userId: string): Promise<{ allowed: boolean; current: number; limit: number | 'unlimited'; error?: string; }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { allowed: false, current: 0, limit: 0, error: 'User not found' };
+    }
+
+    const userBands = await this.getUserBands(userId);
+    const current = userBands.length;
+    const limit = BAND_LIMITS[user.subscriptionPlan as PlanType];
+
+    if (limit === 'unlimited') {
+      return { allowed: true, current, limit };
+    }
+
+    return {
+      allowed: current < limit,
+      current,
+      limit,
+      error: current >= limit ? `Band limit reached (${limit} bands)` : undefined
     };
   }
 }

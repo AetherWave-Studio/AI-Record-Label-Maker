@@ -2187,6 +2187,276 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============================================================================
+  // GHOSTMUSICIAN RPG ROUTES
+  // ============================================================================
+
+  // Get user's RPG stats (total bands, limits, credits, plan)
+  app.get('/api/rpg/stats', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const bands = await storage.getUserBands(userId);
+      const bandLimitCheck = await storage.checkBandLimit(userId);
+      
+      res.status(200).json({
+        plan: user.subscriptionPlan,
+        credits: user.credits,
+        totalBands: bands.length,
+        bandLimit: bandLimitCheck.limit,
+        canCreateBand: bandLimitCheck.allowed,
+        bands: bands.map(b => ({
+          id: b.id,
+          bandName: b.bandName,
+          genre: b.genre,
+          fame: b.fame,
+          totalStreams: b.totalStreams,
+          chartPosition: b.chartPosition,
+          lastGrowthApplied: b.lastGrowthApplied,
+        })),
+      });
+    } catch (error: any) {
+      console.error('Error fetching RPG stats:', error);
+      res.status(500).json({ error: 'Failed to fetch RPG stats' });
+    }
+  });
+
+  // Create a new virtual band
+  app.post('/api/rpg/bands', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Validate request body FIRST (before any credit operations)
+      const bandSchema = z.object({
+        bandName: z.string().min(1, 'Band name is required'),
+        genre: z.string().min(1, 'Genre is required'),
+        concept: z.string().optional(),
+        philosophy: z.string().optional(),
+        influences: z.array(z.string()).optional(),
+        colorPalette: z.array(z.string()).optional(),
+        members: z.any(), // JSONB field
+        audioFileId: z.string().optional(),
+        songTitle: z.string().optional(),
+      });
+
+      const validationResult = bandSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid band data', 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { bandName, genre, concept, philosophy, influences, colorPalette, members, audioFileId, songTitle } = validationResult.data;
+      
+      // Check band limit
+      const limitCheck = await storage.checkBandLimit(userId);
+      if (!limitCheck.allowed) {
+        return res.status(400).json({ error: limitCheck.error || 'Band limit reached' });
+      }
+
+      // Check and deduct credits BEFORE band creation (security-first, matching AetherWave pattern)
+      const creditCheck = await storage.checkRpgCredits(userId, 'band_creation');
+      if (!creditCheck.allowed) {
+        return res.status(400).json({ 
+          error: `Insufficient credits. Need ${creditCheck.requiredCredits}, have ${creditCheck.currentCredits}` 
+        });
+      }
+
+      const deduction = await storage.deductRpgCredits(userId, 'band_creation');
+      if (!deduction.success) {
+        return res.status(400).json({ error: deduction.error || 'Failed to deduct credits' });
+      }
+
+      // Create the band (with auto-refund on failure, matching AetherWave refund pattern)
+      let band;
+      try {
+        band = await storage.createBand({
+          userId,
+          bandName,
+          genre,
+          concept,
+          philosophy,
+          influences: influences || [],
+          colorPalette: colorPalette || [],
+          members,
+          audioFileId,
+          songTitle,
+        });
+      } catch (createError: any) {
+        // CRITICAL: Refund RPG credits if band creation fails
+        // RPG credits and media credits share the same user.credits column
+        const { RPG_CREDIT_COSTS } = await import('@shared/schema');
+        const refundAmount = RPG_CREDIT_COSTS.band_creation;
+        const user = await storage.getUser(userId);
+        if (user) {
+          await storage.updateUserCredits(userId, user.credits + refundAmount);
+          console.log(`Refunded ${refundAmount} credits to user ${userId} after band creation failure`);
+        }
+        console.error('Band creation failed, credits refunded:', createError);
+        return res.status(500).json({ error: 'Failed to create band. Credits have been refunded.' });
+      }
+
+      res.status(201).json({
+        success: true,
+        band,
+        creditsDeducted: deduction.amountDeducted,
+        newBalance: deduction.newBalance,
+      });
+    } catch (error: any) {
+      console.error('Error in band creation endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get all bands for the authenticated user
+  app.get('/api/rpg/bands', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bands = await storage.getUserBands(userId);
+      
+      res.status(200).json({ bands });
+    } catch (error: any) {
+      console.error('Error fetching bands:', error);
+      res.status(500).json({ error: 'Failed to fetch bands' });
+    }
+  });
+
+  // Get a specific band by ID
+  app.get('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Get achievements for this band
+      const achievements = await storage.getBandAchievements(bandId);
+
+      res.status(200).json({ band, achievements });
+    } catch (error: any) {
+      console.error('Error fetching band:', error);
+      res.status(500).json({ error: 'Failed to fetch band' });
+    }
+  });
+
+  // Update a band
+  app.put('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const updates = req.body;
+      const updatedBand = await storage.updateBand(bandId, updates);
+
+      res.status(200).json({ band: updatedBand });
+    } catch (error: any) {
+      console.error('Error updating band:', error);
+      res.status(500).json({ error: 'Failed to update band' });
+    }
+  });
+
+  // Delete a band
+  app.delete('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const success = await storage.deleteBand(bandId);
+
+      if (success) {
+        res.status(200).json({ success: true, message: 'Band deleted successfully' });
+      } else {
+        res.status(500).json({ error: 'Failed to delete band' });
+      }
+    } catch (error: any) {
+      console.error('Error deleting band:', error);
+      res.status(500).json({ error: 'Failed to delete band' });
+    }
+  });
+
+  // Apply daily growth to a band
+  app.post('/api/rpg/bands/:id/daily-growth', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bandId = req.params.id;
+
+      const result = await storage.applyDailyGrowth(userId, bandId);
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      res.status(200).json({
+        success: true,
+        band: result.band,
+        growthApplied: result.growthApplied,
+        message: 'Daily growth applied successfully!'
+      });
+    } catch (error: any) {
+      console.error('Error applying daily growth:', error);
+      res.status(500).json({ error: 'Failed to apply daily growth' });
+    }
+  });
+
+  // Get band achievements
+  app.get('/api/rpg/bands/:id/achievements', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const achievements = await storage.getBandAchievements(bandId);
+
+      res.status(200).json({ achievements });
+    } catch (error: any) {
+      console.error('Error fetching achievements:', error);
+      res.status(500).json({ error: 'Failed to fetch achievements' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
