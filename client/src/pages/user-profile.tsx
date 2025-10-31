@@ -10,18 +10,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { ArrowLeft, User, Music, Trophy, Play, Star, Users, Crown, Zap, Coins, Camera, Upload } from "lucide-react";
-import type { User as UserType, ArtistCard, Release } from "@shared/schema";
+import { ArrowLeft, User, Music, Trophy, Play, Star, Users, Crown, Zap, Coins, Camera, Upload, TrendingUp, Disc, Store } from "lucide-react";
+import type { User as UserType, Band, PlanType } from "@shared/schema";
+import { PLAN_DISPLAY_NAMES, BAND_LIMITS } from "@shared/schema";
 
 interface UserStats {
-  totalCards: number;
-  totalReleases: number;
+  totalBands: number;
   totalStreams: number;
-  fame: number;
-  level: string;
-  experience: number;
-  influence: number;
+  totalSales: number;
+  averageFame: number;
+  highestChartPosition: number;
   credits: number;
+  subscriptionPlan: PlanType;
+  bandLimit: number | 'unlimited';
 }
 
 export function UserProfile() {
@@ -45,66 +46,47 @@ export function UserProfile() {
     enabled: !!userId,
   });
 
-  // Fetch user's artist cards
-  const { data: userCards, isLoading: cardsLoading } = useQuery<ArtistCard[]>({
-    queryKey: [`/api/users/${userId}/cards`],
-    enabled: !!userId,
-  });
-
-  // Fetch user's releases
-  const { data: userReleases, isLoading: releasesLoading } = useQuery<Release[]>({
-    queryKey: [`/api/users/${userId}/releases`],
-    enabled: !!userId,
+  // Fetch user's bands
+  const { data: userBands, isLoading: bandsLoading } = useQuery<Band[]>({
+    queryKey: [`/api/bands`],
+    enabled: !!userId && isAuthenticated,
+    select: (bands) => bands.filter(band => band.userId === userId),
   });
 
   const isOwnProfile = currentUser?.id === userId;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch credits for own profile only
-  const { data: creditData } = useQuery({
-    queryKey: ["/api/credits"],
-    retry: false,
-    enabled: isAuthenticated && isOwnProfile,
-  });
-  const isLoading = userLoading || cardsLoading || releasesLoading;
+  const isLoading = userLoading || bandsLoading;
 
-  // Calculate user stats
+  // Calculate user stats from bands
   const userStats: UserStats = {
-    totalCards: userCards?.length || 0,
-    totalReleases: userReleases?.length || 0,
-    totalStreams: user?.totalStreams || 0,
-    fame: user?.fame || 1,
-    level: user?.level || "Fan",
-    experience: user?.experience || 0,
-    influence: user?.influence || 0,
-    credits: isOwnProfile ? ((creditData as any)?.credits || 0) : 0,
+    totalBands: userBands?.length || 0,
+    totalStreams: userBands?.reduce((sum, band) => sum + (band.totalStreams || 0), 0) || 0,
+    totalSales: userBands?.reduce((sum, band) => sum + (band.physicalCopies || 0) + (band.digitalDownloads || 0), 0) || 0,
+    averageFame: userBands?.length ? Math.round(userBands.reduce((sum, band) => sum + (band.fame || 0), 0) / userBands.length) : 0,
+    highestChartPosition: userBands?.length ? Math.min(...userBands.map(band => band.chartPosition || 100)) : 100,
+    credits: user?.credits || 0,
+    subscriptionPlan: (user?.subscriptionPlan as PlanType) || 'free',
+    bandLimit: user ? BAND_LIMITS[(user.subscriptionPlan as PlanType) || 'free'] : 0,
   };
 
-  // Get level progress
-  const getLevelProgress = (level: string, experience: number) => {
-    const levels = {
-      "Fan": { min: 0, max: 100 },
-      "Artist": { min: 100, max: 500 },
-      "Producer": { min: 500, max: 2000 },
-      "A&R": { min: 2000, max: 5000 },
-      "Label Executive": { min: 5000, max: 10000 }
-    };
-    
-    const currentLevel = levels[level as keyof typeof levels] || levels.Fan;
-    const progress = Math.min(((experience - currentLevel.min) / (currentLevel.max - currentLevel.min)) * 100, 100);
-    return Math.max(progress, 0);
-  };
-
-  const getLevelIcon = (level: string) => {
-    switch (level) {
-      case "Fan": return <User className="h-5 w-5" />;
-      case "Artist": return <Music className="h-5 w-5" />;
-      case "Producer": return <Zap className="h-5 w-5" />;
-      case "A&R": return <Users className="h-5 w-5" />;
-      case "Label Executive": return <Crown className="h-5 w-5" />;
+  // Get subscription tier icon
+  const getPlanIcon = (plan: PlanType) => {
+    switch (plan) {
+      case "free": return <User className="h-5 w-5" />;
+      case "studio": return <Music className="h-5 w-5" />;
+      case "creator": return <Zap className="h-5 w-5" />;
+      case "producer": return <Users className="h-5 w-5" />;
+      case "mogul": return <Crown className="h-5 w-5" />;
       default: return <User className="h-5 w-5" />;
     }
+  };
+  
+  // Calculate band capacity usage
+  const getBandCapacityProgress = () => {
+    if (userStats.bandLimit === 'unlimited') return 0;
+    return (userStats.totalBands / (userStats.bandLimit as number)) * 100;
   };
 
   const getRarityColor = (rarity: string) => {
@@ -204,16 +186,6 @@ export function UserProfile() {
                   </AvatarFallback>
                 </Avatar>
                 
-                {/* Profile Image Upload Button - Only on own profile */}
-                {isOwnProfile && (
-                  <ProfileImageUpload 
-                    subscriptionTier={user.subscriptionTier || "Free"}
-                    canUploadProfileImages={user.canUploadProfileImages || false}
-                    onImageUpdated={() => {
-                      queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}`] });
-                    }}
-                  />
-                )}
               </div>
 
               {/* User Info */}
@@ -232,17 +204,19 @@ export function UserProfile() {
                     )}
                   </div>
                   
-                  {/* Level and Progress */}
+                  {/* Subscription Tier and Stats */}
                   <div className="flex items-center gap-4 mb-4 flex-wrap">
-                    <div
-                      className="flex items-center gap-2 bg-gradient-to-r from-sky-glint/10 to-electric-neon/10 px-4 py-2 rounded-xl border border-sky-glint/30 backdrop-blur-sm"
-                      style={{
-                        boxShadow: '0 4px 16px rgba(166, 239, 255, 0.1)',
-                      }}
-                    >
-                      {getLevelIcon(userStats.level)}
-                      <span className="font-headline font-bold text-sky-glint">{userStats.level}</span>
-                    </div>
+                    <Link href="/upgrade">
+                      <div
+                        className="flex items-center gap-2 bg-gradient-to-r from-sky-glint/10 to-electric-neon/10 px-4 py-2 rounded-xl border border-sky-glint/30 backdrop-blur-sm hover:border-sky-glint cursor-pointer transition-all"
+                        style={{
+                          boxShadow: '0 4px 16px rgba(166, 239, 255, 0.1)',
+                        }}
+                      >
+                        {getPlanIcon(userStats.subscriptionPlan)}
+                        <span className="font-headline font-bold text-sky-glint">{PLAN_DISPLAY_NAMES[userStats.subscriptionPlan]}</span>
+                      </div>
+                    </Link>
                     <div
                       className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-xl border border-amber-400/30 backdrop-blur-sm"
                       style={{
@@ -250,45 +224,55 @@ export function UserProfile() {
                       }}
                     >
                       <Star className="h-4 w-4 text-amber-400" />
-                      <span className="text-white-smoke font-bold">{userStats.fame}</span>
-                      <span className="text-soft-gray text-sm font-semibold">FAME</span>
+                      <span className="text-white-smoke font-bold">{userStats.averageFame}</span>
+                      <span className="text-soft-gray text-sm font-semibold">AVG FAME</span>
                     </div>
                     {isOwnProfile && (
-                      <div
-                        className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-xl border border-amber-400/30 backdrop-blur-sm"
-                        style={{
-                          boxShadow: '0 4px 16px rgba(251, 191, 36, 0.1)',
-                        }}
-                      >
-                        <Coins className="h-4 w-4 text-amber-400" />
-                        <span className="text-white-smoke font-bold">{userStats.credits}</span>
-                        <span className="text-soft-gray text-sm font-semibold">CREDITS</span>
-                      </div>
+                      <>
+                        <div
+                          className="flex items-center gap-2 bg-amber-500/10 px-4 py-2 rounded-xl border border-amber-400/30 backdrop-blur-sm"
+                          style={{
+                            boxShadow: '0 4px 16px rgba(251, 191, 36, 0.1)',
+                          }}
+                        >
+                          <Coins className="h-4 w-4 text-amber-400" />
+                          <span className="text-white-smoke font-bold">{userStats.credits}</span>
+                          <span className="text-soft-gray text-sm font-semibold">CREDITS</span>
+                        </div>
+                        <Link href="/buy-credits">
+                          <Button size="sm" variant="outline" className="gap-2">
+                            <Store className="h-4 w-4" />
+                            Buy Credits
+                          </Button>
+                        </Link>
+                      </>
                     )}
                   </div>
 
-                  {/* Experience Progress */}
+                  {/* Band Capacity */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-soft-gray">Experience: {userStats.experience} XP</span>
-                      <span className="text-soft-gray">Influence: {userStats.influence}</span>
+                      <span className="text-soft-gray">Bands: {userStats.totalBands} / {userStats.bandLimit === 'unlimited' ? '∞' : userStats.bandLimit}</span>
+                      <span className="text-soft-gray">Chart Peak: #{userStats.highestChartPosition}</span>
                     </div>
-                    <Progress 
-                      value={getLevelProgress(userStats.level, userStats.experience)} 
-                      className="h-2"
-                    />
+                    {userStats.bandLimit !== 'unlimited' && (
+                      <Progress 
+                        value={getBandCapacityProgress()} 
+                        className="h-2"
+                      />
+                    )}
                   </div>
                 </div>
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-sky-glint">{userStats.totalCards}</div>
-                    <div className="text-xs text-soft-gray">Artists Created</div>
+                    <div className="text-2xl font-bold text-sky-glint">{userStats.totalBands}</div>
+                    <div className="text-xs text-soft-gray">Virtual Bands</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-electric-blue">{userStats.totalReleases}</div>
-                    <div className="text-xs text-soft-gray">Songs Released</div>
+                    <div className="text-2xl font-bold text-electric-blue">{userStats.totalSales.toLocaleString()}</div>
+                    <div className="text-xs text-soft-gray">Total Sales</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-yellow-400">{userStats.totalStreams.toLocaleString()}</div>
