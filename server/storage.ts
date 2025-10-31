@@ -1019,7 +1019,33 @@ export class DbStorage implements IStorage {
 
     // Calculate growth based on FAME and tier multiplier
     const { FAME_GROWTH_MULTIPLIERS, ACHIEVEMENT_MILESTONES } = await import('@shared/schema');
-    const tierMultiplier = FAME_GROWTH_MULTIPLIERS[user.subscriptionPlan as PlanType] || 1.0;
+    let tierMultiplier = FAME_GROWTH_MULTIPLIERS[user.subscriptionPlan as PlanType] || 1.0;
+    
+    // Check for manager and producer bonuses from inventory
+    const inventory = await this.getUserInventory(userId);
+    let managerMultiplier = 1.0;
+    let producerMultiplier = 1.0;
+    
+    for (const item of inventory) {
+      if (item.isActive) {
+        // Fetch the product to get its productData
+        const product = await this.getProduct(item.productId);
+        if (product && product.productData) {
+          const data = product.productData as any;
+          // Manager provides experience/sales multiplier
+          if (data.type === 'manager' && data.experienceMultiplier) {
+            managerMultiplier = Math.max(managerMultiplier, data.experienceMultiplier);
+          }
+          // Producer provides FAME growth multiplier
+          if (data.type === 'producer' && data.fameMultiplier) {
+            producerMultiplier = Math.max(producerMultiplier, data.fameMultiplier);
+          }
+        }
+      }
+    }
+    
+    // Apply manager multiplier to tier multiplier (affects sales)
+    tierMultiplier = tierMultiplier * managerMultiplier;
     
     // Check for achievement bonuses
     const achievements = await this.getBandAchievements(bandId);
@@ -1034,8 +1060,9 @@ export class DbStorage implements IStorage {
       achievementBonus = ACHIEVEMENT_MILESTONES.gold.fameBonus;
     }
 
-    const baseFameGrowth = tierMultiplier * (1 + achievementBonus);
-    const fameGrowth = Math.round(band.fame * 0.1 * baseFameGrowth); // 10% FAME growth per day, modified by tier and achievements
+    // Apply producer multiplier to FAME growth
+    const baseFameGrowth = tierMultiplier * (1 + achievementBonus) * producerMultiplier;
+    const fameGrowth = Math.round(band.fame * 0.1 * baseFameGrowth); // 10% FAME growth per day, modified by tier, achievements, and producer
     
     // Calculate sales growth based on FAME (20x for streams, 1x for digital, 0.1x for physical)
     const streamsAdded = Math.round(band.fame * 20 * tierMultiplier);
