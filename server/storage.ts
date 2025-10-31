@@ -1,4 +1,4 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS, type FeedEvent, type InsertFeedEvent, feedEvents, ownedCardDesigns, type OwnedCardDesign } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS, type FeedEvent, type InsertFeedEvent, feedEvents, ownedCardDesigns, type OwnedCardDesign, type Product, type InsertProduct, products, type UserInventory, type InsertUserInventory, userInventory } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { eq, and, desc } from "drizzle-orm";
@@ -92,6 +92,28 @@ export interface IStorage {
   // Equip a card design to a specific band
   equipCardDesign(bandId: string, designId: string): Promise<{
     success: boolean;
+    error?: string;
+  }>;
+  
+  // ============================================================================
+  // MARKETPLACE OPERATIONS
+  // ============================================================================
+  
+  // Get all products (optionally filtered by category)
+  getProducts(category?: string): Promise<Product[]>;
+  
+  // Get a single product by ID
+  getProduct(productId: string): Promise<Product | undefined>;
+  
+  // Get user's inventory
+  getUserInventory(userId: string): Promise<UserInventory[]>;
+  
+  // Purchase a product
+  purchaseProduct(userId: string, productId: string, quantity?: number): Promise<{
+    success: boolean;
+    product?: Product;
+    newBalance?: number;
+    totalCost?: number;
     error?: string;
   }>;
 }
@@ -423,6 +445,29 @@ export class MemStorage implements IStorage {
 
   async equipCardDesign(bandId: string, designId: string): Promise<{ success: boolean; error?: string; }> {
     return { success: false, error: 'Card design system not available in memory storage' };
+  }
+  
+  // Marketplace operations (stubs for MemStorage)
+  async getProducts(category?: string): Promise<Product[]> {
+    return [];
+  }
+  
+  async getProduct(productId: string): Promise<Product | undefined> {
+    return undefined;
+  }
+  
+  async getUserInventory(userId: string): Promise<UserInventory[]> {
+    return [];
+  }
+  
+  async purchaseProduct(userId: string, productId: string, quantity: number = 1): Promise<{
+    success: boolean;
+    product?: Product;
+    newBalance?: number;
+    totalCost?: number;
+    error?: string;
+  }> {
+    return { success: false, error: 'Marketplace not available in memory storage' };
   }
 }
 
@@ -1260,6 +1305,116 @@ export class DbStorage implements IStorage {
     } catch (error) {
       console.error('Error equipping card design:', error);
       return { success: false, error: 'Failed to equip card design' };
+    }
+  }
+  
+  // ============================================================================
+  // MARKETPLACE OPERATIONS
+  // ============================================================================
+  
+  async getProducts(category?: string): Promise<Product[]> {
+    let query = this.db.select().from(products).where(eq(products.isActive, 1));
+    
+    if (category) {
+      return await this.db.select().from(products)
+        .where(and(eq(products.isActive, 1), eq(products.category, category)));
+    }
+    
+    return await query;
+  }
+  
+  async getProduct(productId: string): Promise<Product | undefined> {
+    const result = await this.db.select().from(products)
+      .where(eq(products.id, productId))
+      .limit(1);
+    return result[0];
+  }
+  
+  async getUserInventory(userId: string): Promise<UserInventory[]> {
+    return await this.db.select().from(userInventory)
+      .where(eq(userInventory.userId, userId));
+  }
+  
+  async purchaseProduct(userId: string, productId: string, quantity: number = 1): Promise<{
+    success: boolean;
+    product?: Product;
+    newBalance?: number;
+    totalCost?: number;
+    error?: string;
+  }> {
+    // Get product
+    const product = await this.getProduct(productId);
+    if (!product) {
+      return { success: false, error: 'Product not found' };
+    }
+    
+    // Check if product is active
+    if (!product.isActive) {
+      return { success: false, error: 'This product is no longer available' };
+    }
+    
+    // Calculate total cost
+    const totalCost = product.price * quantity;
+    
+    // Check user has enough credits
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+    
+    if (user.credits < totalCost) {
+      return {
+        success: false,
+        error: `Insufficient credits. Need ${totalCost}, have ${user.credits}`
+      };
+    }
+    
+    // Check stock if limited
+    if (product.stock !== null && product.stock < quantity) {
+      return { success: false, error: 'Insufficient stock' };
+    }
+    
+    try {
+      // Deduct credits
+      const updatedUser = await this.updateUserCredits(userId, user.credits - totalCost);
+      if (!updatedUser) {
+        return { success: false, error: 'Failed to deduct credits' };
+      }
+      
+      // Check if user already owns this product (for stackable items)
+      const inventory = await this.getUserInventory(userId);
+      const existingItem = inventory.find(i => i.productId === productId);
+      
+      if (existingItem) {
+        // Update quantity for stackable items
+        await this.db.update(userInventory)
+          .set({ quantity: existingItem.quantity + quantity })
+          .where(eq(userInventory.id, existingItem.id));
+      } else {
+        // Add new inventory item
+        await this.db.insert(userInventory).values({
+          userId,
+          productId,
+          quantity,
+        });
+      }
+      
+      // Decrease stock if limited
+      if (product.stock !== null) {
+        await this.db.update(products)
+          .set({ stock: product.stock - quantity })
+          .where(eq(products.id, productId));
+      }
+      
+      return {
+        success: true,
+        product,
+        newBalance: updatedUser.credits,
+        totalCost
+      };
+    } catch (error) {
+      console.error('Error purchasing product:', error);
+      return { success: false, error: 'Failed to purchase product' };
     }
   }
 }
