@@ -99,12 +99,12 @@ export default function Gallery() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
-              <Link href="/">
+              <a href="/">
                 <Button variant="ghost" size="sm" data-testid="button-back-home">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Home
                 </Button>
-              </Link>
+              </a>
               <div className="flex items-center space-x-3">
                 <div className="bg-gradient-to-r from-sky-glint to-electric-blue p-3 rounded-lg">
                   <Music className="text-deep-slate" size={24} />
@@ -235,11 +235,11 @@ export default function Gallery() {
                   Clear all filters
                 </Button>
               ) : (
-                <Link href="/">
+                <a href="/">
                   <Button variant="outline">
                     Create your first artist
                   </Button>
-                </Link>
+                </a>
               )}
             </div>
           ) : viewMode === "grid" ? (

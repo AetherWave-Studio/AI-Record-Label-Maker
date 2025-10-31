@@ -6128,5 +6128,32 @@ updateMediaInputs();
     </div>
   </div>
 
+  <!-- React SPA Mount Point -->
+  <div id="root"></div>
+
+  <script type="module">
+    // Detect if this is a React SPA route
+    const isReactRoute = window.location.pathname.startsWith('/ghost-musician') ||
+                          window.location.pathname.startsWith('/upgrade') ||
+                          window.location.pathname.startsWith('/buy-credits') ||
+                          window.location.pathname.startsWith('/store') ||
+                          window.location.pathname.startsWith('/video-generation');
+    
+    if (isReactRoute) {
+      // Hide the AetherWave UI for React routes
+      const bgContainer = document.querySelector('.bg-container');
+      const appContainer = document.getElementById('app-container');
+      if (bgContainer) bgContainer.style.display = 'none';
+      if (appContainer) appContainer.style.display = 'none';
+      
+      // Load the React SPA
+      import('/src/main.tsx');
+    } else {
+      // Remove the React root for AetherWave routes
+      const root = document.getElementById('root');
+      if (root) root.remove();
+    }
+  </script>
+
 </body>
 </html>

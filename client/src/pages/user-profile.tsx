@@ -122,12 +122,12 @@ export function UserProfile() {
               <p className="text-soft-gray mb-6">
                 The user profile you're looking for doesn't exist or has been removed.
               </p>
-              <Link href="/">
+              <a href="/">
                 <Button variant="outline" data-testid="button-back-home">
                   <ArrowLeft className="h-4 w-4 mr-2" />
                   Back to Home
                 </Button>
-              </Link>
+              </a>
             </CardContent>
           </Card>
         </div>
@@ -141,12 +141,21 @@ export function UserProfile() {
       <header className="p-6">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-            <Link href={isOwnProfile ? "/" : "/gallery"}>
-              <button className="flex items-center gap-2 px-4 py-2 bg-black/70 backdrop-blur-2xl rounded-full border border-white/5 text-soft-gray hover:text-white-smoke hover:border-sky-glint/30 transition-all">
-                <ArrowLeft className="h-4 w-4" />
-                <span className="text-sm font-semibold">Back</span>
-              </button>
-            </Link>
+            {isOwnProfile ? (
+              <a href="/">
+                <button className="flex items-center gap-2 px-4 py-2 bg-black/70 backdrop-blur-2xl rounded-full border border-white/5 text-soft-gray hover:text-white-smoke hover:border-sky-glint/30 transition-all">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Back</span>
+                </button>
+              </a>
+            ) : (
+              <Link href="/gallery">
+                <button className="flex items-center gap-2 px-4 py-2 bg-black/70 backdrop-blur-2xl rounded-full border border-white/5 text-soft-gray hover:text-white-smoke hover:border-sky-glint/30 transition-all">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="text-sm font-semibold">Back</span>
+                </button>
+              </Link>
+            )}
           </div>
 
           {/* User Hero Section - Premium Black Glass */}

@@ -20,7 +20,7 @@ export default function UserNavigation({ onShowMyCards, onShowAuth }: UserNaviga
   const logoutMutation = useLogout();
   
   // Fetch user credit balance
-  const { data: creditData } = useQuery({
+  const { data: creditData } = useQuery<{ credits: number }>({
     queryKey: ["/api/credits"],
     retry: false,
     enabled: isAuthenticated,

@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface User {
   id: string;
@@ -33,4 +34,17 @@ export function useAuth() {
     isLoading,
     isAuthenticated: !!authData?.user,
   };
+}
+
+export function useLogout() {
+  return useMutation({
+    mutationFn: async () => {
+      return apiRequest("POST", "/api/auth/logout");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/credits"] });
+      window.location.href = "/";
+    },
+  });
 }

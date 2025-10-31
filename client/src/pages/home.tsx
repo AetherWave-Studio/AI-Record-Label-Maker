@@ -115,7 +115,7 @@ export default function Home() {
         <div className="container mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/">
+            <a href="/">
               <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-aetherwave-pink to-electric-neon flex items-center justify-center font-bold text-white shadow-lg">
                   A
@@ -124,7 +124,7 @@ export default function Home() {
                   AetherWave
                 </span>
               </div>
-            </Link>
+            </a>
 
             {/* Search Bar */}
             <div className="hidden md:flex flex-1 max-w-xl mx-8">
@@ -290,12 +290,12 @@ export default function Home() {
       {/* Quick Action Bar - Mobile Alternative */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-charcoal/95 backdrop-blur-sm border-t border-sky-glint/20 z-40">
         <div className="flex items-center justify-around p-3">
-          <Link href="/">
+          <a href="/">
             <button className="flex flex-col items-center gap-1 text-sky-glint">
               <Music size={24} />
               <span className="text-xs">Feed</span>
             </button>
-          </Link>
+          </a>
           <Link href="/gallery">
             <button className="flex flex-col items-center gap-1 text-soft-gray hover:text-white-smoke">
               <Search size={24} />
