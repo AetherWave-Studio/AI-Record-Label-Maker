@@ -575,3 +575,64 @@ export const ownedCardDesigns = pgTable("owned_card_designs", {
 });
 
 export type OwnedCardDesign = typeof ownedCardDesigns.$inferSelect;
+
+// ============================================================================
+// MARKETPLACE SYSTEM
+// ============================================================================
+
+// Product categories
+export const ProductCategory = z.enum([
+  'card_themes',
+  'premium_features', 
+  'profile_items',
+  'sound_packs',
+  'collectibles'
+]);
+export type ProductCategory = z.infer<typeof ProductCategory>;
+
+// Product rarities
+export const ProductRarity = z.enum(['Common', 'Rare', 'Epic', 'Legendary']);
+export type ProductRarity = z.infer<typeof ProductRarity>;
+
+// Products table - All marketplace items
+export const products = pgTable("products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name").notNull(),
+  description: text("description").notNull(),
+  category: varchar("category").notNull(), // ProductCategory
+  price: integer("price").notNull(), // Credit cost
+  imageUrl: varchar("image_url"), // Optional preview image
+  productData: jsonb("product_data"), // Category-specific data (multipliers, etc.)
+  rarity: varchar("rarity").notNull().default('Common'), // ProductRarity
+  requiredLevel: varchar("required_level").default('Fan'), // Minimum FAME tier
+  subscriptionTierRequired: varchar("subscription_tier_required"), // Optional tier gate
+  isActive: integer("is_active").default(1).notNull(), // 1 = available, 0 = hidden
+  stock: integer("stock"), // null = unlimited, number = limited stock
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Product = typeof products.$inferSelect;
+
+// User inventory table - Track purchased items
+export const userInventory = pgTable("user_inventory", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  productId: varchar("product_id").notNull().references(() => products.id),
+  quantity: integer("quantity").default(1).notNull(), // For stackable items
+  isActive: integer("is_active").default(1).notNull(), // 1 = equipped/active, 0 = owned but inactive
+  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+});
+
+export const insertUserInventorySchema = createInsertSchema(userInventory).omit({
+  id: true,
+  purchasedAt: true,
+});
+
+export type InsertUserInventory = z.infer<typeof insertUserInventorySchema>;
+export type UserInventory = typeof userInventory.$inferSelect;
