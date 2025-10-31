@@ -226,12 +226,12 @@ export default function Upgrade() {
                       </Button>
                     ) : isFree ? (
                       <Button 
-                        disabled
+                        onClick={() => handleUpgrade(tier.name)}
                         variant="outline"
-                        className="w-full border-gray-600 text-gray-400"
-                        data-testid="free-tier-button"
+                        className="w-full border-slate-700 hover:bg-slate-800 hover:text-white"
+                        data-testid="downgrade-button-fan"
                       >
-                        {currentPlanId === 'free' ? 'Your Current Plan' : 'Free Tier'}
+                        Downgrade to Free
                       </Button>
                     ) : (
                       <Button 
