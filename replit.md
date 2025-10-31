@@ -23,7 +23,7 @@ The backend is an Express.js application written in TypeScript, running on Node.
 The project utilizes a serverless PostgreSQL database hosted on Neon, accessed via Drizzle ORM. The schema is defined in `shared/schema.ts` and managed with Drizzle Kit. 
 
 **Core Tables:**
-- `users`: UUID, username, subscription plan (free/studio/creator/producer/mogul), credits, vocal preferences, Stripe data
+- `users`: UUID, username, subscription plan (free/studio/creator/producer/mogul), credits, freeBandGenerations (3 free bands for all users), vocal preferences, Stripe data
 - `uploadedAudio`: User-uploaded music files for RPG band creation
 - `quests`: Social media quest tracking for bonus credits
 
@@ -43,8 +43,11 @@ Replit Auth provides OIDC-based authentication, with user accounts automatically
 **Concept:**
 Users create virtual artists and bands, building a music industry empire with realistic metrics and gamified progression.
 
+**Unified Profile System:**
+All users, whether they came for AI media generation or the RPG game, receive a unified profile on the GhostMusician platform with 3 free band generations. This ensures everyone can experience the RPG without spending credits initially.
+
 **Core Features:**
-- **Band Creation** (15 credits): Create virtual artists with AI-generated profiles, backstories, and member details
+- **Band Creation**: First 3 bands are FREE for all users. Additional bands cost 15 credits each. Create virtual artists with AI-generated profiles, backstories, and member details
 - **Daily Growth Mechanics**: Apply daily growth to bands (24-hour cooldown) to increase FAME, streams, and sales
 - **FAME System** (1-100 scale): Primary stat affecting growth rates and chart position
 - **Metrics Tracking**: Physical copies, digital downloads, total streams, chart position (0-100)
@@ -57,8 +60,15 @@ Users create virtual artists and bands, building a music industry empire with re
 - Creator: 17 bands
 - Producer/Mogul: Unlimited bands
 
-**RPG Credit Costs:**
-- Band Creation: 15 credits
+**Free Band Generation System:**
+- Every user gets **3 free band generations** (no credit cost)
+- Free bands are tracked separately from credits in the `freeBandGenerations` column
+- After using all 3 free generations, bands cost 15 credits each
+- If band creation fails, free generations are automatically refunded
+- Displayed in user profile modal and throughout the GhostMusician interface
+
+**RPG Credit Costs (After Free Generations):**
+- Band Creation: 15 credits (first 3 are FREE)
 - Marketing Campaign: 10 credits
 - FAME Boost: 5 credits
 - Collaboration: 8 credits
@@ -66,7 +76,7 @@ Users create virtual artists and bands, building a music industry empire with re
 **Shared Credit System:**
 All credits work across both AI media generation and RPG features. Users can:
 - Generate AI music/images/videos with credits
-- Create and manage virtual bands with the same credits
+- Create and manage virtual bands with the same credits (after using 3 free generations)
 - Seamlessly switch between creative tools and RPG gameplay
 
 ## External Dependencies
