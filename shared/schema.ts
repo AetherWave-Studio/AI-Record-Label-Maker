@@ -132,13 +132,22 @@ export const FREE_TIER_CREDIT_CAP = 50;    // Max 50 credits (quest rewards can 
 export const PlanType = z.enum(['free', 'studio', 'creator', 'producer', 'mogul']);
 export type PlanType = z.infer<typeof PlanType>;
 
+// Display names for subscription tiers
+export const PLAN_DISPLAY_NAMES: Record<PlanType, string> = {
+  free: 'Fan',
+  studio: 'Studio Pass',
+  creator: 'Artist',
+  producer: 'Record Label',
+  mogul: 'Mogul',
+};
+
 // Unified subscription pricing (monthly)
 export const PLAN_PRICING: Record<PlanType, number> = {
   free: 0,
-  studio: 9.99,
-  creator: 19.99,
-  producer: 49,
-  mogul: 99,
+  studio: 4.99,
+  creator: 9.99,
+  producer: 19.99,
+  mogul: 49.99,
 };
 
 // Video resolution options
