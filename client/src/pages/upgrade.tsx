@@ -3,70 +3,92 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Crown, Music, Users, Sparkles, Zap } from "lucide-react";
+import { PLAN_DISPLAY_NAMES, PLAN_PRICING, BAND_LIMITS, type PlanType } from "@shared/schema";
 
 const SUBSCRIPTION_TIERS = [
   {
-    name: "Free",
-    price: "$0",
-    bandLimit: 3,
+    id: 'free' as PlanType,
+    name: PLAN_DISPLAY_NAMES.free,
+    price: `$${PLAN_PRICING.free}`,
+    bandLimit: BAND_LIMITS.free,
     features: [
-      "3 AI-generated bands",
+      "2 virtual bands",
+      "3 FREE band generations",
       "Basic artist profiles",
-      "Standard audio analysis",
-      "Community gallery access"
+      "10 credits per day (capped at 50)",
+      "Community activity feed"
     ],
     icon: Music,
     current: true
   },
   {
-    name: "Tier 2",
-    price: "$9.99",
+    id: 'studio' as PlanType,
+    name: PLAN_DISPLAY_NAMES.studio,
+    price: `$${PLAN_PRICING.studio}`,
     period: "/month",
-    bandLimit: 10,
+    bandLimit: BAND_LIMITS.studio,
     features: [
-      "10 AI-generated bands",
-      "1,000 credits monthly",
+      "7 virtual bands",
+      "Unlimited music generation",
       "Enhanced artist profiles",
-      "Advanced audio analysis",
+      "1.5x FAME growth multiplier",
       "Priority processing",
-      "Custom band photos",
-      "High-quality exports"
+      "Album art generation",
+      "HD video generation"
     ],
     icon: Users,
     popular: false
   },
   {
-    name: "Tier 3", 
-    price: "$24.99",
+    id: 'creator' as PlanType,
+    name: PLAN_DISPLAY_NAMES.creator, 
+    price: `$${PLAN_PRICING.creator}`,
     period: "/month",
-    bandLimit: 30,
+    bandLimit: BAND_LIMITS.creator,
     features: [
-      "30 AI-generated bands",
-      "3,000 credits monthly",
+      "17 virtual bands",
+      "Unlimited music generation",
       "Premium artist profiles",
-      "Pro audio analysis",
-      "Streaming distribution",
-      "Mastering services",
-      "Industry partnerships"
+      "2.0x FAME growth multiplier",
+      "WAV audio conversion",
+      "Advanced analytics",
+      "Midjourney integration"
     ],
     icon: Sparkles,
     popular: true
   },
   {
-    name: "Pro",
-    price: "$49.99", 
+    id: 'producer' as PlanType,
+    name: PLAN_DISPLAY_NAMES.producer,
+    price: `$${PLAN_PRICING.producer}`, 
     period: "/month",
-    bandLimit: -1,
+    bandLimit: BAND_LIMITS.producer,
     features: [
-      "Unlimited AI-generated bands",
-      "9,000 credits monthly",
-      "Professional artist profiles",
-      "Enterprise audio analysis",
-      "Full streaming distribution",
-      "Premium mastering services",
-      "Direct label connections",
-      "Royalty-free music access",
-      "Priority customer support"
+      "Unlimited virtual bands",
+      "Unlimited music generation",
+      "Professional profiles",
+      "2.5x FAME growth multiplier",
+      "All premium features",
+      "Label partnerships",
+      "Marketplace exclusives"
+    ],
+    icon: Crown,
+    popular: false
+  },
+  {
+    id: 'mogul' as PlanType,
+    name: PLAN_DISPLAY_NAMES.mogul,
+    price: `$${PLAN_PRICING.mogul}`, 
+    period: "/month",
+    bandLimit: BAND_LIMITS.mogul,
+    features: [
+      "Unlimited virtual bands",
+      "Unlimited everything",
+      "3.0x FAME growth multiplier",
+      "Commercial license",
+      "API access",
+      "Priority support",
+      "All future features"
     ],
     icon: Crown,
     popular: false
@@ -83,9 +105,10 @@ export default function Upgrade() {
     alert(`Upgrade to ${tierName} - Payment integration coming soon!`);
   };
 
-  const currentTier = (user as any)?.subscriptionTier || "Free";
+  const currentPlanId = (user?.subscriptionPlan as PlanType) || 'free';
+  const currentTierDisplayName = PLAN_DISPLAY_NAMES[currentPlanId];
   const currentBandCount = (user as any)?.bandGenerationCount || 0;
-  const userCredits = (user as any)?.credits || 0;
+  const userCredits = user?.credits || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
@@ -106,7 +129,7 @@ export default function Upgrade() {
             <div className="mt-6 inline-flex items-center gap-4 bg-slate-800/50 rounded-lg px-6 py-3 border border-slate-700">
               <div className="text-sm">
                 <span className="text-gray-400">Current Plan:</span>
-                <span className="ml-2 font-semibold text-blue-400">{currentTier}</span>
+                <span className="ml-2 font-semibold text-blue-400">{currentTierDisplayName}</span>
               </div>
               <div className="w-px h-6 bg-slate-600" />
               <div className="text-sm">
@@ -126,8 +149,8 @@ export default function Upgrade() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {SUBSCRIPTION_TIERS.map((tier) => {
             const Icon = tier.icon;
-            const isCurrentTier = tier.name === currentTier;
-            const isFree = tier.name === "Free";
+            const isCurrentTier = tier.id === currentPlanId;
+            const isFree = tier.id === 'free';
             
             return (
               <Card 
@@ -208,7 +231,7 @@ export default function Upgrade() {
                         className="w-full border-gray-600 text-gray-400"
                         data-testid="free-tier-button"
                       >
-                        Your Current Plan
+                        {currentPlanId === 'free' ? 'Your Current Plan' : 'Free Tier'}
                       </Button>
                     ) : (
                       <Button 
@@ -218,9 +241,9 @@ export default function Upgrade() {
                             ? "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600" 
                             : "bg-slate-700 hover:bg-slate-600"
                         }`}
-                        data-testid={`upgrade-button-${tier.name.toLowerCase()}`}
+                        data-testid={`upgrade-button-${tier.name.toLowerCase().replace(/\s+/g, '-')}`}
                       >
-                        {currentTier === "Free" ? "Upgrade Now" : "Change Plan"}
+                        {currentPlanId === 'free' ? "Upgrade Now" : "Change Plan"}
                       </Button>
                     )}
                   </div>
