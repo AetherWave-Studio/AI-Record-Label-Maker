@@ -1,4 +1,4 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS, type FeedEvent, type InsertFeedEvent, feedEvents } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS, type FeedEvent, type InsertFeedEvent, feedEvents, ownedCardDesigns, type OwnedCardDesign } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { eq, and, desc } from "drizzle-orm";
@@ -410,6 +410,19 @@ export class MemStorage implements IStorage {
 
   async checkBandLimit(userId: string): Promise<{ allowed: boolean; current: number; limit: number | 'unlimited'; error?: string; }> {
     return { allowed: false, current: 0, limit: 0, error: 'GhostMusician RPG not available in memory storage' };
+  }
+
+  async getOwnedCardDesigns(userId: string): Promise<string[]> {
+    // Default: everyone owns ghosts_online for free
+    return ['ghosts_online'];
+  }
+
+  async purchaseCardDesign(userId: string, designId: string, price: number): Promise<{ success: boolean; newBalance?: number; error?: string; }> {
+    return { success: false, error: 'Card design system not available in memory storage' };
+  }
+
+  async equipCardDesign(bandId: string, designId: string): Promise<{ success: boolean; error?: string; }> {
+    return { success: false, error: 'Card design system not available in memory storage' };
   }
 }
 
@@ -1156,6 +1169,98 @@ export class DbStorage implements IStorage {
       limit,
       error: current >= limit ? `Band limit reached (${limit} bands)` : undefined
     };
+  }
+
+  // ============================================================================
+  // CARD DESIGN OPERATIONS
+  // ============================================================================
+
+  async getOwnedCardDesigns(userId: string): Promise<string[]> {
+    const result = await this.db
+      .select()
+      .from(ownedCardDesigns)
+      .where(eq(ownedCardDesigns.userId, userId));
+    
+    // Everyone owns ghosts_online by default
+    const owned = result.map(r => r.designId);
+    if (!owned.includes('ghosts_online')) {
+      owned.push('ghosts_online');
+    }
+    
+    return owned;
+  }
+
+  async purchaseCardDesign(userId: string, designId: string, price: number): Promise<{
+    success: boolean;
+    newBalance?: number;
+    error?: string;
+  }> {
+    // Check if user already owns this design
+    const owned = await this.getOwnedCardDesigns(userId);
+    if (owned.includes(designId)) {
+      return { success: false, error: 'You already own this card design' };
+    }
+
+    // Check user has enough credits
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+
+    if (user.credits < price) {
+      return {
+        success: false,
+        error: `Insufficient credits. Need ${price}, have ${user.credits}`
+      };
+    }
+
+    try {
+      // Deduct credits
+      const updatedUser = await this.updateUserCredits(userId, user.credits - price);
+      if (!updatedUser) {
+        return { success: false, error: 'Failed to deduct credits' };
+      }
+
+      // Add design to owned
+      await this.db.insert(ownedCardDesigns).values({
+        userId,
+        designId,
+      });
+
+      return {
+        success: true,
+        newBalance: updatedUser.credits
+      };
+    } catch (error) {
+      console.error('Error purchasing card design:', error);
+      return { success: false, error: 'Failed to purchase card design' };
+    }
+  }
+
+  async equipCardDesign(bandId: string, designId: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    // Get band to verify it exists and get userId
+    const band = await this.getBand(bandId);
+    if (!band) {
+      return { success: false, error: 'Band not found' };
+    }
+
+    // Verify user owns this design
+    const owned = await this.getOwnedCardDesigns(band.userId);
+    if (!owned.includes(designId)) {
+      return { success: false, error: 'You do not own this card design' };
+    }
+
+    // Update band's equipped design
+    try {
+      await this.updateBand(bandId, { equippedCardDesign: designId });
+      return { success: true };
+    } catch (error) {
+      console.error('Error equipping card design:', error);
+      return { success: false, error: 'Failed to equip card design' };
+    }
   }
 }
 
