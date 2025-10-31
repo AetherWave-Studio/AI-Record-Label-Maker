@@ -2457,6 +2457,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =====================================================
+  // Ghost-Musician Compatibility Routes (Alias routes)
+  // Map /api/artist-cards to /api/rpg/bands
+  // =====================================================
+  
+  app.get('/api/artist-cards', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const bands = await storage.getUserBands(userId);
+      
+      // Transform band data to match Ghost-Musician's expected format
+      const artistCards = bands.map((band: any) => ({
+        id: band.id,
+        artistData: {
+          bandName: band.bandName,
+          genre: band.genre,
+          philosophy: band.philosophy,
+          bandConcept: band.concept,
+          members: band.members,
+          influences: band.influences || [],
+          signatureSound: band.genre,
+          imageUrl: band.tradingCardUrl,
+          cardImageUrl: band.tradingCardUrl,
+          fileName: band.songTitle || 'Unknown',
+          duration: 180,
+          tempo: 120,
+          key: 'C',
+          energy: 'High',
+          createdAt: band.createdAt,
+          rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+          streamCount: band.totalStreams,
+          monthlyListeners: Math.floor(band.totalStreams / 30),
+        },
+        rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+      }));
+      
+      res.json(artistCards);
+    } catch (error: any) {
+      console.error('Error fetching artist cards:', error);
+      res.status(500).json({ error: 'Failed to fetch artist cards' });
+    }
+  });
+
+  app.get('/api/artist-cards/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const band = await storage.getBand(id);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Artist card not found' });
+      }
+
+      // Transform band data to match Ghost-Musician's expected format
+      const artistCard = {
+        id: band.id,
+        artistData: {
+          bandName: band.bandName,
+          genre: band.genre,
+          philosophy: band.philosophy,
+          bandConcept: band.concept,
+          members: band.members,
+          influences: band.influences || [],
+          signatureSound: band.genre,
+          imageUrl: band.tradingCardUrl,
+          cardImageUrl: band.tradingCardUrl,
+          fileName: band.songTitle || 'Unknown',
+          duration: 180,
+          tempo: 120,
+          key: 'C',
+          energy: 'High',
+          createdAt: band.createdAt,
+          rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+          streamCount: band.totalStreams,
+          monthlyListeners: Math.floor(band.totalStreams / 30),
+        },
+        rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+      };
+      
+      res.json(artistCard);
+    } catch (error: any) {
+      console.error('Error fetching artist card:', error);
+      res.status(500).json({ error: 'Failed to fetch artist card' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
