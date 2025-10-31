@@ -129,6 +129,10 @@ export const isDevAuthenticated: RequestHandler = async (req: any, res, next) =>
   }
 
   // Inject user into request in the same format as Replit Auth
-  req.user = devUser;
+  // Normalize the user object to have id at top level
+  req.user = {
+    ...devUser,
+    id: devUser.id || devUser.claims?.sub || devUser.userinfo?.sub
+  };
   next();
 };
