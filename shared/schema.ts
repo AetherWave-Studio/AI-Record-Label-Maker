@@ -27,6 +27,8 @@ export const users = pgTable("users", {
   freeBandGenerations: integer("free_band_generations").default(3).notNull(), // 3 free band creations for all users
   subscriptionPlan: varchar("subscription_plan").default('free').notNull(), // 'free', 'studio', 'creator', 'producer', 'mogul'
   lastCreditReset: timestamp("last_credit_reset").defaultNow().notNull(),
+  lastLoginAt: timestamp("last_login_at"), // Track daily login for rewards
+  dailyLoginStreak: integer("daily_login_streak").default(0).notNull(), // Consecutive days logged in
   welcomeBonusClaimed: integer("welcome_bonus_claimed").default(0), // 1 if claimed, 0 if not (50 credits one-time bonus) - optional for backward compat
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
@@ -92,6 +94,34 @@ export const QUEST_REWARDS: Record<QuestType, number> = {
   facebook_follow: 10,   // 10 credits for following on Facebook
   tiktok_follow: 10,     // 10 credits for following on TikTok
 };
+
+// News Feed Events - Track all platform activities for social feed
+export const FeedEventType = z.enum([
+  'band_created',
+  'daily_growth',
+  'achievement',
+  'rank_change',
+  'press_release',
+  'band_milestone'
+]);
+export type FeedEventType = z.infer<typeof FeedEventType>;
+
+export const feedEvents = pgTable("feed_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  eventType: varchar("event_type").notNull(),
+  bandId: varchar("band_id"), // Band involved in the event
+  data: jsonb("data").notNull(), // Event-specific data (achievement type, growth stats, etc.)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFeedEventSchema = createInsertSchema(feedEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertFeedEvent = z.infer<typeof insertFeedEventSchema>;
+export type FeedEvent = typeof feedEvents.$inferSelect;
 
 // Free tier credit system constants
 export const FREE_TIER_WELCOME_BONUS = 50; // One-time 50 credits on signup

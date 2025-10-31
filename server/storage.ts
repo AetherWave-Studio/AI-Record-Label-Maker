@@ -1,7 +1,7 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS, type FeedEvent, type InsertFeedEvent, feedEvents } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import ws from "ws";
 
 // Configure Neon for WebSocket
@@ -25,6 +25,20 @@ export interface IStorage {
   completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }>;
   // User preference operations
   updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined>;
+  
+  // Daily login operations
+  recordDailyLogin(userId: string): Promise<{ 
+    success: boolean; 
+    creditsAwarded: number; 
+    streak: number; 
+    firstLoginToday: boolean; 
+    error?: string;
+  }>;
+  
+  // Feed event operations
+  createFeedEvent(event: InsertFeedEvent): Promise<FeedEvent>;
+  getFeedEvents(limit?: number, offset?: number): Promise<FeedEvent[]>;
+  getUserFeedEvents(userId: string, limit?: number): Promise<FeedEvent[]>;
   
   // ============================================================================
   // GHOSTMUSICIAN RPG OPERATIONS
@@ -89,6 +103,8 @@ export class MemStorage implements IStorage {
       freeBandGenerations: existingUser?.freeBandGenerations ?? userData.freeBandGenerations ?? 3, // 3 free band generations for all users
       welcomeBonusClaimed: existingUser?.welcomeBonusClaimed ?? 1, // Automatically claim for new users
       lastCreditReset: userData.lastCreditReset || existingUser?.lastCreditReset || new Date(),
+      lastLoginAt: existingUser?.lastLoginAt || null,
+      dailyLoginStreak: existingUser?.dailyLoginStreak ?? 0,
       stripeCustomerId: userData.stripeCustomerId || existingUser?.stripeCustomerId || null,
       stripeSubscriptionId: userData.stripeSubscriptionId || existingUser?.stripeSubscriptionId || null,
       createdAt: existingUser?.createdAt || new Date(),
@@ -312,6 +328,23 @@ export class MemStorage implements IStorage {
   async completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }> {
     // Stub implementation for MemStorage
     return { success: false, creditsAwarded: 0, error: 'Quest system not available in memory storage' };
+  }
+
+  async recordDailyLogin(userId: string): Promise<{ success: boolean; creditsAwarded: number; streak: number; firstLoginToday: boolean; error?: string }> {
+    // Stub implementation for MemStorage
+    return { success: false, creditsAwarded: 0, streak: 0, firstLoginToday: false, error: 'Daily login system not available in memory storage' };
+  }
+
+  async createFeedEvent(event: InsertFeedEvent): Promise<FeedEvent> {
+    throw new Error('Feed system not available in memory storage');
+  }
+
+  async getFeedEvents(limit?: number, offset?: number): Promise<FeedEvent[]> {
+    return [];
+  }
+
+  async getUserFeedEvents(userId: string, limit?: number): Promise<FeedEvent[]> {
+    return [];
   }
 
   // GhostMusician RPG stub implementations
@@ -709,6 +742,111 @@ export class DbStorage implements IStorage {
       success: true,
       creditsAwarded: creditsToAward
     };
+  }
+
+  async recordDailyLogin(userId: string): Promise<{ success: boolean; creditsAwarded: number; streak: number; firstLoginToday: boolean; error?: string }> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      return { success: false, creditsAwarded: 0, streak: 0, firstLoginToday: false, error: 'User not found' };
+    }
+
+    const now = new Date();
+    const lastLogin = user.lastLoginAt;
+    
+    // Check if this is the first login today
+    let firstLoginToday = true;
+    if (lastLogin) {
+      const lastLoginDate = new Date(lastLogin);
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const lastLoginDay = new Date(lastLoginDate.getFullYear(), lastLoginDate.getMonth(), lastLoginDate.getDate());
+      
+      if (today.getTime() === lastLoginDay.getTime()) {
+        // Already logged in today
+        firstLoginToday = false;
+      }
+    }
+
+    if (!firstLoginToday) {
+      return {
+        success: true,
+        creditsAwarded: 0,
+        streak: user.dailyLoginStreak || 0,
+        firstLoginToday: false
+      };
+    }
+
+    // Calculate streak
+    let newStreak = 1;
+    if (lastLogin) {
+      const lastLoginDate = new Date(lastLogin);
+      const yesterday = new Date(now);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayDay = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+      const lastLoginDay = new Date(lastLoginDate.getFullYear(), lastLoginDate.getMonth(), lastLoginDate.getDate());
+      
+      if (yesterdayDay.getTime() === lastLoginDay.getTime()) {
+        // Consecutive day
+        newStreak = (user.dailyLoginStreak || 0) + 1;
+      }
+    }
+
+    // Award credits (free tier only)
+    let creditsAwarded = 0;
+    let newBalance = user.credits;
+    
+    if (user.subscriptionPlan === 'free' && user.credits < FREE_TIER_CREDIT_CAP) {
+      creditsAwarded = Math.min(FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP - user.credits);
+      newBalance = user.credits + creditsAwarded;
+    }
+
+    // Update user
+    await this.db
+      .update(users)
+      .set({
+        lastLoginAt: now,
+        dailyLoginStreak: newStreak,
+        credits: newBalance,
+        updatedAt: now
+      })
+      .where(eq(users.id, userId));
+
+    return {
+      success: true,
+      creditsAwarded,
+      streak: newStreak,
+      firstLoginToday: true
+    };
+  }
+
+  async createFeedEvent(event: InsertFeedEvent): Promise<FeedEvent> {
+    const result = await this.db
+      .insert(feedEvents)
+      .values(event)
+      .returning();
+    
+    return result[0];
+  }
+
+  async getFeedEvents(limit: number = 20, offset: number = 0): Promise<FeedEvent[]> {
+    const result = await this.db
+      .select()
+      .from(feedEvents)
+      .orderBy(desc(feedEvents.createdAt))
+      .limit(limit)
+      .offset(offset);
+    
+    return result;
+  }
+
+  async getUserFeedEvents(userId: string, limit: number = 20): Promise<FeedEvent[]> {
+    const result = await this.db
+      .select()
+      .from(feedEvents)
+      .where(eq(feedEvents.userId, userId))
+      .orderBy(desc(feedEvents.createdAt))
+      .limit(limit);
+    
+    return result;
   }
 
   // ============================================================================

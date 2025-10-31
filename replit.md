@@ -23,9 +23,10 @@ The backend is an Express.js application written in TypeScript, running on Node.
 The project utilizes a serverless PostgreSQL database hosted on Neon, accessed via Drizzle ORM. The schema is defined in `shared/schema.ts` and managed with Drizzle Kit. 
 
 **Core Tables:**
-- `users`: UUID, username, subscription plan (free/studio/creator/producer/mogul), credits, freeBandGenerations (3 free bands for all users), vocal preferences, Stripe data
+- `users`: UUID, username, subscription plan (free/studio/creator/producer/mogul), credits, freeBandGenerations (3 free bands for all users), vocal preferences, Stripe data, daily login tracking (lastLoginAt, dailyLoginStreak)
 - `uploadedAudio`: User-uploaded music files for RPG band creation
 - `quests`: Social media quest tracking for bonus credits
+- `feedEvents`: Platform activity feed tracking band creations, daily growth, achievements, rank changes, and new releases
 
 **GhostMusician RPG Tables:**
 - `bands`: Virtual artist/band profiles with FAME, streams, sales metrics, trading card URLs, member details
@@ -78,6 +79,19 @@ All credits work across both AI media generation and RPG features. Users can:
 - Generate AI music/images/videos with credits
 - Create and manage virtual bands with the same credits (after using 3 free generations)
 - Seamlessly switch between creative tools and RPG gameplay
+
+**Daily Login Rewards:**
+- Free tier users receive **10 credits** on first login each day (capped at 50 total credits)
+- Streak tracking maintains consecutive day counter for future bonus features
+- Credits automatically added to account, with toast notification on first daily login
+- System prevents duplicate claims on same calendar day
+
+**Activity Feed:**
+- Real-time platform feed showing all user activities: band creation, daily growth, achievements, rank changes, releases
+- Feed events include band name, genre, metrics (FAME, streams), and timestamps
+- Authenticated users see global feed with newest events first
+- Feed integrated into home page as primary landing experience
+- Links to band detail pages for deeper exploration
 
 ## External Dependencies
 

@@ -5,14 +5,49 @@ import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { UserStatsWidget } from "@/components/UserStatsWidget";
 import { DailyQuestsWidget } from "@/components/DailyQuestsWidget";
 import { useAuth } from "@/hooks/useAuth";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const { toast } = useToast();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [notificationCount] = useState(3);
-  const [credits] = useState(500);
   const [readyBandsCount] = useState(5); // TODO: Get from API
+  
+  // Daily login reward mutation
+  const dailyLoginMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest('/api/daily-login', {
+        method: 'POST'
+      });
+    },
+    onSuccess: (data: any) => {
+      // Invalidate auth and credits queries to refresh user data
+      queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/user/credits'] });
+      
+      if (data.firstLoginToday && data.creditsAwarded > 0) {
+        toast({
+          title: "Daily Reward!",
+          description: data.message,
+          variant: "default"
+        });
+      }
+    },
+    onError: (error: any) => {
+      console.error('Daily login error:', error);
+    }
+  });
+
+  // Call daily login on mount (only if authenticated)
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      dailyLoginMutation.mutate();
+    }
+  }, [isAuthenticated, user?.id]);
 
   // Mock data for stats widget - will be replaced with API calls
   const mockUserStats = {
@@ -109,7 +144,7 @@ export default function Home() {
               <Link href="/store">
                 <button className="flex items-center gap-2 px-3 py-2 bg-deep-slate border border-sky-glint/30 rounded-lg hover:border-sky-glint transition-colors">
                   <CreditCard size={18} className="text-sky-glint" />
-                  <span className="font-semibold text-white-smoke">{credits}</span>
+                  <span className="font-semibold text-white-smoke">{user?.credits || 0}</span>
                 </button>
               </Link>
 

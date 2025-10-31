@@ -2187,6 +2187,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== DAILY LOGIN REWARDS SYSTEM =====
+
+  // Record daily login and award credits
+  app.post('/api/daily-login', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Record login and check if credits should be awarded
+      const result = await storage.recordDailyLogin(userId);
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Get updated user info
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(200).json({
+        success: true,
+        creditsAwarded: result.creditsAwarded,
+        streak: result.streak,
+        firstLoginToday: result.firstLoginToday,
+        newBalance: updatedUser?.credits || 0,
+        message: result.firstLoginToday && result.creditsAwarded > 0
+          ? `Welcome back! You earned ${result.creditsAwarded} credits. Day ${result.streak} streak!`
+          : result.firstLoginToday
+          ? `Welcome back! Day ${result.streak} streak!`
+          : 'Login already recorded today'
+      });
+
+    } catch (error: any) {
+      console.error('Error recording daily login:', error);
+      res.status(500).json({ error: 'Failed to record login' });
+    }
+  });
+
+  // ===== ACTIVITY FEED SYSTEM =====
+
+  // Get global activity feed
+  app.get('/api/feed', authMiddleware, async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const feedEvents = await storage.getFeedEvents(limit, offset);
+
+      res.status(200).json({
+        events: feedEvents,
+        count: feedEvents.length
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching feed:', error);
+      res.status(500).json({ error: 'Failed to fetch feed' });
+    }
+  });
+
+  // Get user-specific activity feed
+  app.get('/api/feed/user/:userId', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.params.userId;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const feedEvents = await storage.getUserFeedEvents(userId, limit);
+
+      res.status(200).json({
+        events: feedEvents,
+        count: feedEvents.length
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching user feed:', error);
+      res.status(500).json({ error: 'Failed to fetch user feed' });
+    }
+  });
+
   // ============================================================================
   // GHOSTMUSICIAN RPG ROUTES
   // ============================================================================
@@ -2321,6 +2397,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: 'Failed to create band. Your resources have been refunded.' });
       }
 
+      // Create feed event for band creation
+      try {
+        await storage.createFeedEvent({
+          userId,
+          eventType: 'band_created',
+          bandId: band.id,
+          data: {
+            bandName: band.bandName,
+            genre: band.genre,
+            description: `Created ${band.bandName} (${band.genre})`
+          }
+        });
+      } catch (feedError) {
+        console.error('Failed to create feed event for band creation:', feedError);
+        // Don't fail the request if feed event creation fails
+      }
+
       // Get updated user data for response
       const updatedUser = await storage.getUser(userId);
 
@@ -2441,6 +2534,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!result.success) {
         return res.status(400).json({ error: result.error });
+      }
+
+      // Create feed event for daily growth
+      if (result.band) {
+        try {
+          await storage.createFeedEvent({
+            userId,
+            eventType: 'daily_growth',
+            bandId: result.band.id,
+            data: {
+              bandName: result.band.bandName,
+              fame: result.band.fame,
+              totalStreams: result.band.totalStreams,
+              description: `${result.band.bandName} grew! FAME: ${result.band.fame}, Streams: ${result.band.totalStreams.toLocaleString()}`
+            }
+          });
+        } catch (feedError) {
+          console.error('Failed to create feed event for daily growth:', feedError);
+          // Don't fail the request if feed event creation fails
+        }
       }
 
       res.status(200).json({
