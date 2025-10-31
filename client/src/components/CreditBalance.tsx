@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Coins, RefreshCw } from "lucide-react";
+import { Coins, RefreshCw, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface CreditData {
   credits: number;
@@ -14,6 +15,7 @@ interface CreditData {
 
 export function CreditBalance() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const { data: creditData, isLoading, refetch } = useQuery<CreditData>({
     queryKey: ["/api/credits"],
@@ -92,18 +94,31 @@ export function CreditBalance() {
             </div>
           </div>
           
-          {canRenew && (
+          <div className="flex gap-2">
             <Button
               size="sm"
               variant="outline"
-              onClick={handleRenewCredits}
+              onClick={() => setLocation('/buy-credits')}
               className="border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
-              data-testid="renew-credits-button"
+              data-testid="button-buy-credits"
             >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              Renew
+              <Plus className="h-3 w-3 mr-1" />
+              Buy
             </Button>
-          )}
+            
+            {canRenew && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRenewCredits}
+                className="border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10"
+                data-testid="renew-credits-button"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Renew
+              </Button>
+            )}
+          </div>
         </div>
         
         {creditData.tier !== 'Free' && (
