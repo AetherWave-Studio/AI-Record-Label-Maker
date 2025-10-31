@@ -355,6 +355,7 @@ export const bands = pgTable("bands", {
   // Visual assets
   portraitUrl: varchar("portrait_url"), // AI-generated band portrait
   tradingCardUrl: varchar("trading_card_url"), // Full trading card image
+  equippedCardDesign: varchar("equipped_card_design").default('ghosts_online').notNull(), // Which card design to use
   
   // Audio
   audioFileId: varchar("audio_file_id").references(() => uploadedAudio.id),
@@ -459,3 +460,108 @@ export const ACHIEVEMENT_MILESTONES = {
     fameBonus: 0.45, // +45% FAME growth
   },
 };
+
+// ============================================================================
+// CARD DESIGN SYSTEM
+// ============================================================================
+
+// Available card design styles
+export const CardDesignType = z.enum([
+  'ghosts_online',        // Default free design - clean cyan borders
+  'cyberpunk_holo',       // Premium: Rainbow gradients, circuit patterns, glow effects
+  'vintage_weathered',    // Premium: Aged textures, decorative borders, lightning
+  'modern_sleek',         // Premium: Professional, stage lighting, premium typography
+  'neon_arcade',          // Premium: 80s retro, pixel effects, vibrant colors
+  'dark_carnival',        // Special: Halloween themed
+  'winter_frost',         // Special: Winter/holiday themed
+  'gold_anniversary',     // Special: Platform anniversary
+]);
+export type CardDesignType = z.infer<typeof CardDesignType>;
+
+// Card design metadata
+export interface CardDesignInfo {
+  id: CardDesignType;
+  name: string;
+  description: string;
+  price: number; // Credits cost (0 = free default)
+  rarity: 'common' | 'premium' | 'special' | 'legendary';
+  available: boolean; // False for limited-time designs not currently available
+}
+
+// Card design catalog with pricing
+export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
+  ghosts_online: {
+    id: 'ghosts_online',
+    name: 'Ghosts Online',
+    description: 'The original design - clean, professional, timeless',
+    price: 0, // Free default
+    rarity: 'common',
+    available: true,
+  },
+  cyberpunk_holo: {
+    id: 'cyberpunk_holo',
+    name: 'Cyberpunk Holographic',
+    description: 'Rainbow gradient borders, circuit patterns, neon glow effects',
+    price: 2000,
+    rarity: 'legendary',
+    available: true,
+  },
+  vintage_weathered: {
+    id: 'vintage_weathered',
+    name: 'Vintage Weathered',
+    description: 'Aged textures, decorative corner flourishes, lightning effects',
+    price: 800,
+    rarity: 'premium',
+    available: true,
+  },
+  modern_sleek: {
+    id: 'modern_sleek',
+    name: 'Modern Sleek',
+    description: 'Professional look with stage lighting and premium typography',
+    price: 1200,
+    rarity: 'premium',
+    available: true,
+  },
+  neon_arcade: {
+    id: 'neon_arcade',
+    name: 'Neon Arcade',
+    description: '80s retro vibes with pixel effects and vibrant colors',
+    price: 1000,
+    rarity: 'premium',
+    available: true,
+  },
+  dark_carnival: {
+    id: 'dark_carnival',
+    name: 'Dark Carnival',
+    description: 'Spooky Halloween theme with dark mystique',
+    price: 500,
+    rarity: 'special',
+    available: false, // Only available in October
+  },
+  winter_frost: {
+    id: 'winter_frost',
+    name: 'Winter Frost',
+    description: 'Icy winter wonderland with frost effects',
+    price: 500,
+    rarity: 'special',
+    available: false, // Only available in December
+  },
+  gold_anniversary: {
+    id: 'gold_anniversary',
+    name: 'Gold Anniversary',
+    description: 'Exclusive anniversary edition with gold accents',
+    price: 0, // Free during anniversary week
+    rarity: 'special',
+    available: false, // Only available during platform anniversary
+  },
+};
+
+// User's owned card designs table
+export const ownedCardDesigns = pgTable("owned_card_designs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  designId: varchar("design_id").notNull(), // CardDesignType
+  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+});
+
+export type OwnedCardDesign = typeof ownedCardDesigns.$inferSelect;
