@@ -207,10 +207,10 @@ export default function Home() {
                       <span>My Bands ({displayUser?.totalCards || 0})</span>
                     </button>
 
-                    <Link href="/ghost-musician/card-shop">
-                      <button className="w-full px-4 py-3 text-left hover:bg-deep-slate transition-colors flex items-center gap-3" data-testid="link-card-shop">
-                        <span>🎴</span>
-                        <span>Card Design Shop</span>
+                    <Link href="/store">
+                      <button className="w-full px-4 py-3 text-left hover:bg-deep-slate transition-colors flex items-center gap-3" data-testid="link-store">
+                        <span>🛍️</span>
+                        <span>AetherWave Store</span>
                       </button>
                     </Link>
 

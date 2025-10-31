@@ -14,7 +14,6 @@ import { ArtistPage } from "@/pages/ArtistPage";
 import { UserProfile } from "@/pages/user-profile";
 import PlaylistPage from "@/pages/playlist";
 import Upgrade from "@/pages/upgrade";
-import CardShop from "@/pages/card-shop";
 
 function Router() {
   return (
@@ -30,7 +29,7 @@ function Router() {
       <Route path="/ghost-musician/gallery" component={Gallery} />
       <Route path="/ghost-musician/music" component={MusicMarketplace} />
       <Route path="/ghost-musician/store" component={Store} />
-      <Route path="/ghost-musician/card-shop" component={CardShop} />
+      <Route path="/store" component={Store} />
       <Route path="/ghost-musician/playlist/:playlistId" component={PlaylistPage} />
       <Route path="/ghost-musician/upgrade" component={Upgrade} />
       
