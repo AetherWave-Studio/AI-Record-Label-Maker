@@ -2291,12 +2291,9 @@
           const profileTrigger = document.getElementById('profile-trigger');
           if (profileTrigger && !profileTrigger.hasAttribute('data-listener-attached')) {
             profileTrigger.addEventListener('click', function() {
-              console.log('Profile trigger clicked');
-              if (window.showProfileModal) {
-                window.showProfileModal();
-              } else {
-                console.error('showProfileModal function not found');
-              }
+              console.log('Profile trigger clicked - navigating to user profile page');
+              // Navigate to the full GhostMusician user profile page
+              window.location.href = `/ghost-musician/user/${user.id}`;
             });
             profileTrigger.setAttribute('data-listener-attached', 'true');
             console.log('Profile trigger event listener attached');
