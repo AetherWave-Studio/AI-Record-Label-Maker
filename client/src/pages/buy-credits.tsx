@@ -48,12 +48,12 @@ const CheckoutForm = ({ bundle, onSuccess }: { bundle: CreditBundle, onSuccess: 
         setIsProcessing(false);
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Confirm payment on backend and add credits
-        const result = await apiRequest("POST", "/api/confirm-payment", { 
-          paymentIntentId: paymentIntent.id 
+        const data = await apiRequest("/api/confirm-payment", { 
+          method: "POST",
+          body: JSON.stringify({ paymentIntentId: paymentIntent.id })
         });
 
-        if (result.ok) {
-          const data = await result.json();
+        if (data) {
           toast({
             title: "Payment Successful! 🎉",
             description: `${data.creditsAdded} credits added to your account! New balance: ${data.newBalance}`,
@@ -123,8 +123,7 @@ export default function BuyCredits() {
 
   useEffect(() => {
     // Fetch available credit bundles
-    apiRequest("GET", "/api/credit-bundles")
-      .then((res) => res.json())
+    apiRequest("/api/credit-bundles")
       .then((data) => {
         setBundles(data);
         setIsLoading(false);
@@ -144,10 +143,10 @@ export default function BuyCredits() {
     setSelectedBundle(bundle);
 
     try {
-      const res = await apiRequest("POST", "/api/create-payment-intent", { 
-        bundleId: bundle.id 
+      const data = await apiRequest("/api/create-payment-intent", { 
+        method: "POST",
+        body: JSON.stringify({ bundleId: bundle.id })
       });
-      const data = await res.json();
       setClientSecret(data.clientSecret);
     } catch (error: any) {
       toast({
