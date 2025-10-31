@@ -2260,17 +2260,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: limitCheck.error || 'Band limit reached' });
       }
 
-      // Check and deduct credits BEFORE band creation (security-first, matching AetherWave pattern)
-      const creditCheck = await storage.checkRpgCredits(userId, 'band_creation');
-      if (!creditCheck.allowed) {
-        return res.status(400).json({ 
-          error: `Insufficient credits. Need ${creditCheck.requiredCredits}, have ${creditCheck.currentCredits}` 
-        });
-      }
+      // Check for free band generations first
+      const user = await storage.getUser(userId);
+      let usedFreeBand = false;
+      
+      if (user && user.freeBandGenerations > 0) {
+        // Use free band generation
+        const decrementResult = await storage.decrementFreeBandGenerations(userId);
+        if (!decrementResult.success) {
+          return res.status(400).json({ error: decrementResult.error || 'Failed to use free band generation' });
+        }
+        usedFreeBand = true;
+      } else {
+        // No free bands available, use credits
+        const creditCheck = await storage.checkRpgCredits(userId, 'band_creation');
+        if (!creditCheck.allowed) {
+          return res.status(400).json({ 
+            error: `Insufficient credits. Need ${creditCheck.requiredCredits}, have ${creditCheck.currentCredits}` 
+          });
+        }
 
-      const deduction = await storage.deductRpgCredits(userId, 'band_creation');
-      if (!deduction.success) {
-        return res.status(400).json({ error: deduction.error || 'Failed to deduct credits' });
+        const deduction = await storage.deductRpgCredits(userId, 'band_creation');
+        if (!deduction.success) {
+          return res.status(400).json({ error: deduction.error || 'Failed to deduct credits' });
+        }
       }
 
       // Create the band (with auto-refund on failure, matching AetherWave refund pattern)
@@ -2289,24 +2302,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
           songTitle,
         });
       } catch (createError: any) {
-        // CRITICAL: Refund RPG credits if band creation fails
-        // RPG credits and media credits share the same user.credits column
-        const { RPG_CREDIT_COSTS } = await import('@shared/schema');
-        const refundAmount = RPG_CREDIT_COSTS.band_creation;
-        const user = await storage.getUser(userId);
-        if (user) {
-          await storage.updateUserCredits(userId, user.credits + refundAmount);
-          console.log(`Refunded ${refundAmount} credits to user ${userId} after band creation failure`);
+        // CRITICAL: Refund on failure
+        if (usedFreeBand) {
+          // Restore the free band generation
+          await storage.incrementFreeBandGenerations(userId);
+          console.log(`Restored 1 free band generation to user ${userId} after band creation failure`);
+        } else {
+          // Refund RPG credits
+          const { RPG_CREDIT_COSTS } = await import('@shared/schema');
+          const refundAmount = RPG_CREDIT_COSTS.band_creation;
+          const currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            await storage.updateUserCredits(userId, currentUser.credits + refundAmount);
+            console.log(`Refunded ${refundAmount} credits to user ${userId} after band creation failure`);
+          }
         }
-        console.error('Band creation failed, credits refunded:', createError);
-        return res.status(500).json({ error: 'Failed to create band. Credits have been refunded.' });
+        console.error('Band creation failed, resources refunded:', createError);
+        return res.status(500).json({ error: 'Failed to create band. Your resources have been refunded.' });
       }
+
+      // Get updated user data for response
+      const updatedUser = await storage.getUser(userId);
 
       res.status(201).json({
         success: true,
         band,
-        creditsDeducted: deduction.amountDeducted,
-        newBalance: deduction.newBalance,
+        usedFreeBand,
+        freeBandGenerationsRemaining: updatedUser?.freeBandGenerations || 0,
+        creditsRemaining: updatedUser?.credits || 0,
       });
     } catch (error: any) {
       console.error('Error in band creation endpoint:', error);

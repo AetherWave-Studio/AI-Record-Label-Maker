@@ -14,6 +14,8 @@ export interface IStorage {
   upsertUser(user: UpsertUser): Promise<User>;
   // Credit operations
   updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
+  decrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }>;
+  incrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }>;
   deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult>;
   checkCredits(userId: string, serviceType: ServiceType): Promise<CreditCheckResult>;
   refundCredits(userId: string, serviceType: ServiceType): Promise<{ success: boolean; newBalance: number; amountRefunded: number; error?: string }>;
@@ -108,6 +110,36 @@ export class MemStorage implements IStorage {
     }
     this.users.set(userId, user);
     return user;
+  }
+
+  async decrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }> {
+    const user = this.users.get(userId);
+    if (!user) {
+      return { success: false, remaining: 0, error: 'User not found' };
+    }
+    
+    if (user.freeBandGenerations <= 0) {
+      return { success: false, remaining: 0, error: 'No free band generations remaining' };
+    }
+    
+    user.freeBandGenerations -= 1;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    
+    return { success: true, remaining: user.freeBandGenerations };
+  }
+
+  async incrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }> {
+    const user = this.users.get(userId);
+    if (!user) {
+      return { success: false, remaining: 0, error: 'User not found' };
+    }
+    
+    user.freeBandGenerations += 1;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    
+    return { success: true, remaining: user.freeBandGenerations };
   }
 
   async deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult> {
@@ -400,6 +432,48 @@ export class DbStorage implements IStorage {
       .returning();
     
     return result[0];
+  }
+
+  async decrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      return { success: false, remaining: 0, error: 'User not found' };
+    }
+    
+    if (user.freeBandGenerations <= 0) {
+      return { success: false, remaining: 0, error: 'No free band generations remaining' };
+    }
+    
+    const result = await this.db
+      .update(users)
+      .set({ 
+        freeBandGenerations: user.freeBandGenerations - 1,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return { success: true, remaining: result[0].freeBandGenerations };
+  }
+
+  async incrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }> {
+    const user = await this.getUser(userId);
+    
+    if (!user) {
+      return { success: false, remaining: 0, error: 'User not found' };
+    }
+    
+    const result = await this.db
+      .update(users)
+      .set({ 
+        freeBandGenerations: user.freeBandGenerations + 1,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return { success: true, remaining: result[0].freeBandGenerations };
   }
 
   async deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult> {
