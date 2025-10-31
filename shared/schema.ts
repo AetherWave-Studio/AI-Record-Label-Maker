@@ -636,3 +636,56 @@ export const insertUserInventorySchema = createInsertSchema(userInventory).omit(
 
 export type InsertUserInventory = z.infer<typeof insertUserInventorySchema>;
 export type UserInventory = typeof userInventory.$inferSelect;
+
+// ============================================================================
+// CREDIT BUNDLES - Real money purchases via Stripe
+// ============================================================================
+
+export const CreditBundle = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  credits: z.number(),
+  bonusCredits: z.number(),
+  priceUSD: z.number(), // Price in dollars (e.g., 4.99)
+  popular: z.boolean().optional(),
+});
+
+export type CreditBundle = z.infer<typeof CreditBundle>;
+
+// Credit bundle products available for purchase
+export const CREDIT_BUNDLES: CreditBundle[] = [
+  {
+    id: 'starter',
+    name: 'Starter Pack',
+    description: 'Perfect for trying out premium features',
+    credits: 100,
+    bonusCredits: 10,
+    priceUSD: 4.99,
+  },
+  {
+    id: 'popular',
+    name: 'Popular Pack',
+    description: 'Most popular choice for regular creators',
+    credits: 250,
+    bonusCredits: 50,
+    priceUSD: 9.99,
+    popular: true,
+  },
+  {
+    id: 'creator',
+    name: 'Creator Pack',
+    description: 'For serious content creators',
+    credits: 600,
+    bonusCredits: 150,
+    priceUSD: 19.99,
+  },
+  {
+    id: 'pro',
+    name: 'Professional Pack',
+    description: 'Maximum value for power users',
+    credits: 1500,
+    bonusCredits: 500,
+    priceUSD: 49.99,
+  },
+];
