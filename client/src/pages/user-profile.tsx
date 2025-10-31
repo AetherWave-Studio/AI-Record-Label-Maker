@@ -46,10 +46,10 @@ export function UserProfile() {
     enabled: !!userId,
   });
 
-  // Fetch user's bands
+  // Fetch user's bands (public - anyone can view)
   const { data: userBands, isLoading: bandsLoading } = useQuery<Band[]>({
     queryKey: [`/api/bands`],
-    enabled: !!userId && isAuthenticated,
+    enabled: !!userId,
     select: (bands) => bands.filter(band => band.userId === userId),
   });
 
@@ -308,157 +308,167 @@ export function UserProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {userReleases && userReleases.length > 0 ? (
-                      userReleases.slice(0, 3).map((release) => (
-                        <div key={release.id} className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg">
-                          <Play className="h-4 w-4 text-sky-glint" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-white-smoke">
-                              Released "{release.releaseTitle || release.fileName}"
-                            </p>
-                            <p className="text-xs text-soft-gray">
-                              {release.createdAt ? new Date(release.createdAt).toLocaleDateString() : "Recent"}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) : userCards && userCards.length > 0 ? (
-                      userCards.slice(0, 3).map((card) => {
-                        const artistData = card.artistData as any;
-                        return (
-                          <div key={card.id} className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg">
+                    {userBands && userBands.length > 0 ? (
+                      userBands.slice(0, 3).map((band) => (
+                        <Link key={band.id} href={`/band/${band.id}`}>
+                          <div className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg hover:bg-deep-slate/60 cursor-pointer transition-colors">
                             <Music className="h-4 w-4 text-electric-blue" />
                             <div className="flex-1">
                               <p className="text-sm font-medium text-white-smoke">
-                                Created artist "{artistData.bandName}"
+                                {band.bandName}
                               </p>
                               <p className="text-xs text-soft-gray">
-                                {card.createdAt ? new Date(card.createdAt).toLocaleDateString() : "Recent"}
+                                {band.genre} • {band.fame} FAME • #{band.chartPosition}
                               </p>
                             </div>
+                            <Badge variant="outline" className="text-xs">
+                              {band.totalStreams.toLocaleString()} streams
+                            </Badge>
                           </div>
-                        );
-                      })
+                        </Link>
+                      ))
                     ) : (
-                      <p className="text-soft-gray text-center py-8">No recent activity</p>
+                      <p className="text-soft-gray text-center py-8">No bands created yet</p>
                     )}
                   </CardContent>
                 </Card>
 
-                {/* Level Progression */}
+                {/* Quick Navigation */}
                 <Card className="bg-charcoal/60 border-soft-gray/20">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-white-smoke">
-                      {getLevelIcon(userStats.level)}
-                      Career Progression
+                      <TrendingUp className="h-5 w-5 text-sky-glint" />
+                      Quick Actions
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-center mb-4">
-                      <div className="text-2xl font-bold text-sky-glint mb-1">{userStats.level}</div>
-                      <div className="text-sm text-soft-gray">Current Level</div>
-                    </div>
+                  <CardContent className="space-y-3">
+                    <Link href="/record-label" className="block">
+                      <div className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg hover:bg-deep-slate/60 cursor-pointer transition-colors">
+                        <Disc className="h-5 w-5 text-sky-glint" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white-smoke">Record Label</p>
+                          <p className="text-xs text-soft-gray">Manage all your bands</p>
+                        </div>
+                      </div>
+                    </Link>
                     
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-soft-gray">Experience</span>
-                        <span className="text-white-smoke">{userStats.experience} XP</span>
+                    <Link href="/store" className="block">
+                      <div className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg hover:bg-deep-slate/60 cursor-pointer transition-colors">
+                        <Store className="h-5 w-5 text-electric-blue" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white-smoke">Store</p>
+                          <p className="text-xs text-soft-gray">Buy card designs & items</p>
+                        </div>
                       </div>
-                      <Progress value={getLevelProgress(userStats.level, userStats.experience)} className="h-3" />
-                    </div>
+                    </Link>
 
-                    <div className="grid grid-cols-2 gap-4 mt-6 text-center">
-                      <div>
-                        <div className="text-lg font-bold text-electric-blue">{userStats.influence}</div>
-                        <div className="text-xs text-soft-gray">Influence</div>
+                    {isOwnProfile && (
+                      <Link href="/buy-credits" className="block">
+                        <div className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg hover:bg-deep-slate/60 cursor-pointer transition-colors">
+                          <Coins className="h-5 w-5 text-amber-400" />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-white-smoke">Buy Credits</p>
+                            <p className="text-xs text-soft-gray">{userStats.credits} credits available</p>
+                          </div>
+                        </div>
+                      </Link>
+                    )}
+
+                    <Link href="/upgrade" className="block">
+                      <div className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg hover:bg-deep-slate/60 cursor-pointer transition-colors">
+                        <Crown className="h-5 w-5 text-yellow-400" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-white-smoke">Upgrade Plan</p>
+                          <p className="text-xs text-soft-gray">Currently: {PLAN_DISPLAY_NAMES[userStats.subscriptionPlan]}</p>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-lg font-bold text-yellow-400">{userStats.fame}</div>
-                        <div className="text-xs text-soft-gray">Fame</div>
-                      </div>
-                    </div>
+                    </Link>
                   </CardContent>
                 </Card>
               </div>
             </TabsContent>
 
-            {/* Artist Collection Tab */}
+            {/* Band Collection Tab */}
             <TabsContent value="collection" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white-smoke">Artist Collection</h2>
+                <h2 className="text-2xl font-bold text-white-smoke">Virtual Bands</h2>
                 <Badge variant="outline" className="text-sky-glint border-sky-glint">
-                  {userStats.totalCards} Artists
+                  {userStats.totalBands} / {userStats.bandLimit === 'unlimited' ? '∞' : userStats.bandLimit} Bands
                 </Badge>
               </div>
 
-              {userCards && userCards.length > 0 ? (
+              {userBands && userBands.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userCards.map((card) => {
-                    const artistData = card.artistData as any;
-                    return (
-                      <Link key={card.id} href={`/artist/${card.id}`}>
-                        <Card className="group hover:scale-105 transition-all duration-200 cursor-pointer bg-gradient-to-br from-charcoal/40 to-deep-slate/60 border-soft-gray/20 hover:border-sky-glint/50">
-                          <CardContent className="p-0">
-                            <div className="aspect-[5/7] relative overflow-hidden rounded-t-lg">
-                              {card.cardImageUrl ? (
-                                <img
-                                  src={card.cardImageUrl}
-                                  alt={artistData.bandName}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                              ) : card.imageUrl ? (
-                                <img
-                                  src={card.imageUrl}
-                                  alt={artistData.bandName}
-                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-charcoal to-deep-slate flex items-center justify-center">
-                                  <Users className="h-16 w-16 text-soft-gray opacity-50" />
-                                </div>
-                              )}
-                              
-                              <div className="absolute top-3 right-3">
-                                <Badge 
-                                  className={`${getRarityColor(card.rarity || 'Common')} text-white border-0`}
-                                >
-                                  {card.rarity || 'Common'}
-                                </Badge>
+                  {userBands.map((band) => (
+                    <Link key={band.id} href={`/band/${band.id}`}>
+                      <Card className="group hover:scale-105 transition-all duration-200 cursor-pointer bg-gradient-to-br from-charcoal/40 to-deep-slate/60 border-soft-gray/20 hover:border-sky-glint/50">
+                        <CardContent className="p-0">
+                          <div className="aspect-[5/7] relative overflow-hidden rounded-t-lg">
+                            {band.tradingCardUrl ? (
+                              <img
+                                src={band.tradingCardUrl}
+                                alt={band.bandName}
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-charcoal to-deep-slate flex items-center justify-center">
+                                <Users className="h-16 w-16 text-soft-gray opacity-50" />
                               </div>
+                            )}
+                            
+                            <div className="absolute top-3 right-3">
+                              <Badge className="bg-amber-500/80 text-white border-0">
+                                #{band.chartPosition}
+                              </Badge>
                             </div>
+                          </div>
 
-                            <div className="p-4 space-y-2">
+                          <div className="p-4 space-y-3">
+                            <div>
                               <h3 className="font-bold text-white-smoke group-hover:text-sky-glint transition-colors">
-                                {artistData.bandName || "Unknown Artist"}
+                                {band.bandName}
                               </h3>
-                              
-                              <div className="flex items-center gap-2 text-xs text-soft-gray">
+                              <div className="flex items-center gap-2 text-xs text-soft-gray mt-1">
                                 <Music className="h-3 w-3" />
-                                <span>{artistData.genre}</span>
-                                <span>•</span>
-                                <Users className="h-3 w-3" />
-                                <span>{artistData.members?.length || 0} members</span>
+                                <span>{band.genre}</span>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    );
-                  })}
+                            
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-soft-gray">FAME</span>
+                                <span className="text-yellow-400 font-bold">{band.fame}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-soft-gray">Streams</span>
+                                <span className="text-sky-glint font-bold">{band.totalStreams.toLocaleString()}</span>
+                              </div>
+                              <div className="flex justify-between text-xs">
+                                <span className="text-soft-gray">Sales</span>
+                                <span className="text-electric-blue font-bold">
+                                  {((band.physicalCopies || 0) + (band.digitalDownloads || 0)).toLocaleString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-16">
                   <Music className="h-16 w-16 mx-auto mb-4 text-soft-gray opacity-50" />
-                  <h3 className="text-2xl font-bold text-white-smoke mb-2">No Artists Created</h3>
+                  <h3 className="text-2xl font-bold text-white-smoke mb-2">No Bands Created</h3>
                   <p className="text-soft-gray mb-6">
                     {isOwnProfile 
-                      ? "Upload your first audio file to create an artist identity" 
-                      : "This user hasn't created any artists yet"}
+                      ? "Create your first virtual band to start your music empire" 
+                      : "This user hasn't created any bands yet"}
                   </p>
                   {isOwnProfile && (
-                    <Link href="/">
+                    <Link href="/record-label">
                       <Button variant="outline">
-                        Create Your First Artist
+                        Create Your First Band
                       </Button>
                     </Link>
                   )}
@@ -466,61 +476,70 @@ export function UserProfile() {
               )}
             </TabsContent>
 
-            {/* Music Releases Tab */}
+            {/* Band Highlights Tab */}
             <TabsContent value="releases" className="space-y-6">
               <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-white-smoke">Music Releases</h2>
+                <h2 className="text-2xl font-bold text-white-smoke">Top Bands</h2>
                 <Badge variant="outline" className="text-electric-blue border-electric-blue">
-                  {userStats.totalReleases} Releases
+                  Sorted by FAME
                 </Badge>
               </div>
 
-              {userReleases && userReleases.length > 0 ? (
+              {userBands && userBands.length > 0 ? (
                 <div className="space-y-4">
-                  {userReleases.map((release) => (
-                    <Card key={release.id} className="bg-charcoal/60 border-soft-gray/20 hover:border-electric-blue/50 transition-colors">
-                      <CardContent className="p-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gradient-to-r from-electric-blue to-sky-glint rounded-lg flex items-center justify-center">
-                            <Play className="h-6 w-6 text-deep-slate" />
-                          </div>
-                          
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-white-smoke">
-                              {release.releaseTitle || release.fileName}
-                            </h3>
-                            <p className="text-sm text-soft-gray">
-                              {release.releaseType} • {release.genre}
-                            </p>
-                            <p className="text-xs text-soft-gray">
-                              Released: {release.createdAt ? new Date(release.createdAt).toLocaleDateString() : "Unknown"}
-                            </p>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-electric-blue">
-                              {(release.streams || 0).toLocaleString()}
+                  {[...userBands].sort((a, b) => (b.fame || 0) - (a.fame || 0)).map((band, index) => (
+                    <Link key={band.id} href={`/band/${band.id}`}>
+                      <Card className="bg-charcoal/60 border-soft-gray/20 hover:border-electric-blue/50 transition-colors cursor-pointer">
+                        <CardContent className="p-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-r from-electric-blue to-sky-glint rounded-lg flex items-center justify-center font-bold text-deep-slate text-xl">
+                              #{index + 1}
                             </div>
-                            <div className="text-xs text-soft-gray">streams</div>
+                            
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-white-smoke">
+                                {band.bandName}
+                              </h3>
+                              <p className="text-sm text-soft-gray">
+                                {band.genre} • Chart Position: #{band.chartPosition}
+                              </p>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-6 text-center">
+                              <div>
+                                <div className="text-lg font-bold text-yellow-400">{band.fame}</div>
+                                <div className="text-xs text-soft-gray">FAME</div>
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold text-sky-glint">{band.totalStreams.toLocaleString()}</div>
+                                <div className="text-xs text-soft-gray">Streams</div>
+                              </div>
+                              <div>
+                                <div className="text-lg font-bold text-electric-blue">
+                                  {((band.physicalCopies || 0) + (band.digitalDownloads || 0)).toLocaleString()}
+                                </div>
+                                <div className="text-xs text-soft-gray">Sales</div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-16">
-                  <Play className="h-16 w-16 mx-auto mb-4 text-soft-gray opacity-50" />
-                  <h3 className="text-2xl font-bold text-white-smoke mb-2">No Music Releases</h3>
+                  <Music className="h-16 w-16 mx-auto mb-4 text-soft-gray opacity-50" />
+                  <h3 className="text-2xl font-bold text-white-smoke mb-2">No Bands Yet</h3>
                   <p className="text-soft-gray mb-6">
                     {isOwnProfile 
-                      ? "Create artists and release music under their names to build your discography" 
-                      : "This user hasn't released any music yet"}
+                      ? "Create your first band to see rankings" 
+                      : "This user hasn't created any bands yet"}
                   </p>
                   {isOwnProfile && (
-                    <Link href="/gallery">
+                    <Link href="/record-label">
                       <Button variant="outline">
-                        Browse Your Artists
+                        Create Your First Band
                       </Button>
                     </Link>
                   )}
@@ -535,59 +554,65 @@ export function UserProfile() {
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <Card className="bg-charcoal/60 border-soft-gray/20 text-center p-6">
                   <Music className="h-8 w-8 mx-auto mb-3 text-sky-glint" />
-                  <div className="text-2xl font-bold text-sky-glint">{userStats.totalCards}</div>
-                  <div className="text-sm text-soft-gray">Artists Created</div>
+                  <div className="text-2xl font-bold text-sky-glint">{userStats.totalBands}</div>
+                  <div className="text-sm text-soft-gray">Virtual Bands</div>
                 </Card>
 
                 <Card className="bg-charcoal/60 border-soft-gray/20 text-center p-6">
-                  <Play className="h-8 w-8 mx-auto mb-3 text-electric-blue" />
-                  <div className="text-2xl font-bold text-electric-blue">{userStats.totalReleases}</div>
-                  <div className="text-sm text-soft-gray">Songs Released</div>
+                  <TrendingUp className="h-8 w-8 mx-auto mb-3 text-electric-blue" />
+                  <div className="text-2xl font-bold text-electric-blue">{userStats.totalSales.toLocaleString()}</div>
+                  <div className="text-sm text-soft-gray">Total Sales</div>
                 </Card>
 
                 <Card className="bg-charcoal/60 border-soft-gray/20 text-center p-6">
-                  <Users className="h-8 w-8 mx-auto mb-3 text-yellow-400" />
+                  <Play className="h-8 w-8 mx-auto mb-3 text-yellow-400" />
                   <div className="text-2xl font-bold text-yellow-400">{userStats.totalStreams.toLocaleString()}</div>
                   <div className="text-sm text-soft-gray">Total Streams</div>
                 </Card>
 
                 <Card className="bg-charcoal/60 border-soft-gray/20 text-center p-6">
                   <Star className="h-8 w-8 mx-auto mb-3 text-yellow-400" />
-                  <div className="text-2xl font-bold text-yellow-400">{userStats.fame}</div>
-                  <div className="text-sm text-soft-gray">Fame Rating</div>
+                  <div className="text-2xl font-bold text-yellow-400">{userStats.averageFame}</div>
+                  <div className="text-sm text-soft-gray">Average FAME</div>
                 </Card>
               </div>
 
-              {/* Level Progression Chart */}
+              {/* Subscription Details */}
               <Card className="bg-charcoal/60 border-soft-gray/20">
                 <CardHeader>
-                  <CardTitle className="text-white-smoke">Career Progression</CardTitle>
+                  <CardTitle className="text-white-smoke">Subscription & Progress</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-soft-gray">Current Level</span>
-                    <div className="flex items-center gap-2">
-                      {getLevelIcon(userStats.level)}
-                      <span className="font-semibold text-sky-glint">{userStats.level}</span>
-                    </div>
+                    <span className="text-soft-gray">Current Plan</span>
+                    <Link href="/upgrade">
+                      <div className="flex items-center gap-2 hover:opacity-80 cursor-pointer transition-opacity">
+                        {getPlanIcon(userStats.subscriptionPlan)}
+                        <span className="font-semibold text-sky-glint">{PLAN_DISPLAY_NAMES[userStats.subscriptionPlan]}</span>
+                      </div>
+                    </Link>
                   </div>
                   
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-soft-gray">Experience Progress</span>
-                      <span className="text-white-smoke">{userStats.experience} XP</span>
+                      <span className="text-soft-gray">Band Capacity</span>
+                      <span className="text-white-smoke">
+                        {userStats.totalBands} / {userStats.bandLimit === 'unlimited' ? '∞' : userStats.bandLimit}
+                      </span>
                     </div>
-                    <Progress value={getLevelProgress(userStats.level, userStats.experience)} className="h-3" />
+                    {userStats.bandLimit !== 'unlimited' && (
+                      <Progress value={getBandCapacityProgress()} className="h-3" />
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 pt-4">
                     <div className="text-center">
-                      <div className="text-xl font-bold text-electric-blue">{userStats.influence}</div>
-                      <div className="text-sm text-soft-gray">Industry Influence</div>
+                      <div className="text-xl font-bold text-electric-blue">#{userStats.highestChartPosition}</div>
+                      <div className="text-sm text-soft-gray">Highest Chart Position</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-xl font-bold text-yellow-400">{userStats.fame}</div>
-                      <div className="text-sm text-soft-gray">Fame Level</div>
+                      <div className="text-xl font-bold text-yellow-400">{userStats.credits}</div>
+                      <div className="text-sm text-soft-gray">Available Credits</div>
                     </div>
                   </div>
                 </CardContent>
