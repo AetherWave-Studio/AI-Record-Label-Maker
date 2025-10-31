@@ -10,6 +10,9 @@ deploymentTarget = "autoscale"
 build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
+[deployment.databaseMigrations]
+beforeStartCommand = "npm run db:push -- --force"
+
 [env]
 PORT = "5000"
 
