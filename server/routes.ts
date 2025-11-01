@@ -302,8 +302,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Chat endpoint using OpenAI (via Replit AI Integrations)
-  // Note: Authenticated to prevent abuse of OpenAI integration credits
+  // Chat endpoint using OpenAI
+  // Note: Authenticated to prevent abuse of OpenAI credits
   app.post("/api/chat", authMiddleware, async (req: any, res) => {
     try {
       const { message } = req.body;
@@ -312,10 +312,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Message is required' });
       }
 
-      // Initialize OpenAI client with Replit AI Integrations credentials
+      // Initialize OpenAI client with direct API key (no proxy)
       const openai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        apiKey: process.env.OPENAI_API_KEY,
+        // Don't set baseURL to use default OpenAI endpoint
       });
 
       // Call OpenAI chat API
@@ -1473,7 +1473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // DALL-E 3 path (Panel 1 - Professional album art)
       if (useDallE) {
-        const openaiApiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+        const openaiApiKey = process.env.OPENAI_API_KEY;
 
         if (!openaiApiKey) {
           return res.status(500).json({ error: 'OpenAI API key not configured' });
@@ -1481,7 +1481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const openai = new OpenAI({
           apiKey: openaiApiKey,
-          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+          // Don't set baseURL to use default OpenAI endpoint
         });
 
         // Style descriptions for DALL-E prompts
@@ -2748,11 +2748,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const cardPrompt = generateCardPrompt(cardDesign as any, bandData);
           
           // Call DALL-E 3 to generate the trading card
-          const openaiApiKey = process.env.OPENAI_API_KEY || process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+          const openaiApiKey = process.env.OPENAI_API_KEY;
           if (openaiApiKey) {
             const openai = new OpenAI({
               apiKey: openaiApiKey,
-              baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+              // Don't set baseURL to use default OpenAI endpoint
             });
 
             const imageResponse = await openai.images.generate({
