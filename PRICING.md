@@ -1,7 +1,7 @@
 # AetherWave Studio Pricing & Credit System
 
 **Last Updated:** January 2025
-**Credit Value:** 1 credit = $0.01 USD
+**Credit Value:** 1 credit = $0.005 USD
 
 ---
 
@@ -13,11 +13,11 @@ All pricing includes a **50% margin** for infrastructure, storage, support, and 
 
 | Service | API Provider | API Cost | + 50% Margin | Credits |
 |---------|--------------|----------|--------------|---------|
-| **Music Generation** | KIE.ai/Suno | $0.06 | $0.09 | **10** |
-| **Image (DALL-E 3)** | OpenAI | $0.04 | $0.06 | **6** |
-| **Album Art** | fal.ai Seedream | $0.03 | $0.045 | **5** |
-| **WAV Conversion** | (processing) | $0.02 | $0.03 | **3** |
-| **Video (see below)** | fal.ai Seedance | varies | varies | **5-375** |
+| **Music Generation** | KIE.ai/Suno | $0.06 | $0.09 | **18** |
+| **Image (DALL-E 3)** | OpenAI | $0.04 | $0.06 | **12** |
+| **Album Art** | fal.ai Seedream | $0.03 | $0.045 | **9** |
+| **WAV Conversion** | (processing) | $0.02 | $0.03 | **6** |
+| **Video (see below)** | fal.ai Seedance | varies | varies | **10-750** |
 
 ---
 
@@ -29,10 +29,10 @@ Video pricing is **dynamic** based on model, provider, resolution, and duration.
 
 | Model | Provider | Cost/Second | API Cost | 5s Video | 8s Video | 10s Video |
 |-------|----------|-------------|----------|----------|----------|-----------|
-| **Sora 2 Standard** | KIE.ai/OpenAI | $0.015 | $0.15/10s | **12 credits** | **23 credits** | **23 credits** |
-| **Veo 3 Fast** | KIE.ai/Google | $0.0375 | $0.30/8s | **29 credits** | **45 credits** | **57 credits** |
-| **Sora 2 Pro** | KIE.ai/OpenAI | $0.045 | $0.45/10s | **34 credits** | **54 credits** | **68 credits** |
-| **Sora 2 Pro HD** | KIE.ai/OpenAI | $0.10 | $1.00/10s | **75 credits** | **120 credits** | **150 credits** |
+| **Sora 2 Standard** | KIE.ai/OpenAI | $0.015 | $0.15/10s | **24 credits** | **46 credits** | **46 credits** |
+| **Veo 3 Fast** | KIE.ai/Google | $0.0375 | $0.30/8s | **58 credits** | **90 credits** | **114 credits** |
+| **Sora 2 Pro** | KIE.ai/OpenAI | $0.045 | $0.45/10s | **68 credits** | **108 credits** | **136 credits** |
+| **Sora 2 Pro HD** | KIE.ai/OpenAI | $0.10 | $1.00/10s | **150 credits** | **240 credits** | **300 credits** |
 
 **Key Benefits:**
 - ⭐ **OpenAI Sora 2** - 60% cheaper than OpenAI direct pricing!
@@ -44,14 +44,14 @@ Video pricing is **dynamic** based on model, provider, resolution, and duration.
 
 | Model | Resolution | Cost/Second | 3s Video | 5s Video | 8s Video | 10s Video |
 |-------|-----------|-------------|----------|----------|----------|-----------|
-| **Lite** | 512p (480p) | $0.010 | 5 credits | 8 credits | 15 credits | 15 credits |
-| **Lite** | 720p | $0.0225 | 11 credits | 17 credits | 27 credits | 34 credits |
-| **Lite** | 1080p | $0.050 | 23 credits | 38 credits | 60 credits | 75 credits |
-| **Lite** | 4K | $0.100* | 45 credits | 75 credits | 120 credits | 150 credits |
-| **Pro** | 512p (480p) | $0.020 | 9 credits | 15 credits | 30 credits | 30 credits |
-| **Pro** | 720p | $0.045 | 21 credits | 34 credits | 54 credits | 68 credits |
-| **Pro** | 1080p | $0.100 | 45 credits | 75 credits | 120 credits | 150 credits |
-| **Pro** | 4K | $0.200* | 90 credits | 150 credits | 240 credits | 300 credits |
+| **Lite** | 512p (480p) | $0.010 | 10 credits | 16 credits | 30 credits | 30 credits |
+| **Lite** | 720p | $0.0225 | 22 credits | 34 credits | 54 credits | 68 credits |
+| **Lite** | 1080p | $0.050 | 46 credits | 76 credits | 120 credits | 150 credits |
+| **Lite** | 4K | $0.100* | 90 credits | 150 credits | 240 credits | 300 credits |
+| **Pro** | 512p (480p) | $0.020 | 18 credits | 30 credits | 60 credits | 60 credits |
+| **Pro** | 720p | $0.045 | 42 credits | 68 credits | 108 credits | 136 credits |
+| **Pro** | 1080p | $0.100 | 90 credits | 150 credits | 240 credits | 300 credits |
+| **Pro** | 4K | $0.200* | 180 credits | 300 credits | 480 credits | 600 credits |
 
 *\*4K pricing is estimated*
 
@@ -62,13 +62,13 @@ Video pricing is **dynamic** based on model, provider, resolution, and duration.
 costPerSecond = MODEL_COST_PER_SECOND  // Fixed rate from KIE.ai
 apiCost = costPerSecond × duration
 totalCost = apiCost × 1.5  // 50% margin
-credits = Math.ceil(totalCost / 0.01)
+credits = Math.ceil(totalCost / 0.005)
 
 // For Seedance models (resolution-dependent)
 costPerSecond = getApiCost(model, resolution)  // from fal.ai pricing
 apiCost = costPerSecond × duration
 totalCost = apiCost × 1.5  // 50% margin
-credits = Math.ceil(totalCost / 0.01)
+credits = Math.ceil(totalCost / 0.005)
 ```
 
 **Implementation:** See `calculateVideoCredits()` in `server/routes.ts` and `kieSubscribe()` in `server/kieClient.ts`
@@ -80,24 +80,24 @@ credits = Math.ceil(totalCost / 0.01)
 ### Free Plan - $0/month
 
 **Credits:**
-- **50 credits welcome bonus** (one-time on signup)
-- **10 credits/day** (resets daily at midnight UTC)
-- **50 credit cap** - Quest rewards can push you over 50, but daily credits won't be added if you're at/above 50
+- **100 credits welcome bonus** (one-time on signup)
+- **20 credits/day** (resets daily at midnight UTC)
+- **100 credit cap** - Quest rewards can push you over 100, but daily credits won't be added if you're at/above 100
 - Earn extra credits through quests (follow on social media)
 
 **What You Can Make:**
-- 🎵 5 songs (10 credits each) OR
-- 🎬 10 short videos (lite, 512p, 3s = 5 credits each) OR
-- 🖼️ 8 images (6 credits each) OR
-- 🎨 10 album arts (5 credits each) OR
+- 🎵 5 songs (18 credits each) OR
+- 🎬 10 short videos (lite, 512p, 3s = 10 credits each) OR
+- 🖼️ 8 images (12 credits each) OR
+- 🎨 10 album arts (9 credits each) OR
 - **Mix and match** (e.g., 2 videos + 4 songs)
 
 **Quest System - Earn Extra Credits:**
-- ✅ Follow us on X.com → +10 credits
-- ✅ Join our Discord → +10 credits
-- ✅ Follow us on Facebook → +10 credits
-- ✅ Follow us on TikTok → +10 credits
-- **Total possible: 40 extra credits** (one-time per quest)
+- ✅ Follow us on X.com → +20 credits
+- ✅ Join our Discord → +20 credits
+- ✅ Follow us on Facebook → +20 credits
+- ✅ Follow us on TikTok → +20 credits
+- **Total possible: 80 extra credits** (one-time per quest)
 
 **Restrictions:**
 - Music: V3.5, V4 models only
@@ -118,16 +118,16 @@ credits = Math.ceil(totalCost / 0.01)
 
 **Credits:**
 - **Unlimited music generation** (all models V3.5 - V5)
-- 200 credits/month for video & images
+- 400 credits/month for video & images
   - No daily reset - use anytime during the month
   - Resets on billing anniversary date
 
 **What You Can Make Per Month:**
 - 🎵 **Unlimited songs** (all models V3.5 - V5)
-- 🎬 **~8 Sora 2 videos** (8s, 23 credits each - OpenAI branding!) OR
-- 🎬 ~25 Seedance Lite videos (512p, 8s = 8 credits each) OR
-- 🎬 **~4 Veo 3 Fast videos** (8s, 45 credits each - Google branding!) OR
-- 🖼️ ~33 images (DALL-E 3, 6 credits each) OR
+- 🎬 **~8 Sora 2 videos** (8s, 46 credits each - OpenAI branding!) OR
+- 🎬 ~25 Seedance Lite videos (512p, 8s = 16 credits each) OR
+- 🎬 **~4 Veo 3 Fast videos** (8s, 90 credits each - Google branding!) OR
+- 🖼️ ~33 images (DALL-E 3, 12 credits each) OR
 - **Mix and match!** (e.g., 10 songs + 4 Sora 2 videos + 8 images)
 
 **Features:**
@@ -157,7 +157,7 @@ credits = Math.ceil(totalCost / 0.01)
 **Credits:**
 - **Unlimited music generation**
 - **Unlimited WAV conversion**
-- 500 credits/month for video & images
+- 1000 credits/month for video & images
   - Separate pool from music
   - Resets monthly
 
@@ -188,7 +188,7 @@ credits = Math.ceil(totalCost / 0.01)
 **Credits:**
 - **Unlimited music generation**
 - **Unlimited WAV conversion**
-- 2000 credits/month for video & images
+- 4000 credits/month for video & images
 
 **What You Can Make Per Month:**
 - 🎵 **Unlimited songs** (all models)
@@ -217,7 +217,7 @@ credits = Math.ceil(totalCost / 0.01)
 
 **Credits:**
 - **Unlimited everything** (with fair-use rate limits)
-- 5000 credit cap for video generation to prevent abuse
+- 10000 credit cap for video generation to prevent abuse
 
 **What You Can Make Per Month:**
 - 🎵 **Unlimited songs** (all models)
@@ -247,8 +247,8 @@ credits = Math.ceil(totalCost / 0.01)
 | Feature | Free | Starter 🆕 | Studio | Creator | All Access |
 |---------|------|---------|--------|---------|------------|
 | **Price** | $0 | **$9.99** | $19 | $49 | $99 |
-| **Credits** | 50 bonus + 10/day (cap: 50) | 200/mo | 500/mo | 2000/mo | 5000/mo |
-| **Quest Rewards** | ✅ (4 quests × 10 credits) | ❌ | ❌ | ❌ | ❌ |
+| **Credits** | 100 bonus + 20/day (cap: 100) | 400/mo | 1000/mo | 4000/mo | 10000/mo |
+| **Quest Rewards** | ✅ (4 quests × 20 credits) | ❌ | ❌ | ❌ | ❌ |
 | **Music** | Limited | **Unlimited** | Unlimited | Unlimited | Unlimited |
 | **Music Models** | V3.5, V4 | **All (V3.5-V5)** | All | All | All |
 | **Video Models** | Seedance Lite | **Sora 2 + Lite** | Sora 2 + Lite/Pro | **Sora 2/Pro + Veo 3 + All Seedance** | **All (Sora Pro HD!)** |

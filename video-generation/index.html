@@ -1,0 +1,1894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Video Generation - AetherWave Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --aetherwave-pink: #ff2ea6;
+      --aetherwave-purple: #8b5cf6;
+      --dark-bg: #0d0b15;
+      --card-bg: #1a1625;
+      --text-primary: #e9e8ff;
+      --text-muted: #b7b3d9;
+      --border-color: #2d2640;
+      --success-color: #2ed573;
+      --warning-color: #ffa502;
+      --error-color: #ff4757;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Animated Background */
+    .bg-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15), transparent 50%),
+                  radial-gradient(ellipse at 80% 70%, rgba(255, 46, 166, 0.12), transparent 50%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.3;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 15s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--aetherwave-pink);
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 300px;
+      height: 300px;
+      background: var(--aetherwave-purple);
+      bottom: 20%;
+      right: 15%;
+      animation-delay: 5s;
+    }
+
+    .orb-3 {
+      width: 250px;
+      height: 250px;
+      background: var(--aetherwave-purple);
+      top: 50%;
+      left: 60%;
+      animation-delay: 8s;
+      opacity: 0.3;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(0.98); }
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(13, 11, 21, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .logo-icon2 {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-btn {
+      padding: 0.5rem 1.25rem;
+      background: var(--aetherwave-pink);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 46, 166, 0.4);
+    }
+
+    /* Main Content */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 0;
+    }
+
+    .page-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      animation: fadeInUp 0.8s ease-out;
+    }
+
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* Video Generation Panels */
+    .video-panels-container {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      grid-template-rows: auto 1fr;
+      gap: 1.5rem;
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+
+    .panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .panel-header {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(255, 46, 166, 0.1));
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .panel-description {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .panel-content {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Panel Positions */
+    .panel-library {
+      grid-column: 1 / 2;
+      grid-row: 1 / 3;
+    }
+
+    .panel-generation {
+      grid-column: 2 / 3;
+      grid-row: 1 / 3;
+    }
+
+    .panel-tools {
+      grid-column: 3 / 4;
+      grid-row: 1 / 3;
+    }
+
+    /* Video Generation Chat */
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 0.5rem 0;
+    }
+
+    .message {
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .message.user {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .message.assistant {
+      display: flex;
+      justify-content: flex-start;
+    }
+
+    .message-content {
+      max-width: 80%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      line-height: 1.4;
+    }
+
+    .message.user .message-content {
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.assistant .message-content {
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      opacity: 0.8;
+    }
+
+    /* Chat Input */
+    .chat-input-area {
+      border-top: 1px solid var(--border-color);
+      padding: 1rem;
+      background: rgba(26, 22, 37, 0.5);
+    }
+
+    .model-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .model-option {
+      padding: 0.5rem 1rem;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .model-option:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--aetherwave-purple);
+    }
+
+    .model-option.selected {
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      color: white;
+      border-color: transparent;
+    }
+
+    .input-container {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-end;
+    }
+
+    .input-wrapper {
+      flex: 1;
+    }
+
+    .chat-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--dark-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input:focus {
+      outline: none;
+      border-color: var(--aetherwave-purple);
+    }
+
+    .file-upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 0.75rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .file-upload-area:hover {
+      border-color: var(--aetherwave-purple);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .file-upload-area.drag-over {
+      border-color: var(--aetherwave-pink);
+      background: rgba(255, 46, 166, 0.05);
+    }
+
+    .send-btn {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 46, 166, 0.4);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Video Library */
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .video-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .video-card:hover {
+      border-color: var(--aetherwave-purple);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+    }
+
+    .video-thumbnail {
+      width: 100%;
+      height: 120px;
+      background: var(--dark-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .video-info {
+      padding: 0.75rem;
+    }
+
+    .video-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .video-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Video Tools */
+    .tool-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .tool-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .tool-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 8px;
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .tool-btn:hover {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--aetherwave-purple);
+    }
+
+    .tool-btn.primary {
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      border: none;
+      color: white;
+    }
+
+    .tool-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 46, 166, 0.4);
+    }
+
+    /* Background Removal */
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .upload-area:hover {
+      border-color: var(--aetherwave-purple);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .upload-area.drag-over {
+      border-color: var(--aetherwave-pink);
+      background: rgba(255, 46, 166, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    /* Processing Status */
+    .processing-status {
+      padding: 1rem;
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--dark-bg);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    /* Video Preview */
+    .video-preview {
+      width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      background: var(--dark-bg);
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      color: white;
+    }
+
+    .btn-secondary {
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      color: var(--text-primary);
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+      .video-panels-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 1rem;
+      }
+
+      .panel-library {
+        grid-column: 1;
+        grid-row: 1;
+        min-height: 250px;
+      }
+
+      .panel-generation {
+        grid-column: 1;
+        grid-row: 2;
+        min-height: 400px;
+      }
+
+      .panel-tools {
+        grid-column: 1;
+        grid-row: 3;
+        min-height: 300px;
+      }
+
+      .panel-content {
+        max-height: 350px;
+      }
+
+      .chat-messages {
+        min-height: 200px;
+      }
+
+      .video-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      }
+
+      .tools-grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 0.5rem 0.75rem;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .logo {
+        font-size: 1.1rem;
+      }
+
+      .logo-icon2 {
+        width: 32px;
+        height: 32px;
+      }
+
+      nav {
+        display: flex;
+        position: relative;
+      }
+
+      nav a:not(.mobile-menu-btn) {
+        display: none;
+      }
+
+      .mobile-menu-btn {
+        display: block;
+        background: none;
+        border: none;
+        color: var(--text-primary);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.5rem;
+      }
+
+      nav.mobile-menu-open {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(13, 11, 21, 0.98);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        z-index: 1000;
+        padding: 2rem;
+      }
+
+      nav.mobile-menu-open .mobile-menu-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+      }
+
+      nav.mobile-menu-open a {
+        font-size: 1.2rem;
+        color: var(--text-primary);
+        display: block;
+      }
+
+      main {
+        padding: 0.75rem;
+      }
+
+      .page-title {
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .page-subtitle {
+        font-size: 0.9rem;
+      }
+
+      .video-panels-container {
+        gap: 0.75rem;
+      }
+
+      .panel-library {
+        min-height: 200px;
+      }
+
+      .panel-generation {
+        min-height: 350px;
+      }
+
+      .panel-tools {
+        min-height: 250px;
+      }
+
+      .panel-content {
+        padding: 1rem;
+        max-height: 280px;
+      }
+
+      .panel-header {
+        padding: 0.75rem 1rem;
+      }
+
+      .panel-title {
+        font-size: 1rem;
+      }
+
+      .panel-description {
+        font-size: 0.8rem;
+      }
+
+      .chat-messages {
+        gap: 0.75rem;
+        min-height: 150px;
+      }
+
+      .message {
+        max-width: 85%;
+      }
+
+      .message.user {
+        margin-left: auto;
+      }
+
+      .message.ai {
+        margin-right: auto;
+      }
+
+      .message-content {
+        font-size: 0.9rem;
+      }
+
+      .chat-input-container {
+        padding: 0.75rem;
+        gap: 0.5rem;
+      }
+
+      .chat-input {
+        font-size: 0.9rem;
+        padding: 0.75rem;
+      }
+
+      .send-btn {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+
+      .video-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 0.75rem;
+      }
+
+      .video-item {
+        border-radius: 12px;
+      }
+
+      .video-preview {
+        height: 80px;
+      }
+
+      .video-info {
+        padding: 0.75rem;
+      }
+
+      .video-title {
+        font-size: 0.85rem;
+      }
+
+      .video-meta {
+        font-size: 0.75rem;
+      }
+
+      .tools-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .tool-card {
+        padding: 1rem;
+        border-radius: 12px;
+      }
+
+      .tool-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+      }
+
+      .tool-name {
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .tool-description {
+        font-size: 0.8rem;
+      }
+
+      .model-selector {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .model-option {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 6px;
+      }
+
+      .file-upload-area {
+        padding: 1.5rem;
+        border-radius: 12px;
+      }
+
+      .upload-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .upload-text {
+        font-size: 0.9rem;
+      }
+
+      .upload-hint {
+        font-size: 0.8rem;
+      }
+
+      .generation-settings {
+        gap: 0.75rem;
+      }
+
+      .setting-group {
+        padding: 0.75rem;
+        border-radius: 8px;
+      }
+
+      .setting-label {
+        font-size: 0.85rem;
+        margin-bottom: 0.25rem;
+      }
+
+      .setting-control {
+        font-size: 0.85rem;
+      }
+
+      .credits-display {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.85rem;
+        border-radius: 6px;
+      }
+
+      .quick-actions {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .quick-action-btn {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        border-radius: 6px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header {
+        padding: 0.5rem;
+      }
+
+      .logo {
+        font-size: 1rem;
+      }
+
+      .logo-icon2 {
+        width: 28px;
+        height: 28px;
+      }
+
+      .page-title {
+        font-size: 1.2rem;
+      }
+
+      .page-subtitle {
+        font-size: 0.85rem;
+      }
+
+      main {
+        padding: 0.5rem;
+      }
+
+      .video-panels-container {
+        gap: 0.5rem;
+      }
+
+      .panel-content {
+        padding: 0.75rem;
+        max-height: 250px;
+      }
+
+      .panel-header {
+        padding: 0.5rem 0.75rem;
+      }
+
+      .chat-messages {
+        gap: 0.5rem;
+        min-height: 120px;
+      }
+
+      .message {
+        max-width: 90%;
+      }
+
+      .message-content {
+        font-size: 0.85rem;
+      }
+
+      .chat-input-container {
+        padding: 0.5rem;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .chat-input {
+        width: 100%;
+        font-size: 0.85rem;
+        padding: 0.75rem;
+      }
+
+      .send-btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 0.85rem;
+      }
+
+      .video-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.5rem;
+      }
+
+      .video-preview {
+        height: 70px;
+      }
+
+      .video-info {
+        padding: 0.5rem;
+      }
+
+      .video-title {
+        font-size: 0.8rem;
+      }
+
+      .video-meta {
+        font-size: 0.7rem;
+      }
+
+      .tools-grid {
+        gap: 0.5rem;
+      }
+
+      .tool-card {
+        padding: 0.75rem;
+      }
+
+      .tool-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .tool-name {
+        font-size: 0.9rem;
+      }
+
+      .tool-description {
+        font-size: 0.75rem;
+      }
+
+      .model-option {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+      }
+
+      .file-upload-area {
+        padding: 1rem;
+      }
+
+      .upload-icon {
+        font-size: 1.5rem;
+      }
+
+      .upload-text {
+        font-size: 0.85rem;
+      }
+
+      .upload-hint {
+        font-size: 0.75rem;
+      }
+
+      .setting-group {
+        padding: 0.5rem;
+      }
+
+      .setting-label {
+        font-size: 0.8rem;
+      }
+
+      .setting-control {
+        font-size: 0.8rem;
+      }
+
+      .quick-action-btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+      }
+
+      /* Touch-friendly improvements */
+      .tool-card,
+      .video-item,
+      .model-option,
+      .quick-action-btn {
+        min-height: 44px;
+        touch-action: manipulation;
+      }
+
+      .send-btn {
+        min-height: 44px;
+      }
+
+      /* Better tap targets */
+      .panel-title {
+        font-size: 0.95rem;
+      }
+
+      .credits-display {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem;
+      }
+
+      /* Optimized scrolling for mobile */
+      .chat-messages,
+      .panel-content {
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+      }
+
+      /* Hide hover effects on touch devices */
+      @media (hover: none) {
+        .tool-card:hover,
+        .video-item:hover,
+        .model-option:hover,
+        .quick-action-btn:hover {
+          transform: none;
+          box-shadow: none;
+        }
+
+        .tool-card:active,
+        .video-item:active,
+        .model-option:active,
+        .quick-action-btn:active {
+          transform: scale(0.98);
+          opacity: 0.8;
+        }
+      }
+    }
+
+    /* Performance optimizations */
+    * {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Reduce motion for accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      :root {
+        --border-color: #ffffff;
+        --text-muted: #ffffff;
+      }
+    }
+
+    /* Focus styles for accessibility */
+    button:focus-visible,
+    a:focus-visible,
+    .tool-card:focus-visible {
+      outline: 2px solid var(--aetherwave-pink);
+      outline-offset: 2px;
+    }
+
+    /* Loading Animation */
+    .loading {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-container">
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="/" class="logo">
+        <div class="logo-icon2">
+          <img class="logo-icon2" src="/assets/Logo-SilverAlloy-Loop-1_1761279396703.gif" alt="AetherWave Logo" style="width: 40px; height: 40px; object-fit: contain;">
+        </div>
+        <span>
+          <img src="/assets/aws-banner_1761542850665.png" alt="AetherWave Studio" style="height: 35px; object-fit: contain;">
+        </span>
+      </a>
+    </div>
+    <nav>
+      <a href="https://ai-hub.aetherwavestudio.com">AI Hub</a>
+      <a href="/">Home</a>
+      <a href="/playlists/">Playlists</a>
+      <a href="/featured-artist/">Featured Artist</a>
+      <a href="/virtual-artists/">Virtual Artists</a>
+      <a href="/shop/">Shop</a>
+      <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-header">
+      <h1 class="page-title">AI Video Generation Studio</h1>
+      <p class="page-subtitle">Transform your ideas into stunning videos with AI-powered generation and editing tools</p>
+    </div>
+
+    <div class="video-panels-container">
+      <!-- Video Library Panel -->
+      <div class="panel panel-library">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>📁</span>
+            <span>Video Library</span>
+          </div>
+          <div class="panel-description">Your generated videos and projects</div>
+        </div>
+        <div class="panel-content">
+          <div class="video-grid" id="video-library">
+            <div class="empty-state">
+              <div class="empty-state-icon">🎬</div>
+              <div>No videos yet</div>
+              <div style="font-size: 0.85rem; margin-top: 0.5rem;">Start generating videos to see them here</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Generation Panel (Chat Interface) -->
+      <div class="panel panel-generation">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>✨</span>
+            <span>AI Video Generation</span>
+          </div>
+          <div class="panel-description">Chat with AI to create amazing videos</div>
+        </div>
+        <div class="panel-content">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message assistant">
+              <div class="message-content">
+                <div class="message-label">AetherWave AI</div>
+                <div>Welcome to the AI Video Generation Studio! 🎬</div>
+                <div style="margin-top: 0.5rem;">I can help you create videos using multiple AI models:</div>
+                <ul style="margin-top: 0.5rem; padding-left: 1.2rem; font-size: 0.9rem;">
+                  <li><strong>Veo 3</strong> - High-quality video generation</li>
+                  <li><strong>Sora 2</strong> - Creative video synthesis</li>
+                  <li><strong>Seedance</strong> - Quick video creation</li>
+                </ul>
+                <div style="margin-top: 0.5rem;">Simply describe what you want or upload an image to get started!</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chat-input-area">
+            <div class="model-selector">
+              <div class="model-option selected" data-model="veo3">Veo 3</div>
+              <div class="model-option" data-model="sora2">Sora 2</div>
+              <div class="model-option" data-model="seedance">Seedance</div>
+            </div>
+
+            <div class="file-upload-area" id="image-upload">
+              <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
+              <div style="font-size: 0.9rem; font-weight: 600;">Upload Image</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">or drag & drop</div>
+            </div>
+
+            <div class="input-container">
+              <div class="input-wrapper">
+                <textarea
+                  class="chat-input"
+                  id="video-prompt-input"
+                  placeholder="Describe your video idea... (e.g., 'A cinematic drone shot of a sunset over mountains')"
+                  rows="3"
+                ></textarea>
+              </div>
+              <button class="send-btn" id="generate-btn" onclick="generateVideo()">
+                <span>Generate</span>
+                <span>→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video Tools Panel -->
+      <div class="panel panel-tools">
+        <div class="panel-header">
+          <div class="panel-title">
+            <span>🛠️</span>
+            <span>Video Tools</span>
+          </div>
+          <div class="panel-description">Enhance and edit your videos</div>
+        </div>
+        <div class="panel-content">
+          <!-- Background Removal Tool -->
+          <div class="tool-section">
+            <div class="tool-section-title">
+              <span>🎭</span>
+              <span>Background Remover</span>
+            </div>
+
+            <div class="upload-area" id="bg-upload">
+              <div class="upload-icon">📹</div>
+              <div style="font-weight: 600; margin-bottom: 0.5rem;">Upload Video</div>
+              <div style="font-size: 0.85rem; color: var(--text-muted);">Remove background and add transparency</div>
+            </div>
+
+            <button class="tool-btn primary" onclick="showBackgroundRemover()">
+              <span>✨</span>
+              <span>Remove Background</span>
+            </button>
+          </div>
+
+          <!-- Video Editing Tools -->
+          <div class="tool-section">
+            <div class="tool-section-title">
+              <span>✂️</span>
+              <span>Video Editing</span>
+            </div>
+
+            <button class="tool-btn" onclick="showVideoTrimmer()">
+              <span>⏱️</span>
+              <span>Trim Video</span>
+            </button>
+
+            <button class="tool-btn" onclick="showVideoMerger()">
+              <span>🔗</span>
+              <span>Merge Videos</span>
+            </button>
+
+            <button class="tool-btn" onclick="showVideoEffects()">
+              <span>🎨</span>
+              <span>Add Effects</span>
+            </button>
+
+            <button class="tool-btn" onclick="showAudioEditor()">
+              <span>🎵</span>
+              <span>Add Music</span>
+            </button>
+
+            <button class="tool-btn" onclick="showVideoFilters()">
+              <span>🎭</span>
+              <span>Filters</span>
+            </button>
+
+            <button class="tool-btn" onclick="showVideoSpeed()">
+              <span>⚡</span>
+              <span>Speed Control</span>
+            </button>
+
+            <button class="tool-btn" onclick="showVideoRotator()">
+              <span>🔄</span>
+              <span>Rotate</span>
+            </button>
+
+            <button class="tool-btn" onclick="showVideoCrop()">
+              <span>✂️</span>
+              <span>Crop & Resize</span>
+            </button>
+          </div>
+
+          <!-- Export Options -->
+          <div class="tool-section">
+            <div class="tool-section-title">
+              <span>💾</span>
+              <span>Export Options</span>
+            </div>
+
+            <button class="tool-btn">
+              <span>🌐</span>
+              <span>Export as WebM</span>
+            </button>
+
+            <button class="tool-btn">
+              <span>🎬</span>
+              <span>Export as MP4</span>
+            </button>
+
+            <button class="tool-btn">
+              <span>📱</span>
+              <span>Export for Mobile</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State management
+    let selectedModel = 'veo3';
+    let uploadedImage = null;
+    let isGenerating = false;
+    let userCredits = 0;
+
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const nav = document.querySelector('nav');
+      nav.classList.toggle('mobile-menu-open');
+    }
+
+    // Model selection
+    document.querySelectorAll('.model-option').forEach(option => {
+      option.addEventListener('click', function() {
+        document.querySelectorAll('.model-option').forEach(opt => opt.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedModel = this.dataset.model;
+      });
+    });
+
+    // Image upload handling
+    const imageUploadArea = document.getElementById('image-upload');
+    const bgUploadArea = document.getElementById('bg-upload');
+
+    function setupUploadDragAndDrop(element, callback) {
+      element.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = element.id === 'image-upload' ? 'image/*' : 'video/*';
+        input.onchange = (e) => callback(e.target.files[0]);
+        input.click();
+      });
+
+      element.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        element.classList.add('drag-over');
+      });
+
+      element.addEventListener('dragleave', () => {
+        element.classList.remove('drag-over');
+      });
+
+      element.addEventListener('drop', (e) => {
+        e.preventDefault();
+        element.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) callback(file);
+      });
+    }
+
+    setupUploadDragAndDrop(imageUploadArea, (file) => {
+      if (file && file.type.startsWith('image/')) {
+        uploadedImage = file;
+        imageUploadArea.innerHTML = `
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">✅</div>
+          <div style="font-weight: 600;">${file.name}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Click to change</div>
+        `;
+      }
+    });
+
+    setupUploadDragAndDrop(bgUploadArea, (file) => {
+      if (file && file.type.startsWith('video/')) {
+        processBackgroundRemoval(file);
+      }
+    });
+
+    // API Helper Functions
+    async function apiCall(endpoint, options = {}) {
+      try {
+        const response = await fetch(`/api/video${endpoint}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          ...options
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'API request failed');
+        }
+
+        return await response.json();
+      } catch (error) {
+        console.error('API Error:', error);
+        throw error;
+      }
+    }
+
+    // Load available models
+    async function loadVideoModels() {
+      try {
+        const data = await apiCall('/models');
+        updateModelOptions(data.models);
+      } catch (error) {
+        console.error('Failed to load video models:', error);
+      }
+    }
+
+    function updateModelOptions(models) {
+      const modelSelector = document.querySelector('.model-selector');
+      modelSelector.innerHTML = '';
+
+      Object.entries(models).forEach(([key, model]) => {
+        const option = document.createElement('div');
+        option.className = `model-option ${key === selectedModel ? 'selected' : ''}`;
+        option.dataset.model = key;
+        option.textContent = `${model.name} (${model.credits} credits)`;
+        option.addEventListener('click', () => {
+          document.querySelectorAll('.model-option').forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+          selectedModel = key;
+        });
+        modelSelector.appendChild(option);
+      });
+    }
+
+    // Video generation
+    async function generateVideo() {
+      const promptInput = document.getElementById('video-prompt-input');
+      const prompt = promptInput.value.trim();
+      const generateBtn = document.getElementById('generate-btn');
+
+      if (!prompt && !uploadedImage) {
+        addMessage('Please enter a description or upload an image first!', 'assistant');
+        return;
+      }
+
+      if (isGenerating) return;
+
+      isGenerating = true;
+      generateBtn.innerHTML = '<span class="loading"></span><span>Generating...</span>';
+      generateBtn.disabled = true;
+
+      // Add user message
+      addMessage(prompt || (uploadedImage ? 'Generate video from uploaded image' : 'Generate video'), 'user');
+
+      // Add assistant processing message
+      const processingId = addMessage(`Creating your video using ${getModelName()}... This may take a few minutes.`, 'assistant');
+
+      try {
+        // Prepare form data for file upload
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('model', selectedModel);
+        if (uploadedImage) {
+          formData.append('image', uploadedImage);
+        }
+
+        const response = await apiCall('/generate', {
+          method: 'POST',
+          body: formData,
+          headers: {} // Don't set Content-Type for FormData
+        });
+
+        if (response.success) {
+          removeMessage(processingId);
+          addMessage(`✨ Video generated successfully! ${response.creditsUsed} credits used.`, 'assistant');
+          addVideoToLibrary(response.video);
+
+          // Update credits display if available
+          if (response.newBalance !== undefined) {
+            userCredits = response.newBalance;
+            updateCreditsDisplay();
+          }
+        } else {
+          throw new Error(response.error || 'Generation failed');
+        }
+
+      } catch (error) {
+        removeMessage(processingId);
+        addMessage(`❌ ${error.message || 'Failed to generate video. Please try again.'}`, 'assistant');
+      } finally {
+        isGenerating = false;
+        generateBtn.innerHTML = '<span>Generate</span><span>→</span>';
+        generateBtn.disabled = false;
+        promptInput.value = '';
+        uploadedImage = null;
+        resetImageUploadArea();
+      }
+    }
+
+    function getModelName() {
+      const modelNames = {
+        'veo3': 'Veo 3',
+        'sora2': 'Sora 2',
+        'seedance': 'Seedance'
+      };
+      return modelNames[selectedModel] || selectedModel;
+    }
+
+    function resetImageUploadArea() {
+      imageUploadArea.innerHTML = `
+        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📸</div>
+        <div style="font-size: 0.9rem; font-weight: 600;">Upload Image</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">or drag & drop</div>
+      `;
+    }
+
+    // Background removal
+    async function processBackgroundRemover(file) {
+      addMessage(`Processing background removal for: ${file.name}`, 'assistant');
+
+      const processingId = addMessage('Removing background... This may take a few minutes.', 'assistant');
+
+      try {
+        const formData = new FormData();
+        formData.append('video', file);
+        formData.append('format', 'webm');
+
+        const response = await apiCall('/remove-background', {
+          method: 'POST',
+          body: formData,
+          headers: {}
+        });
+
+        if (response.success) {
+          removeMessage(processingId);
+          addMessage(`✨ Background removed successfully! ${response.creditsUsed} credits used.`, 'assistant');
+          addVideoToLibrary(response.video);
+
+          if (response.newBalance !== undefined) {
+            userCredits = response.newBalance;
+            updateCreditsDisplay();
+          }
+        } else {
+          throw new Error(response.error || 'Background removal failed');
+        }
+
+      } catch (error) {
+        removeMessage(processingId);
+        addMessage(`❌ ${error.message || 'Failed to remove background. Please try again.'}`, 'assistant');
+      }
+    }
+
+    function showBackgroundRemover() {
+      addMessage('Click the upload area above to select a video for background removal. The process costs 20 credits and will create a transparent video you can use in your projects.', 'assistant');
+    }
+
+    // Video Editing Tool Functions
+    function showVideoTrimmer() {
+      addMessage('🎬 **Video Trimmer** - Cut your videos to the perfect length!', 'assistant');
+      addMessage('Upload a video and select the start and end points to trim it. Perfect for removing unwanted footage or creating short clips for social media.', 'assistant');
+      addMessage('Features:', 'assistant');
+      addMessage('• Precise timeline controls with visual preview', 'assistant');
+      addMessage('• Frame-accurate trimming', 'assistant');
+      addMessage• Multiple trim points support', 'assistant');
+      addMessage('• Maintains original quality', 'assistant');
+      addMessage('Cost: 10 credits per video', 'assistant');
+    }
+
+    function showVideoMerger() {
+      addMessage('🔗 **Video Merger** - Combine multiple videos into one seamless video!', 'assistant');
+      addMessage('Upload multiple video clips and arrange them in the order you want. Perfect for creating compilations or combining multiple takes.', 'assistant');
+      addMessage('Features:', 'assistant');
+      addMessage('• Drag-and-drop timeline editor', 'assistant');
+      addMessage('• Cross-fade transitions between clips', 'assistant');
+      addMessage('• Maintain consistent quality', 'assistant');
+      addMessage('• Automatic aspect ratio handling', 'assistant');
+      addMessage('Cost: 15 credits for merging (5 credits per additional video)', 'assistant');
+    }
+
+    function showVideoEffects() {
+      addMessage('🎨 **Video Effects** - Add professional effects to your videos!', 'assistant');
+      addMessage('Choose from a variety of cinematic effects to enhance your videos:', 'assistant');
+      addMessage('✨ **Visual Effects:**', 'assistant');
+      addMessage('• Blur and focus effects', 'assistant');
+      addMessage('• Color grading and filters', 'assistant');
+      addMessage('• Particle effects and overlays', 'assistant');
+      addMessage('• Motion blur and speed ramping', 'assistant');
+      addMessage('🎭 **Transitions:**', 'assistant');
+      addMessage('• Fade in/out transitions', 'assistant');
+      addMessage('• Slide and wipe effects', 'assistant');
+      addMessage('• Zoom and pan effects', 'assistant');
+      addMessage('Cost: 5-20 credits depending on effect complexity', 'assistant');
+    }
+
+    function showAudioEditor() {
+      addMessage('🎵 **Audio Editor** - Add music and audio to your videos!', 'assistant');
+      addMessage('Enhance your videos with custom audio tracks:', 'assistant');
+      addMessage('🎶 **Music Options:**', 'assistant');
+      addMessage('• Background music library', 'assistant');
+      'assistant');
+      addMessage('• AI-generated music composition', 'assistant');
+      addMessage('• Upload your own music files', 'assistant');
+      addMessage('• Royalty-free music integration', 'assistant');
+      addMessage('🔊 **Audio Controls:**', 'assistant');
+      addMessage('• Volume adjustment and mixing', 'assistant');
+      addMessage('• Audio sync and timing', 'assistant');
+      addMessage('• Voice-over recording capability', 'assistant');
+      addMessage('Cost: 10 credits for background music addition', 'assistant');
+    }
+
+    function showVideoFilters() {
+      addMessage('🎭 **Video Filters** - Apply professional filters instantly!', 'assistant');
+      addMessage('Transform your videos with one-click filters:', 'assistant');
+      addMessage('🌈 **Color Filters:**', 'assistant');
+      addMessage('• Vintage and retro effects', 'assistant');
+      addMessage('• Black & white conversion', 'assistant');
+      addMessage('• Sepia and warm tones', 'assistant');
+      addMessage('• Color temperature adjustment', 'assistant');
+      addMessage('🎨 **Creative Filters:**', 'assistant');
+      addMessage('• Glitch and digital effects', 'assistant');
+      addMessage('• Film grain and cinematic looks', 'assistant');
+      addMessage('• Abstract and artistic filters', 'assistant');
+      addMessage('• Custom LUT support', 'assistant');
+      addMessage('Cost: 5 credits per filter applied', 'assistant');
+    }
+
+    function showVideoSpeed() {
+      addMessage('⚡ **Speed Control** - Adjust video playback speed!', 'assistant');
+      addMessage('Change the tempo of your videos:', 'assistant');
+      addMessage('⏩️ **Speed Options:**', 'assistant');
+      addMessage('• Slow motion (0.25x - 0.75x)', 'assistant');
+      addMessage('• Normal speed (1.0x)', 'assistant');
+      addMessage('• Fast motion (1.25x - 4x)', 'assistant');
+      addMessage('• Variable speed ramps', 'assistant');
+      addMessage('🎯 **Use Cases:**', 'assistant');
+      addMessage('• Create dramatic slow-motion effects', 'assistant');
+      addMessage('• Speed up time-lapse footage', 'assistant');
+      addMessage('• Match video to audio tempo', 'assistant');
+      addMessage('• Create perfect loops', 'assistant');
+      addMessage('Cost: 5 credits per speed adjustment', 'assistant');
+    }
+
+    function showVideoRotator() {
+      addMessage('🔄 **Video Rotator** - Rotate and flip your videos!', 'assistant');
+      addMessage('Adjust video orientation:', 'assistant');
+      addMessage('📐 **Rotation Options:**', 'assistant');
+      addMessage('• 90°, 180°, 270° rotation', 'assistant');
+      addMessage('• Custom angle rotation', 'assistant');
+      addMessage('• Smooth rotation animation', 'assistant');
+      addMessage('↔️ **Flip Options:**', 'assistant');
+      addMessage('• Horizontal flip (mirror)', 'assistant');
+      addMessage('• Vertical flip (upside down)', 'assistant');
+      addMessage('• Both horizontal and vertical', 'assistant');
+      addMessage('🎯 **Perfect For:**', 'assistant');
+      addMessage('• Fixing phone-recorded videos', 'assistant');
+      addMessage('• Creating artistic effects', 'assistant');
+      addMessage('• Correcting camera orientation', 'assistant');
+      addMessage('• Social media optimization', 'assistant');
+      addMessage('Cost: 5 credits per rotation/flip', 'assistant');
+    }
+
+    function showVideoCrop() {
+      addMessage('✂️ **Crop & Resize** - Perfect your video composition!', 'assistant');
+      addMessage('Frame your videos perfectly:', 'assistant');
+      addMessage('📐 **Resizing Options:**', 'assistant');
+      addMessage('• Standard aspect ratios (16:9, 9:16, 4:3, 1:1)', 'assistant');
+      addMessage('• Social media formats (Reels, Stories, Posts)', 'assistant');
+      add句话('• Custom dimensions and resolution', 'assistant');
+      addMessage('• High-quality upscaling and downscaling', 'assistant');
+      addMessage('✂️ **Cropping Options:**', 'assistant');
+      addMessage('• Free-form crop tool', 'assistant');
+      addMessage('• Smart object detection cropping', 'assistant');
+      addMessage('• Rule-of-thirds composition guide', 'assistant');
+      addMessage('• Pan and zoom adjustments', 'assistant');
+      addMessage('🎯 **Use Cases:**', 'assistant');
+      addMessage('• Remove unwanted footage', 'assistant');
+      addMessage('• Focus on specific subjects', 'assistant');
+      addMessage('• Create different format versions', 'assistant');
+      addMessage('• Optimize for different platforms', 'assistant');
+      addMessage('Cost: 10 credits per crop/resize operation', 'assistant');
+    }
+
+    // Chat message functions
+    function addMessage(content, sender) {
+      const messagesContainer = document.getElementById('chat-messages');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      messageDiv.innerHTML = `
+        <div class="message-content">
+          <div class="message-label">${sender === 'user' ? 'You' : 'AetherWave AI'}</div>
+          <div>${content}</div>
+        </div>
+      `;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      return messageDiv;
+    }
+
+    function removeMessage(messageElement) {
+      if (messageElement && messageElement.parentNode) {
+        messageElement.parentNode.removeChild(messageElement);
+      }
+    }
+
+    // Video library management
+    function addVideoToLibrary(video) {
+      const libraryContainer = document.getElementById('video-library');
+
+      // Remove empty state if it exists
+      const emptyState = libraryContainer.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      // Create new video card
+      const videoCard = document.createElement('div');
+      videoCard.className = 'video-card';
+      videoCard.innerHTML = `
+        <div class="video-thumbnail">
+          <div style="font-size: 2rem;">🎬</div>
+        </div>
+        <div class="video-info">
+          <div class="video-title">${video.prompt || 'Generated Video'}</div>
+          <div class="video-meta">${video.model || 'AI'} • ${formatTime(video.createdAt)}</div>
+        </div>
+      `;
+
+      videoCard.addEventListener('click', () => {
+        // TODO: Implement video preview/playback
+        addMessage(`Opening video: ${video.prompt || 'Generated Video'}`, 'assistant');
+      });
+
+      libraryContainer.insertBefore(videoCard, libraryContainer.firstChild);
+    }
+
+    function formatTime(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      const minutes = Math.floor(diff / 60000);
+
+      if (minutes < 1) return 'Just now';
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      return date.toLocaleDateString();
+    }
+
+    function updateCreditsDisplay() {
+      // TODO: Update credits display if available
+      console.log('Credits updated:', userCredits);
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        generateVideo();
+      }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      // Auto-focus the input
+      document.getElementById('video-prompt-input').focus();
+
+      // Load available models
+      loadVideoModels();
+
+      // Load video library
+      loadVideoLibrary();
+    });
+
+    // Load user's video library
+    async function loadVideoLibrary() {
+      try {
+        const data = await apiCall('/library');
+        if (data.success && data.videos.length > 0) {
+          data.videos.forEach(video => addVideoToLibrary(video));
+        }
+      } catch (error) {
+        console.error('Failed to load video library:', error);
+      }
+    }
+  </script>
+</body>
+</html>

@@ -30,6 +30,7 @@ import {
 } from "@shared/schema";
 import { eq, lt } from "drizzle-orm";
 import virtualArtistsRouter from './VirtualArtistsRoutes.js';
+import { setupVideoRoutes } from './video-routes';
 
 
 
@@ -650,13 +651,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/music-status/:taskId", authMiddleware, async (req, res) => {
     try {
       const { taskId } = req.params;
+      const { checkForTimeout } = req.query; // Frontend can request timeout check
       const sunoApiKey = process.env.SUNO_API_KEY;
 
       if (!sunoApiKey) {
         return res.status(500).json({ error: 'API key not configured' });
       }
 
-      console.log('Checking status for taskId:', taskId);
+      console.log('Checking status for taskId:', taskId, checkForTimeout ? '(final timeout check)' : '');
       const proxyAgent = createProxyAgent();
       const response = await nodeFetch(`https://api.kie.ai/api/v1/generate/record-info?taskId=${taskId}`, {
         headers: {
@@ -667,12 +669,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await response.json();
       console.log(`KIE.ai status for task ${taskId}:`, JSON.stringify(data, null, 2));
-      
+
       // KIE.ai response format: { code: 200, data: { taskId, status, response: { sunoData: [...] } } }
       if (data.code === 200 && data.data) {
         const taskData = data.data;
-        const taskStatus = taskData.status; // PENDING, TEXT_SUCCESS, FIRST_SUCCESS, SUCCESS
-        
+        const taskStatus = taskData.status; // PENDING, TEXT_SUCCESS, FIRST_SUCCESS, SUCCESS, or *_FAILED/*_ERROR
+
+        // Check for explicit FAILURE status codes from KIE.ai (TRUE service failures)
+        const isExplicitFailure = taskStatus.includes('FAIL') || taskStatus.includes('ERROR');
+
+        if (isExplicitFailure) {
+          console.log(`🚫 KIE.ai reports task ${taskId} FAILED with status: ${taskStatus}`);
+          return res.json({
+            status: 'FAILED',
+            failed: true,
+            failureReason: taskStatus,
+            tracks: [],
+            error: `Music generation failed: ${taskStatus}`
+          });
+        }
+
+        // Check for timeout scenario (frontend polling exceeded limit)
+        // Only consider it a stuck task if:
+        // 1. Frontend is doing a final timeout check
+        // 2. Status is still PENDING (not actively progressing)
+        // 3. This indicates the task has been stuck for 6+ minutes
+        if (checkForTimeout === 'true' && taskStatus === 'PENDING') {
+          console.log(`⏱️ Task ${taskId} stuck in PENDING after timeout - treating as failed`);
+          return res.json({
+            status: 'TIMEOUT',
+            timeout: true,
+            tracks: [],
+            error: 'Task stuck in pending state after extended wait time'
+          });
+        }
+
         // Extract tracks from response.sunoData if available
         const sunoData = taskData.response?.sunoData || [];
         const tracks = sunoData.map((track: any) => ({
@@ -691,9 +722,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tracks: tracks
         });
       } else {
-        // Return error or pending status
-        res.json({ 
-          status: 'pending', 
+        // KIE.ai API error response
+        res.json({
+          status: 'pending',
           tracks: [],
           error: data.msg || 'Unknown status'
         });
@@ -701,6 +732,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error: any) {
       console.error('Status check error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Refund music generation credits when task fails or times out
+  app.post("/api/music-refund/:taskId", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { taskId } = req.params;
+      const { reason } = req.body; // 'timeout' or 'failed'
+
+      console.log(`📋 Refund request for music task ${taskId} by user ${userId}. Reason: ${reason}`);
+
+      // Verify the task status one final time before refunding
+      const sunoApiKey = process.env.SUNO_API_KEY;
+      if (sunoApiKey) {
+        try {
+          const proxyAgent = createProxyAgent();
+          const response = await nodeFetch(`https://api.kie.ai/api/v1/generate/record-info?taskId=${taskId}`, {
+            headers: {
+              'Authorization': `Bearer ${sunoApiKey}`
+            },
+            agent: proxyAgent
+          });
+          const data = await response.json();
+
+          if (data.code === 200 && data.data) {
+            const taskStatus = data.data.status;
+
+            // Don't refund if task actually succeeded!
+            if (taskStatus === 'SUCCESS') {
+              console.log(`✅ Task ${taskId} actually completed successfully - no refund needed`);
+              return res.json({
+                refunded: false,
+                message: 'Task completed successfully',
+                status: taskStatus,
+                tracks: data.data.response?.sunoData || []
+              });
+            }
+
+            // Don't refund if task is actively progressing (not stuck)
+            if (taskStatus === 'TEXT_SUCCESS' || taskStatus === 'FIRST_SUCCESS') {
+              console.log(`⏳ Task ${taskId} is actively progressing (${taskStatus}) - no refund yet`);
+              return res.json({
+                refunded: false,
+                message: 'Task is still progressing',
+                status: taskStatus
+              });
+            }
+          }
+        } catch (verifyError) {
+          console.error('Error verifying task status before refund:', verifyError);
+          // Continue with refund if we can't verify
+        }
+      }
+
+      // Confirmed failure or timeout - process refund
+      const refundResult = await storage.refundCredits(userId, 'music_generation');
+
+      if (refundResult.success) {
+        const wasRefunded = refundResult.amountRefunded > 0;
+
+        console.log(wasRefunded
+          ? `✅ Refunded ${refundResult.amountRefunded} credits to user ${userId}. New balance: ${refundResult.newBalance}`
+          : `ℹ️ User ${userId} has unlimited plan - no credits to refund`
+        );
+
+        return res.json({
+          refunded: true,
+          creditsRefunded: refundResult.amountRefunded,
+          newBalance: refundResult.newBalance,
+          message: wasRefunded
+            ? `${refundResult.amountRefunded} credits have been refunded to your account`
+            : 'Task failed (unlimited plan - no credits deducted)',
+          reason: reason
+        });
+      } else {
+        console.error(`❌ Failed to refund credits for user ${userId}:`, refundResult.error);
+        return res.status(500).json({
+          error: 'Failed to process refund',
+          details: refundResult.error
+        });
+      }
+
+    } catch (error: any) {
+      console.error('Music refund error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -1428,10 +1545,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         } catch (error: any) {
           console.error('DALL-E 3 generation error:', error);
-          return res.status(500).json({
-            error: 'Failed to generate album art with DALL-E 3',
-            details: error.message
-          });
+
+          // Automatically refund credits on API failure
+          const refundResult = await storage.refundCredits(userId, 'album_art_generation');
+
+          if (refundResult.success) {
+            console.log(refundResult.amountRefunded > 0
+              ? `✅ Refunded ${refundResult.amountRefunded} credits to user ${userId} after DALL-E failure. New balance: ${refundResult.newBalance}`
+              : `ℹ️ DALL-E failed for unlimited plan user - no credits to refund`
+            );
+
+            return res.status(500).json({
+              error: 'Failed to generate album art with DALL-E 3',
+              details: error.message,
+              refunded: true,
+              creditsRefunded: refundResult.amountRefunded,
+              newBalance: refundResult.newBalance
+            });
+          } else {
+            console.error(`❌ Failed to refund credits for user ${userId}:`, refundResult.error);
+            return res.status(500).json({
+              error: 'Failed to generate album art with DALL-E 3',
+              details: error.message,
+              refundError: refundResult.error
+            });
+          }
         }
       }
 
@@ -1540,11 +1678,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
     } catch (error: any) {
       console.error('Album art generation error:', error);
-      res.status(500).json({
-        error: 'Failed to generate album art',
-        details: error.message,
-        body: error.body
-      });
+
+      // Automatically refund credits on API failure
+      const refundResult = await storage.refundCredits(userId, 'album_art_generation');
+
+      if (refundResult.success) {
+        console.log(refundResult.amountRefunded > 0
+          ? `✅ Refunded ${refundResult.amountRefunded} credits to user ${userId} after art generation failure. New balance: ${refundResult.newBalance}`
+          : `ℹ️ Art generation failed for unlimited plan user - no credits to refund`
+        );
+
+        return res.status(500).json({
+          error: 'Failed to generate album art',
+          details: error.message,
+          body: error.body,
+          refunded: true,
+          creditsRefunded: refundResult.amountRefunded,
+          newBalance: refundResult.newBalance
+        });
+      } else {
+        console.error(`❌ Failed to refund credits for user ${userId}:`, refundResult.error);
+        return res.status(500).json({
+          error: 'Failed to generate album art',
+          details: error.message,
+          body: error.body,
+          refundError: refundResult.error
+        });
+      }
     }
   });
 
@@ -1935,11 +2095,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error: any) {
       console.error('Fal.ai Video Generation Error:', error);
-      res.status(500).json({
-        error: 'Failed to generate video with Fal.ai',
-        details: error.message,
-        body: error.body
-      });
+
+      // Automatically refund credits on API failure
+      // Note: Video generation uses custom credit calculation, so we refund using the same method
+      const hasUnlimitedVideo = ['all_access'].includes(user.subscriptionPlan);
+
+      if (!hasUnlimitedVideo) {
+        try {
+          // Refund the credits that were deducted
+          const creditModelName = modelVersion === 'pro-fast' ? 'seedance-pro-fast' :
+            modelVersion === 'pro' ? 'seedance-pro' : 'seedance-lite';
+
+          const requiredCredits = calculateVideoCredits(
+            creditModelName,
+            resolution as '480p' | '720p' | '1080p' | '4k',
+            parseInt(duration)
+          );
+
+          const currentCredits = (await storage.getUser(userId))?.credits || 0;
+          const newCredits = currentCredits + requiredCredits;
+          await storage.updateUserCredits(userId, newCredits);
+
+          console.log(`✅ Refunded ${requiredCredits} credits to user ${userId} after Fal.ai video generation failure. New balance: ${newCredits}`);
+
+          return res.status(500).json({
+            error: 'Failed to generate video with Fal.ai',
+            details: error.message,
+            body: error.body,
+            refunded: true,
+            creditsRefunded: requiredCredits,
+            newBalance: newCredits
+          });
+        } catch (refundError) {
+          console.error(`❌ Failed to refund credits for user ${userId}:`, refundError);
+          return res.status(500).json({
+            error: 'Failed to generate video with Fal.ai',
+            details: error.message,
+            body: error.body,
+            refundError: 'Failed to process refund'
+          });
+        }
+      } else {
+        console.log(`ℹ️ Fal.ai video failed for unlimited plan user - no credits to refund`);
+        return res.status(500).json({
+          error: 'Failed to generate video with Fal.ai',
+          details: error.message,
+          body: error.body,
+          refunded: false
+        });
+      }
     }
   });
 
@@ -3062,6 +3266,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch artist card' });
     }
   });
+
+  // Setup video generation and editing routes
+  setupVideoRoutes(app);
 
   const httpServer = createServer(app);
 

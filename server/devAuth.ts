@@ -14,7 +14,7 @@ const DEV_USER: User = {
   username: 'devuser',
   vocalGenderPreference: 'm',
   credits: 10000,
-  subscriptionPlan: 'all_access',
+  subscriptionPlan: 'mogul', // Highest tier plan with all features
   lastCreditReset: new Date(),
   welcomeBonusClaimed: 1,
   stripeCustomerId: null,

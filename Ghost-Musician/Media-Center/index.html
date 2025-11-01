@@ -1,0 +1,648 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Media Site</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @font-face {
+            font-family: 'NotoSansHans';
+            src: url('https://assets-persist.lovart.ai/agent-static-assets/NotoSansHans-Regular.otf') format('opentype');
+        }
+
+        body {
+            width: 1920px;
+            height: 1080px;
+            background-color: #0a0a0a;
+            font-family: 'NotoSansHans', sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            padding: 0 40px;
+        }
+
+        .row {
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .row-wrapper {
+            display: flex;
+            gap: 20px;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        .row-1 .row-wrapper {
+            animation: scrollRight 30s linear infinite;
+        }
+
+        .row-2 .row-wrapper {
+            animation: scrollLeft 35s linear infinite;
+        }
+
+        .row-3 .row-wrapper {
+            animation: scrollRight 32s linear infinite;
+        }
+
+        @keyframes scrollRight {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(-50% - 10px));
+            }
+        }
+
+        @keyframes scrollLeft {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(calc(50% + 10px));
+            }
+        }
+
+        .card {
+            flex-shrink: 0;
+            width: 320px;
+            height: 180px;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+        }
+
+        .card-thumbnail {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            padding: 16px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .card-title {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .card-subscribers {
+            color: #a0a0a0;
+            font-size: 12px;
+        }
+
+        /* Modal styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            position: fixed;
+            width: 320px;
+            height: 180px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            transition: all 0.4s ease;
+            z-index: 1001;
+        }
+
+        .modal-card.expanded {
+            width: 80vw;
+            height: 80vh;
+            max-width: 1400px;
+            max-height: 800px;
+        }
+
+        .modal-card-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #1a1a1a;
+        }
+
+        .modal-card-thumbnail {
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 50%, #45b7d1 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 120px;
+            color: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(0, 0, 0, 0.6);
+            border: none;
+            border-radius: 50%;
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+            z-index: 1002;
+        }
+
+        .modal-close-btn:hover {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .modal-card-info {
+            padding: 30px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-card-title {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .modal-card-subscribers {
+            color: #a0a0a0;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal-card-description {
+            color: #d0d0d0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Row 1 - Scrolls Right -->
+        <div class="row row-1">
+            <div class="row-wrapper">
+                <div class="card" data-title="Tech Channel" data-subscribers="2.5M" data-description="Explore the latest in technology, gadgets, and innovation. From smartphone reviews to AI breakthroughs, we cover it all with in-depth analysis and expert insights.">
+                    <div class="card-thumbnail">📱</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Tech Channel</div>
+                        <div class="card-subscribers">2.5M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Music Vibes" data-subscribers="1.8M" data-description="Your ultimate destination for music discovery. From indie artists to chart-toppers, enjoy curated playlists and exclusive performances.">
+                    <div class="card-thumbnail">🎵</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Music Vibes</div>
+                        <div class="card-subscribers">1.8M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Gaming Zone" data-subscribers="3.2M" data-description="Join millions of gamers for live streams, tutorials, and epic gaming moments. From casual to competitive gaming, we have it all.">
+                    <div class="card-thumbnail">🎮</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Gaming Zone</div>
+                        <div class="card-subscribers">3.2M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Travel Stories" data-subscribers="1.2M" data-description="Discover hidden gems and travel destinations around the world. Experience cultures, cuisines, and adventures through our immersive travel content.">
+                    <div class="card-thumbnail">✈️</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Travel Stories</div>
+                        <div class="card-subscribers">1.2M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Cooking Lab" data-subscribers="950K" data-description="Master culinary arts with our expert chefs. Learn recipes from around the world, cooking techniques, and food science explained.">
+                    <div class="card-thumbnail">👨‍🍳</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Cooking Lab</div>
+                        <div class="card-subscribers">950K subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Fitness Pro" data-subscribers="2.1M" data-description="Transform your body and mind with our fitness programs. Workouts, nutrition tips, and wellness advice from certified trainers.">
+                    <div class="card-thumbnail">💪</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Fitness Pro</div>
+                        <div class="card-subscribers">2.1M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Art Studio" data-subscribers="680K" data-description="Unleash your creativity with our art tutorials. Digital art, painting, sculpture, and design techniques for all skill levels.">
+                    <div class="card-thumbnail">🎨</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Art Studio</div>
+                        <div class="card-subscribers">680K subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Science Today" data-subscribers="1.5M" data-description="Explore the wonders of science and nature. From space discoveries to biological breakthroughs, explained in simple terms.">
+                    <div class="card-thumbnail">🔬</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Science Today</div>
+                        <div class="card-subscribers">1.5M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Comedy Club" data-subscribers="1.9M" data-description="Laugh out loud with the funniest comedians and hilarious skits. Fresh comedy content daily to brighten your day.">
+                    <div class="card-thumbnail">😂</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Comedy Club</div>
+                        <div class="card-subscribers">1.9M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Business Hub" data-subscribers="2.3M" data-description="Master entrepreneurship and business strategy. Learn from successful founders and industry leaders about growth and innovation.">
+                    <div class="card-thumbnail">💼</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Business Hub</div>
+                        <div class="card-subscribers">2.3M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Nature Doc" data-subscribers="1.1M" data-description="Witness the beauty of our planet. Wildlife documentaries and nature exploration from the most remote corners of Earth.">
+                    <div class="card-thumbnail">🦁</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Nature Doc</div>
+                        <div class="card-subscribers">1.1M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Fashion Week" data-subscribers="890K" data-description="Stay on top of fashion trends and style tips. From runway shows to street style, we bring you the latest in fashion.">
+                    <div class="card-thumbnail">👗</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Fashion Week</div>
+                        <div class="card-subscribers">890K subscribers</div>
+                    </div>
+                </div>
+                <!-- Duplicate for seamless loop -->
+                <div class="card" data-title="Tech Channel" data-subscribers="2.5M" data-description="Explore the latest in technology, gadgets, and innovation. From smartphone reviews to AI breakthroughs, we cover it all with in-depth analysis and expert insights.">
+                    <div class="card-thumbnail">📱</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Tech Channel</div>
+                        <div class="card-subscribers">2.5M subscribers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 2 - Scrolls Left -->
+        <div class="row row-2">
+            <div class="row-wrapper">
+                <div class="card" data-title="Photography" data-subscribers="1.4M" data-description="Master photography with our comprehensive guides. Learn composition, lighting, post-processing, and storytelling through images.">
+                    <div class="card-thumbnail">📸</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Photography</div>
+                        <div class="card-subscribers">1.4M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Movie Reviews" data-subscribers="2.0M" data-description="Get honest reviews and analysis of the latest movies and TV shows. Behind-the-scenes insights and industry news.">
+                    <div class="card-thumbnail">🎬</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Movie Reviews</div>
+                        <div class="card-subscribers">2.0M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Language Lab" data-subscribers="1.3M" data-description="Learn new languages with interactive lessons. From beginner to advanced, master any language with our expert instructors.">
+                    <div class="card-thumbnail">🌍</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Language Lab</div>
+                        <div class="card-subscribers">1.3M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="DIY Crafts" data-subscribers="760K" data-description="Create amazing things with our DIY tutorials. Home projects, crafts, and creative ideas for the whole family.">
+                    <div class="card-thumbnail">🔨</div>
+                    <div class="card-overlay">
+                        <div class="card-title">DIY Crafts</div>
+                        <div class="card-subscribers">760K subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Pet Paradise" data-subscribers="1.7M" data-description="All things pets! Care tips, training, funny moments, and heartwarming stories about our beloved animal companions.">
+                    <div class="card-thumbnail">🐶</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Pet Paradise</div>
+                        <div class="card-subscribers">1.7M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="History Matters" data-subscribers="1.6M" data-description="Journey through time with fascinating historical events and stories. Learn the facts that shaped our world.">
+                    <div class="card-thumbnail">📚</div>
+                    <div class="card-overlay">
+                        <div class="card-title">History Matters</div>
+                        <div class="card-subscribers">1.6M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Auto Reviews" data-subscribers="2.4M" data-description="The latest in automotive news and reviews. Car tests, modifications, and driving tips from expert reviewers.">
+                    <div class="card-thumbnail">🏎️</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Auto Reviews</div>
+                        <div class="card-subscribers">2.4M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Tech Reviews" data-subscribers="2.8M" data-description="In-depth reviews of gadgets and technology. Unboxing, testing, and comparisons to help you make smart purchases.">
+                    <div class="card-thumbnail">⌚</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Tech Reviews</div>
+                        <div class="card-subscribers">2.8M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Yoga & Wellness" data-subscribers="1.1M" data-description="Find peace and balance with our yoga and meditation programs. Wellness tips for physical and mental health.">
+                    <div class="card-thumbnail">🧘</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Yoga & Wellness</div>
+                        <div class="card-subscribers">1.1M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Music Production" data-subscribers="950K" data-description="Learn music production from industry professionals. Beat making, mixing, mastering, and everything about music creation.">
+                    <div class="card-thumbnail">🎹</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Music Production</div>
+                        <div class="card-subscribers">950K subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Real Estate" data-subscribers="1.25M" data-description="Explore properties and real estate investment strategies. Market trends, home tours, and buying/selling guides.">
+                    <div class="card-thumbnail">🏠</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Real Estate</div>
+                        <div class="card-subscribers">1.25M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Anime World" data-subscribers="2.2M" data-description="Everything anime! Reviews, discussions, and recommendations for anime enthusiasts of all levels.">
+                    <div class="card-thumbnail">🎌</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Anime World</div>
+                        <div class="card-subscribers">2.2M subscribers</div>
+                    </div>
+                </div>
+                <!-- Duplicate for seamless loop -->
+                <div class="card" data-title="Photography" data-subscribers="1.4M" data-description="Master photography with our comprehensive guides. Learn composition, lighting, post-processing, and storytelling through images.">
+                    <div class="card-thumbnail">📸</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Photography</div>
+                        <div class="card-subscribers">1.4M subscribers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Row 3 - Scrolls Right -->
+        <div class="row row-3">
+            <div class="row-wrapper">
+                <div class="card" data-title="Podcast Central" data-subscribers="1.05M" data-description="Listen to engaging podcasts on various topics. Interviews with interesting people, storytelling, and thought-provoking discussions.">
+                    <div class="card-thumbnail">🎙️</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Podcast Central</div>
+                        <div class="card-subscribers">1.05M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Education Plus" data-subscribers="2.6M" data-description="Comprehensive educational content for all ages. Courses, tutorials, and learning resources across multiple subjects.">
+                    <div class="card-thumbnail">📖</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Education Plus</div>
+                        <div class="card-subscribers">2.6M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Beauty Secrets" data-subscribers="1.55M" data-description="Makeup tutorials, skincare routines, and beauty tips from professionals. Transform your look with our expert guidance.">
+                    <div class="card-thumbnail">💄</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Beauty Secrets</div>
+                        <div class="card-subscribers">1.55M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Sports Zone" data-subscribers="3.0M" data-description="Live sports coverage, analysis, and highlights. From football to basketball, stay updated with all major sports events.">
+                    <div class="card-thumbnail">⚽</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Sports Zone</div>
+                        <div class="card-subscribers">3.0M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Coffee Culture" data-subscribers="820K" data-description="Explore the world of coffee. Brewing techniques, bean reviews, and cafe culture from coffee enthusiasts worldwide.">
+                    <div class="card-thumbnail">☕</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Coffee Culture</div>
+                        <div class="card-subscribers">820K subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Design Trends" data-subscribers="1.35M" data-description="Stay ahead with the latest design trends. Graphic design, web design, and creative inspiration for designers.">
+                    <div class="card-thumbnail">🎭</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Design Trends</div>
+                        <div class="card-subscribers">1.35M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Mental Health" data-subscribers="1.45M" data-description="Mental wellness and self-care strategies. Expert advice on stress management, anxiety, and emotional well-being.">
+                    <div class="card-thumbnail">🧠</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Mental Health</div>
+                        <div class="card-subscribers">1.45M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Crypto Insights" data-subscribers="1.9M" data-description="Bitcoin, blockchain, and cryptocurrency explained. Market analysis and investment strategies for crypto enthusiasts.">
+                    <div class="card-thumbnail">₿</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Crypto Insights</div>
+                        <div class="card-subscribers">1.9M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Parenting Guide" data-subscribers="1.32M" data-description="Parenting tips and child development advice. From newborns to teenagers, get expert guidance for every stage.">
+                    <div class="card-thumbnail">👨‍👩‍👧</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Parenting Guide</div>
+                        <div class="card-subscribers">1.32M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Gardening Hub" data-subscribers="980K" data-description="Grow your own garden with expert tips. Plant care, landscaping, and organic gardening techniques.">
+                    <div class="card-thumbnail">🌱</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Gardening Hub</div>
+                        <div class="card-subscribers">980K subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Movie Nights" data-subscribers="2.15M" data-description="Discover what to watch tonight. Movie recommendations, reviews, and streaming guides for all genres.">
+                    <div class="card-thumbnail">🍿</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Movie Nights</div>
+                        <div class="card-subscribers">2.15M subscribers</div>
+                    </div>
+                </div>
+                <div class="card" data-title="Startup Stories" data-subscribers="1.28M" data-description="Learn from startup founders and entrepreneurs. Success stories, failures, and lessons from the startup world.">
+                    <div class="card-thumbnail">🚀</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Startup Stories</div>
+                        <div class="card-subscribers">1.28M subscribers</div>
+                    </div>
+                </div>
+                <!-- Duplicate for seamless loop -->
+                <div class="card" data-title="Podcast Central" data-subscribers="1.05M" data-description="Listen to engaging podcasts on various topics. Interviews with interesting people, storytelling, and thought-provoking discussions.">
+                    <div class="card-thumbnail">🎙️</div>
+                    <div class="card-overlay">
+                        <div class="card-title">Podcast Central</div>
+                        <div class="card-subscribers">1.05M subscribers</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-card" id="modalCard">
+            <div class="modal-card-content">
+                <div class="modal-card-thumbnail">
+                    <span id="modalThumbnailEmoji" style="font-size: 120px;"></span>
+                    <button class="modal-close-btn" id="closeBtn">
+                        <i class="ri-close-line"></i>
+                    </button>
+                </div>
+                <div class="modal-card-info">
+                    <div class="modal-card-title" id="modalTitle"></div>
+                    <div class="modal-card-subscribers" id="modalSubscribers"></div>
+                    <div class="modal-card-description" id="modalDescription"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const modalOverlay = document.getElementById('modalOverlay');
+        const modalCard = document.getElementById('modalCard');
+        const closeBtn = document.getElementById('closeBtn');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalSubscribers = document.getElementById('modalSubscribers');
+        const modalDescription = document.getElementById('modalDescription');
+        const modalThumbnailEmoji = document.getElementById('modalThumbnailEmoji');
+
+        let currentCard = null;
+        let cardOriginalRect = null;
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                if (modalOverlay.classList.contains('active')) return;
+
+                currentCard = this;
+                cardOriginalRect = this.getBoundingClientRect();
+
+                const title = this.dataset.title;
+                const subscribers = this.dataset.subscribers;
+                const description = this.dataset.description;
+                const emoji = this.querySelector('.card-thumbnail').textContent;
+
+                modalTitle.textContent = title;
+                modalSubscribers.textContent = subscribers;
+                modalDescription.textContent = description;
+                modalThumbnailEmoji.textContent = emoji;
+
+                // Position modal card at original location
+                modalCard.style.left = cardOriginalRect.left + 'px';
+                modalCard.style.top = cardOriginalRect.top + 'px';
+                modalCard.style.width = cardOriginalRect.width + 'px';
+                modalCard.style.height = cardOriginalRect.height + 'px';
+
+                // Show overlay and card
+                modalOverlay.classList.add('active');
+
+                // Trigger animation
+                setTimeout(() => {
+                    modalCard.classList.add('expanded');
+                    modalCard.style.left = '50%';
+                    modalCard.style.top = '50%';
+                    modalCard.style.transform = 'translate(-50%, -50%)';
+                }, 10);
+            });
+        });
+
+        function closeModal() {
+            if (!currentCard) return;
+
+            modalCard.classList.remove('expanded');
+            modalCard.style.left = cardOriginalRect.left + 'px';
+            modalCard.style.top = cardOriginalRect.top + 'px';
+            modalCard.style.width = cardOriginalRect.width + 'px';
+            modalCard.style.height = cardOriginalRect.height + 'px';
+            modalCard.style.transform = 'translate(0, 0)';
+
+            setTimeout(() => {
+                modalOverlay.classList.remove('active');
+                currentCard = null;
+            }, 400);
+        }
+
+        closeBtn.addEventListener('click', closeModal);
+
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === modalOverlay) {
+                closeModal();
+            }
+        });
+
+        // Keyboard escape to close
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modalOverlay.classList.contains('active')) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>

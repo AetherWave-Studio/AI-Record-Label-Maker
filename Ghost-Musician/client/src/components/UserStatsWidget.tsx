@@ -1,4 +1,4 @@
-import { TrendingUp, Music, Users, Award } from "lucide-react";
+import { TrendingUp, Music, Users, Award, Gift, Clock } from "lucide-react";
 import { Link } from "wouter";
 
 interface UserStatsWidgetProps {
@@ -35,6 +35,32 @@ export function UserStatsWidget({
             View All →
           </button>
         </Link>
+      </div>
+
+      {/* Daily Reward Notification */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-aetherwave-pink/20 to-electric-neon/20 border border-aetherwave-pink/30 rounded-xl">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-aetherwave-pink/30 flex items-center justify-center animate-pulse">
+              <Gift size={20} className="text-aetherwave-pink" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="font-semibold text-aetherwave-pink">Daily Reward Available!</h4>
+                <div className="flex items-center gap-1">
+                  <Clock size={14} className="text-soft-gray" />
+                  <span className="text-xs text-soft-gray">Click your profile to collect</span>
+                </div>
+              </div>
+              <p className="text-sm text-white-smoke mt-1">🎁 20 credits waiting for you</p>
+            </div>
+          </div>
+          <Link href="/profile">
+            <button className="px-4 py-2 bg-gradient-to-r from-aetherwave-pink to-electric-neon text-white rounded-lg font-semibold hover:shadow-lg hover:shadow-aetherwave-pink/50 transition-all flex items-center gap-2">
+              <span>Collect</span>
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* Stats Grid */}

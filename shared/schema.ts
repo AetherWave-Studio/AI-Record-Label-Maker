@@ -29,7 +29,7 @@ export const users = pgTable("users", {
   lastCreditReset: timestamp("last_credit_reset").defaultNow().notNull(),
   lastLoginAt: timestamp("last_login_at"), // Track daily login for rewards
   dailyLoginStreak: integer("daily_login_streak").default(0).notNull(), // Consecutive days logged in
-  welcomeBonusClaimed: integer("welcome_bonus_claimed").default(0), // 1 if claimed, 0 if not (50 credits one-time bonus) - optional for backward compat
+  welcomeBonusClaimed: integer("welcome_bonus_claimed").default(0), // 1 if claimed, 0 if not (100 credits one-time bonus) - optional for backward compat
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -89,10 +89,10 @@ export type Quest = typeof quests.$inferSelect;
 
 // Quest reward configuration (credits per quest)
 export const QUEST_REWARDS: Record<QuestType, number> = {
-  twitter_follow: 10,    // 10 credits for following on X.com
-  discord_join: 10,      // 10 credits for joining Discord
-  facebook_follow: 10,   // 10 credits for following on Facebook
-  tiktok_follow: 10,     // 10 credits for following on TikTok
+  twitter_follow: 20,    // 20 credits for following on X.com
+  discord_join: 20,      // 20 credits for joining Discord
+  facebook_follow: 20,   // 20 credits for following on Facebook
+  tiktok_follow: 20,     // 20 credits for following on TikTok
 };
 
 // News Feed Events - Track all platform activities for social feed
@@ -124,9 +124,9 @@ export type InsertFeedEvent = z.infer<typeof insertFeedEventSchema>;
 export type FeedEvent = typeof feedEvents.$inferSelect;
 
 // Free tier credit system constants
-export const FREE_TIER_WELCOME_BONUS = 50; // One-time 50 credits on signup
-export const FREE_TIER_DAILY_CREDITS = 10; // 10 credits per day
-export const FREE_TIER_CREDIT_CAP = 50;    // Max 50 credits (quest rewards can exceed cap, but daily credits won't be added if >= 50)
+export const FREE_TIER_WELCOME_BONUS = 100; // One-time 100 credits on signup
+export const FREE_TIER_DAILY_CREDITS = 20; // 20 credits per day
+export const FREE_TIER_CREDIT_CAP = 100;    // Max 100 credits (quest rewards can exceed cap, but daily credits won't be added if >= 100)
 
 // Plan-based feature restrictions
 export const PlanType = z.enum(['free', 'studio', 'creator', 'producer', 'mogul']);
@@ -199,7 +199,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     allowedVideoModels: ['seedance-lite'], // Only Seedance Lite model
     allowedImageEngines: ['dall-e-2'], // Only basic engine (Nano Banana for Panel 3)
     allowedMusicModels: ['V3_5', 'V4'], // Only beginner models
-    maxCreditsPerDay: 10,  // 10 credits/day + 500 welcome bonus (cap at 500, quest rewards can exceed cap but daily credits won't be added if >= 500)
+    maxCreditsPerDay: 20,  // 20 credits/day + 100 welcome bonus (cap at 100, quest rewards can exceed cap but daily credits won't be added if >= 100)
     maxAudioUploadSizeMB: 10, // Free users: 10MB limit (MP3 only, ~10 minutes)
     commercialLicense: false,
     apiAccess: false,
@@ -214,7 +214,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'midjourney'], // DALL-E 2/3 + Midjourney
     allowedMusicModels: ['V3_5', 'V4', 'V4_5'], // Basic to mid-tier models
     maxCreditsPerDay: 'unlimited',
-    maxCreditsPerMonth: 1500, // 1500 credits/month ($9.99 tier)
+    maxCreditsPerMonth: 400, // 400 credits/month ($9.99 tier)
     maxAudioUploadSizeMB: 50, // 50MB limit
     commercialLicense: true,
     apiAccess: false,
@@ -229,7 +229,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
-    maxCreditsPerMonth: 5000, // 5000 credits/month ($19.99 tier)
+    maxCreditsPerMonth: 1000, // 1000 credits/month ($19.99 tier)
     maxAudioUploadSizeMB: 100, // 100MB limit (WAV support)
     commercialLicense: true,
     apiAccess: false,
@@ -244,7 +244,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
-    maxCreditsPerMonth: 15000, // 15000 credits/month ($49 tier)
+    maxCreditsPerMonth: 4000, // 4000 credits/month ($49 tier)
     maxAudioUploadSizeMB: 100, // 100MB limit (WAV support)
     commercialLicense: true,
     apiAccess: false,
@@ -259,7 +259,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     allowedImageEngines: ['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion'], // All engines
     allowedMusicModels: ['V3_5', 'V4', 'V4_5', 'V4_5PLUS', 'V5'], // All models
     maxCreditsPerDay: 'unlimited',
-    maxCreditsPerMonth: 'unlimited', // Unlimited credits ($99 tier)
+    maxCreditsPerMonth: 10000, // 10000 credits/month ($99 tier)
     maxAudioUploadSizeMB: 100, // 100MB limit (WAV support)
     commercialLicense: true,
     apiAccess: true,
@@ -304,15 +304,15 @@ export type ServiceType = z.infer<typeof ServiceType>;
 // Credit cost configuration for each service type
 // NOTE: video_generation uses dynamic pricing based on quality settings (see calculateVideoCredits in routes.ts)
 // Pricing updated 2025-01 based on actual API costs + 50% margin
-// 1 credit = $0.01 USD
+// 1 credit = $0.005 USD
 export const SERVICE_CREDIT_COSTS: Record<ServiceType, number> = {
-  music_generation: 10,        // KIE.ai/Suno: $0.06 API + 50% margin = $0.09
-  video_generation: 5,         // Base for lite 512p 3s (dynamic function calculates actual cost)
-  image_generation: 6,         // DALL-E 3: $0.04 API + 50% margin = $0.06
-  album_art_generation: 5,     // Seedream: $0.03 API + 50% margin = $0.045
-  midjourney_generation: 3,    // KIE.ai Midjourney Fast: ~$0.04 API cost for 4 images, priced competitively at 3 credits
-  midjourney_generation_turbo: 6, // KIE.ai Midjourney Turbo: 2x API cost, 2x credits
-  wav_conversion: 3,           // $0.02 API + 50% margin = $0.03
+  music_generation: 18,        // KIE.ai/Suno: $0.06 API + 50% margin = $0.09
+  video_generation: 10,        // Base for lite 512p 3s (dynamic function calculates actual cost)
+  image_generation: 12,        // DALL-E 3: $0.04 API + 50% margin = $0.06
+  album_art_generation: 9,     // Seedream: $0.03 API + 50% margin = $0.045
+  midjourney_generation: 6,    // KIE.ai Midjourney Fast: ~$0.04 API cost for 4 images, priced competitively at 6 credits
+  midjourney_generation_turbo: 12, // KIE.ai Midjourney Turbo: 2x API cost, 2x credits
+  wav_conversion: 6,           // $0.02 API + 50% margin = $0.03
 };
 
 // Plans that have unlimited access to specific services
@@ -430,10 +430,10 @@ export type RpgServiceType = z.infer<typeof RpgServiceType>;
 
 // Credit costs for RPG game actions
 export const RPG_CREDIT_COSTS: Record<RpgServiceType, number> = {
-  band_creation: 15,      // Creating a new virtual band with AI
-  marketing_campaign: 10, // Running a marketing campaign
-  fame_boost: 5,          // Instant FAME boost
-  collaboration: 8,       // Band collaboration
+  band_creation: 30,      // Creating a new virtual band with AI
+  marketing_campaign: 20, // Running a marketing campaign
+  fame_boost: 10,         // Instant FAME boost
+  collaboration: 16,      // Band collaboration
 };
 
 // Band limits by subscription tier
@@ -647,6 +647,59 @@ export type InsertUserInventory = z.infer<typeof insertUserInventorySchema>;
 export type UserInventory = typeof userInventory.$inferSelect;
 
 // ============================================================================
+// SERVICE REGISTRY - Centralized service configuration and metadata
+// ============================================================================
+
+export const serviceRegistry = pgTable("service_registry", {
+  id: varchar("id").primaryKey(), // e.g., 'music_generation', 'midjourney_generation_turbo'
+  displayName: varchar("display_name").notNull(), // e.g., 'Music Generation (SUNO)'
+  category: varchar("category").notNull(), // 'music', 'image', 'video', 'audio'
+  provider: varchar("provider").notNull(), // 'kie-ai', 'openai', 'fal-ai', 'ttapi'
+
+  // Timeout & Performance
+  typicalTimeSeconds: integer("typical_time_seconds").notNull(), // Typical completion time (lower bound)
+  typicalTimeSecondsMax: integer("typical_time_seconds_max").notNull(), // Typical completion time (upper bound)
+  maxTimeoutSeconds: integer("max_timeout_seconds").notNull(), // Hard timeout before auto-refund
+  pollIntervalMs: integer("poll_interval_ms").default(2000), // How often to poll status (for async services)
+
+  // Credit & Pricing
+  creditCost: integer("credit_cost").notNull(), // Base credit cost
+  isDynamicPricing: integer("is_dynamic_pricing").default(0), // 1 if pricing varies by parameters
+
+  // Success Tracking
+  successRate: integer("success_rate").default(95), // Percentage (0-100) based on historical data
+  totalAttempts: integer("total_attempts").default(0), // Total generations attempted
+  totalSuccesses: integer("total_successes").default(0), // Total successful generations
+  totalFailures: integer("total_failures").default(0), // Total failed generations
+  totalTimeouts: integer("total_timeouts").default(0), // Total timeout occurrences
+  totalRefunds: integer("total_refunds").default(0), // Total refunds issued
+
+  // Status & Availability
+  isActive: integer("is_active").default(1).notNull(), // 1 = active, 0 = disabled
+  isAsyncService: integer("is_async_service").default(0), // 1 = polling required, 0 = synchronous
+  autoRefundEnabled: integer("auto_refund_enabled").default(1), // 1 = auto-refund on failure
+
+  // Metadata
+  description: text("description"), // User-facing description
+  technicalNotes: text("technical_notes"), // Admin/developer notes
+  lastUpdated: timestamp("last_updated").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertServiceRegistrySchema = createInsertSchema(serviceRegistry).omit({
+  totalAttempts: true,
+  totalSuccesses: true,
+  totalFailures: true,
+  totalTimeouts: true,
+  totalRefunds: true,
+  lastUpdated: true,
+  updatedAt: true,
+});
+
+export type InsertServiceRegistry = z.infer<typeof insertServiceRegistrySchema>;
+export type ServiceRegistry = typeof serviceRegistry.$inferSelect;
+
+// ============================================================================
 // CREDIT BUNDLES - Real money purchases via Stripe
 // ============================================================================
 
@@ -668,16 +721,16 @@ export const CREDIT_BUNDLES: CreditBundle[] = [
     id: 'starter',
     name: 'Starter Pack',
     description: 'Perfect for trying out premium features',
-    credits: 100,
-    bonusCredits: 10,
+    credits: 200,
+    bonusCredits: 20,
     priceUSD: 4.99,
   },
   {
     id: 'popular',
     name: 'Popular Pack',
     description: 'Most popular choice for regular creators',
-    credits: 250,
-    bonusCredits: 50,
+    credits: 500,
+    bonusCredits: 100,
     priceUSD: 9.99,
     popular: true,
   },
@@ -685,16 +738,16 @@ export const CREDIT_BUNDLES: CreditBundle[] = [
     id: 'creator',
     name: 'Creator Pack',
     description: 'For serious content creators',
-    credits: 600,
-    bonusCredits: 150,
+    credits: 1200,
+    bonusCredits: 300,
     priceUSD: 19.99,
   },
   {
     id: 'pro',
     name: 'Professional Pack',
     description: 'Maximum value for power users',
-    credits: 1500,
-    bonusCredits: 500,
+    credits: 3000,
+    bonusCredits: 1000,
     priceUSD: 49.99,
   },
 ];

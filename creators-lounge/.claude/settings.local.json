@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e/Gits/AetherWaveStudio-Platform/AI-Record-Label-Maker/Ghost-Musician/client/src/pages/**)",
+      "Read(//e/Gits/AetherWaveStudio-Platform/AI-Record-Label-Maker/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

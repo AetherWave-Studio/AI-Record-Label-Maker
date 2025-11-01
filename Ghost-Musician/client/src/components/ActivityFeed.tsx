@@ -1,15 +1,27 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Home, Users, TrendingUp, Search, Plus, Video, Image, Calendar, Gift } from 'lucide-react';
 import { FeedItem } from './FeedItem';
 import type { FeedTab, FeedItem as FeedItemType } from '@/types/feed';
 
 // Mock data for development - will be replaced with API calls
 const mockFeedItems: FeedItemType[] = [
   {
+    id: 'daily-reward-1',
+    type: 'milestone',
+    user: { id: 'system', username: 'AetherWave Daily', level: 'System', chartPosition: 1 },
+    timestamp: new Date().toISOString(),
+    milestoneType: 'daily_login',
+    milestoneValue: 20,
+    description: '🎁 Daily Login Bonus! Click your profile to collect 20 media credits and start creating!',
+    stats: {
+      fame: 10,
+    },
+  },
+  {
     id: '1',
     type: 'daily_growth_reminder',
     user: { id: 'current-user', username: 'you', level: 'Artist', chartPosition: 34 },
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
     readyBands: [
       { id: '1', name: 'Neon Parallax', lastGrowth: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString() },
       { id: '2', name: 'Chrome Butterfly', lastGrowth: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString() },
@@ -96,31 +108,103 @@ export function ActivityFeed() {
   const [activeTab, setActiveTab] = useState<FeedTab>('for-you');
   const [isLoading, setIsLoading] = useState(false);
   const [feedItems] = useState<FeedItemType[]>(mockFeedItems);
+  const [showCreatePost, setShowCreatePost] = useState(false);
 
-  const tabs: { id: FeedTab; label: string; icon: string }[] = [
-    { id: 'for-you', label: 'For You', icon: '🎯' },
-    { id: 'following', label: 'Following', icon: '🌍' },
-    { id: 'trending', label: 'Trending', icon: '📈' },
+  const tabs: { id: FeedTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'for-you', label: 'For You', icon: <Home size={18} /> },
+    { id: 'following', label: 'Following', icon: <Users size={18} /> },
+    { id: 'trending', label: 'Trending', icon: <TrendingUp size={18} /> },
   ];
 
+  // Create post form for Facebook-like functionality
+  const CreatePostForm = () => (
+    <div className="bg-gradient-to-br from-deep-slate to-charcoal rounded-xl border border-sky-glint/20 p-4 mb-6 shadow-xl">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-glint to-electric-blue flex items-center justify-center text-deep-slate font-bold">
+          D
+        </div>
+        <input
+          type="text"
+          placeholder="What's happening with your music career?"
+          className="flex-1 bg-charcoal/50 border border-soft-gray/30 rounded-full px-4 py-2 text-white-smoke placeholder-soft-gray focus:border-sky-glint focus:outline-none focus:ring-2 focus:ring-sky-glint/20 transition-all"
+          onFocus={() => setShowCreatePost(true)}
+        />
+        <div className="flex gap-2">
+          <button className="p-2 text-soft-gray hover:text-sky-glint hover:bg-charcoal rounded-lg transition-colors">
+            <Video size={20} />
+          </button>
+          <button className="p-2 text-soft-gray hover:text-sky-glint hover:bg-charcoal rounded-lg transition-colors">
+            <Image size={20} />
+          </button>
+          <button className="p-2 text-soft-gray hover:text-sky-glint hover:bg-charcoal rounded-lg transition-colors">
+            <Calendar size={20} />
+          </button>
+        </div>
+      </div>
+      {showCreatePost && (
+        <div className="mt-3">
+          <textarea
+            placeholder="Share more about your musical journey..."
+            className="w-full bg-charcoal/30 border border-soft-gray/30 rounded-lg px-4 py-3 text-white-smoke placeholder-soft-gray focus:border-sky-glint focus:outline-none focus:ring-2 focus:ring-sky-glint/20 transition-all resize-none"
+            rows={3}
+          />
+          <div className="flex justify-end gap-3 mt-3">
+            <button
+              onClick={() => setShowCreatePost(false)}
+              className="px-4 py-2 text-soft-gray hover:text-white-smoke transition-colors"
+            >
+              Cancel
+            </button>
+            <button className="px-6 py-2 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-semibold hover:shadow-lg transition-all">
+              Post
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="w-full max-w-3xl mx-auto">
-      {/* Feed Tabs */}
+    <div className="w-full max-w-4xl mx-auto">
+      {/* Facebook-style Create Post */}
+      <CreatePostForm />
+
+      {/* Facebook-style Stories Bar */}
+      <div className="bg-gradient-to-br from-deep-slate to-charcoal rounded-xl border border-sky-glint/20 p-4 mb-6 shadow-xl">
+        <div className="flex gap-4 overflow-x-auto">
+          <div className="flex flex-col items-center min-w-fit">
+            <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-aetherwave-pink to-electric-neon flex items-center justify-center text-white text-2xl shadow-lg hover:shadow-aetherwave-pink/50 transition-all cursor-pointer">
+              +
+            </div>
+            <span className="text-xs text-soft-gray mt-1">Create Story</span>
+          </div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="flex flex-col items-center min-w-fit">
+              <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-lg shadow-lg">
+                📸
+              </div>
+              <span className="text-xs text-soft-gray mt-1">Story {i}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Facebook-style Feed Tabs */}
       <div className="sticky top-16 z-40 bg-deep-slate/95 backdrop-blur-sm border-b border-sky-glint/20 mb-6">
-        <div className="flex gap-2 p-2">
+        <div className="flex gap-1 p-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all
+                flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
                 ${activeTab === tab.id
-                  ? 'bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate shadow-lg'
-                  : 'bg-charcoal text-soft-gray hover:text-white-smoke hover:bg-charcoal/80'
+                  ? 'bg-sky-glint/20 text-sky-glint border border-sky-glint/50'
+                  : 'text-soft-gray hover:text-white-smoke hover:bg-charcoal/50'
                 }
               `}
             >
-              <span>{tab.icon}</span>
+              {tab.icon}
               <span>{tab.label}</span>
             </button>
           ))}
@@ -147,20 +231,23 @@ export function ActivityFeed() {
                   // Simulate loading more items
                   setTimeout(() => setIsLoading(false), 1000);
                 }}
-                className="px-6 py-3 bg-charcoal border border-sky-glint/30 text-white-smoke rounded-lg hover:border-sky-glint hover:bg-charcoal/80 transition-all"
+                className="px-8 py-3 bg-gradient-to-r from-sky-glint/20 to-electric-blue/20 border border-sky-glint/30 text-sky-glint rounded-lg font-medium hover:border-sky-glint hover:from-sky-glint/30 hover:to-electric-blue/30 transition-all"
               >
-                Load More
+                Load More Posts
               </button>
             </div>
           </>
         ) : (
           <div className="text-center py-12">
+            <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-sky-glint to-electric-blue flex items-center justify-center text-deep-slate text-3xl shadow-lg">
+              🎵
+            </div>
             <p className="text-soft-gray text-lg mb-4">No activity yet</p>
             {activeTab === 'following' && (
               <p className="text-soft-gray mb-4">Follow artists to see their updates here</p>
             )}
             <button className="px-6 py-3 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-semibold hover:shadow-lg transition-all">
-              Upload Your First Song
+              Start Your Music Journey
             </button>
           </div>
         )}

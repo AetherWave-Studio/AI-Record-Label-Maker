@@ -179,6 +179,13 @@ export default function Home() {
                       </button>
                     </Link>
 
+                    <Link href="/creators-lounge/media-center.html">
+                      <button className="w-full px-4 py-3 text-left hover:bg-deep-slate transition-colors flex items-center gap-3">
+                        <span>🎬</span>
+                        <span>Media Center</span>
+                      </button>
+                    </Link>
+
                     <button className="w-full px-4 py-3 text-left hover:bg-deep-slate transition-colors flex items-center gap-3">
                       <span>⚙️</span>
                       <span>Settings</span>
@@ -255,6 +262,12 @@ export default function Home() {
             <button className="flex flex-col items-center gap-1 text-soft-gray hover:text-white-smoke">
               <Search size={24} />
               <span className="text-xs">Explore</span>
+            </button>
+          </Link>
+          <Link href="/creators-lounge/media-center.html">
+            <button className="flex flex-col items-center gap-1 text-soft-gray hover:text-aetherwave-pink">
+              <span className="text-xl">🎬</span>
+              <span className="text-xs">Media</span>
             </button>
           </Link>
           <button className="flex flex-col items-center gap-1 text-soft-gray hover:text-white-smoke">

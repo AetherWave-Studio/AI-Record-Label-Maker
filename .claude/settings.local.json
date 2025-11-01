@@ -3,7 +3,22 @@
     "allow": [
       "Bash(npm run dev)",
       "Bash(taskkill:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(curl:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Read(//g/My Drive/_FILESHARE/**)",
+      "Bash(cmd:*)",
+      "WebSearch",
+      "WebFetch(domain:kie.ai)",
+      "Bash(npm run db:push:*)",
+      "Bash(if [ -n \"$DATABASE_URL\" ])",
+      "Bash(then echo \"DATABASE_URL is set\")",
+      "Bash(psql:*)",
+      "Bash(else echo \"DATABASE_URL not set, checking .env...\")",
+      "Bash(fi)",
+      "Bash(export:*)",
+      "Bash(node fix-dev-user.js:*)"
     ],
     "deny": [],
     "ask": []
