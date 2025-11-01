@@ -404,4 +404,136 @@ export function setupVideoRoutes(app: Express) {
       });
     }
   });
+
+  // SEAMLESS LOOP CREATOR - Upload existing video and create perfect loop
+  app.post("/api/video/create-seamless-loop", async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: "Authentication required"
+        });
+      }
+
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          error: "Video file is required"
+        });
+      }
+
+      const videoFile = req.file;
+
+      // Validate file type
+      if (!videoFile.mimetype.startsWith('video/')) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid file type. Please upload a video file."
+        });
+      }
+
+      // Get user and check credits (30 credits for VEO 3 Fast loop generation)
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      const SEAMLESS_LOOP_COST = 30; // VEO 3 Fast generation cost
+      if (user.credits < SEAMLESS_LOOP_COST) {
+        return res.status(400).json({
+          success: false,
+          error: `Insufficient credits. Required: ${SEAMLESS_LOOP_COST}, Available: ${user.credits}`
+        });
+      }
+
+      console.log(`Starting seamless loop creation for user ${userId}`);
+
+      // TODO: Implement actual seamless loop processing:
+      // 1. Extract first frame and last frame of first 50% using ffmpeg
+      // 2. Upload frames to ImgBB
+      // 3. Call VEO 3 with FIRST_AND_LAST_FRAMES_2_VIDEO mode
+      // 4. Concatenate original first 50% + VEO-generated second 50%
+      // 5. Return final seamless loop video
+
+      res.status(501).json({
+        success: false,
+        error: "Seamless loop processing not yet implemented - needs ffmpeg integration"
+      });
+
+    } catch (error) {
+      console.error("Error creating seamless loop:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to create seamless loop"
+      });
+    }
+  });
+
+  // SEAMLESS LOOP CREATOR - Generate new looping video from text
+  app.post("/api/video/generate-seamless-loop", async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const { prompt, duration = 8 } = req.body;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: "Authentication required"
+        });
+      }
+
+      if (!prompt) {
+        return res.status(400).json({
+          success: false,
+          error: "Prompt is required"
+        });
+      }
+
+      // Get user and check credits
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      // Cost: 2x VEO 3 Fast (first half + second half)
+      const LOOP_GENERATION_COST = 60; // 30 credits per VEO 3 generation x 2
+      if (user.credits < LOOP_GENERATION_COST) {
+        return res.status(400).json({
+          success: false,
+          error: `Insufficient credits. Required: ${LOOP_GENERATION_COST}, Available: ${user.credits}`
+        });
+      }
+
+      console.log(`Starting seamless loop generation for user ${userId} with prompt: "${prompt}"`);
+
+      // TODO: Implement actual seamless loop generation:
+      // 1. Generate first half with VEO 3 (text-to-video)
+      // 2. Extract first and last frames from first half
+      // 3. Upload frames to ImgBB
+      // 4. Generate second half with VEO 3 (FIRST_AND_LAST_FRAMES_2_VIDEO mode)
+      // 5. Concatenate both halves
+      // 6. Return final seamless loop
+
+      res.status(501).json({
+        success: false,
+        error: "Seamless loop generation not yet implemented - needs VEO 3 integration"
+      });
+
+    } catch (error) {
+      console.error("Error generating seamless loop:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to generate seamless loop"
+      });
+    }
+  });
 }
