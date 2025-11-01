@@ -294,6 +294,10 @@
             </div>
             <div id="image-preview"></div>
             <div class="form-group">
+                <label for="image-prompt">Describe the motion you want</label>
+                <textarea id="image-prompt" placeholder="Example: Camera slowly orbits 360 degrees around the subject, smooth rotation"></textarea>
+            </div>
+            <div class="form-group">
                 <label for="image-duration">Loop Duration (seconds)</label>
                 <select id="image-duration">
                     <option value="4">4 seconds</option>
@@ -502,6 +506,13 @@
             if (!selectedImage) return;
 
             const duration = parseInt(document.getElementById('image-duration').value);
+            const prompt = document.getElementById('image-prompt').value.trim();
+            
+            if (!prompt) {
+                alert('Please describe the motion you want in your loop');
+                return;
+            }
+
             const status = document.getElementById('status');
             status.className = 'status processing';
             status.textContent = '⏳ Creating seamless loop from image... AI is animating your image...';
@@ -511,6 +522,7 @@
                 const formData = new FormData();
                 formData.append('image', selectedImage);
                 formData.append('duration', duration);
+                formData.append('prompt', prompt);
 
                 const response = await fetch('/api/video/generate-seamless-loop-image', {
                     method: 'POST',

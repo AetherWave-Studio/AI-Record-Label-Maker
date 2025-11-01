@@ -712,11 +712,19 @@ export function setupVideoRoutes(app: Express) {
       const userId = req.user!.id;
       const imageFile = req.file;
       const duration = parseInt(req.body.duration) || 8;
+      const userPrompt = req.body.prompt || '';
 
       if (!imageFile) {
         return res.status(400).json({
           success: false,
           error: 'No image file uploaded'
+        });
+      }
+
+      if (!userPrompt.trim()) {
+        return res.status(400).json({
+          success: false,
+          error: 'Motion prompt is required'
         });
       }
 
@@ -768,15 +776,16 @@ export function setupVideoRoutes(app: Express) {
         }
         
         const imageBuffer = fs.readFileSync(imageFile.path);
-        const originalImageUrl = await uploadImageToKie(imageBuffer, imgbbApiKey);
+        const base64Image = imageBuffer.toString('base64');
+        const originalImageUrl = await uploadImageToKie(base64Image, imgbbApiKey);
         console.log('Original image uploaded:', originalImageUrl);
 
         // Step 2: Generate first half (image-to-video)
-        console.log(`Generating first half (${halfDuration}s) from image...`);
+        console.log(`Generating first half (${halfDuration}s) from image with prompt: "${userPrompt}"...`);
         const firstHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
           input: {
             image_url: originalImageUrl,
-            prompt: "smooth motion, seamless loop animation",
+            prompt: userPrompt,
             duration: String(Math.round(halfDuration)) as any,
             resolution: "720p",
             enable_safety_checker: true
@@ -807,10 +816,11 @@ export function setupVideoRoutes(app: Express) {
 
         // Step 5: Generate second half (last frame back to original image)
         console.log(`Generating second half (${halfDuration}s) - returning to original image...`);
+        const returnPrompt = `${userPrompt}, smooth return to starting position, seamless loop`;
         const secondHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
           input: {
             image_url: lastFrameUrl,
-            prompt: "smooth transition back to starting position, seamless loop",
+            prompt: returnPrompt,
             duration: String(Math.round(halfDuration)) as any,
             resolution: "720p",
             enable_safety_checker: true
