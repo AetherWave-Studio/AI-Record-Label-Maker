@@ -706,6 +706,178 @@ export function setupVideoRoutes(app: Express) {
     }
   });
 
+  // IMAGE-TO-LOOP: Create seamless loop from single image
+  app.post('/api/video/generate-seamless-loop-image', authMiddleware, upload.single('image'), async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const imageFile = req.file;
+      const duration = parseInt(req.body.duration) || 8;
+
+      if (!imageFile) {
+        return res.status(400).json({
+          success: false,
+          error: 'No image file uploaded'
+        });
+      }
+
+      // Validate MIME type
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+      if (!allowedMimeTypes.includes(imageFile.mimetype)) {
+        await cleanupFile(imageFile.path);
+        return res.status(400).json({
+          success: false,
+          error: `Invalid file type. Allowed: JPG, PNG, WebP`
+        });
+      }
+
+      // Get user for credit check
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      const halfDuration = duration / 2;
+      const LOOP_COST = duration * 2; // 2 credits per second
+
+      // Check credits
+      if (user.credits < LOOP_COST) {
+        return res.status(402).json({
+          success: false,
+          error: `Insufficient credits. Required: ${LOOP_COST}, Available: ${user.credits}`
+        });
+      }
+
+      console.log(`Creating ${duration}s loop from image for user ${userId}, cost: ${LOOP_COST} credits`);
+
+      // Deduct credits upfront
+      await storage.updateUserCredits(userId, user.credits - LOOP_COST);
+
+      let firstHalfPath: string | null = null;
+      let secondHalfPath: string | null = null;
+      let finalLoopPath: string | null = null;
+
+      try {
+        // Step 1: Upload image to ImgBB
+        console.log('Uploading image to ImgBB...');
+        const imgbbApiKey = process.env.IMGBB_API_KEY;
+        if (!imgbbApiKey) {
+          throw new Error('IMGBB_API_KEY not configured');
+        }
+        
+        const imageBuffer = fs.readFileSync(imageFile.path);
+        const originalImageUrl = await uploadImageToKie(imageBuffer, imgbbApiKey);
+        console.log('Original image uploaded:', originalImageUrl);
+
+        // Step 2: Generate first half (image-to-video)
+        console.log(`Generating first half (${halfDuration}s) from image...`);
+        const firstHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
+          input: {
+            image_url: originalImageUrl,
+            prompt: "smooth motion, seamless loop animation",
+            duration: String(Math.round(halfDuration)) as any,
+            resolution: "720p",
+            enable_safety_checker: true
+          },
+          logs: true,
+          onQueueUpdate: (update: any) => {
+            console.log('First half generation:', update.status);
+          }
+        });
+
+        const firstHalfVideoUrl = (firstHalfResult as any).data?.video?.url;
+        if (!firstHalfVideoUrl) {
+          console.error('First half result:', JSON.stringify(firstHalfResult, null, 2));
+          throw new Error('No video URL in first half generation result');
+        }
+
+        // Download first half
+        console.log('Downloading first half video...');
+        firstHalfPath = await downloadVideo(firstHalfVideoUrl);
+
+        // Step 3: Extract last frame from first half
+        console.log('Extracting last frame...');
+        const { lastFrame } = await extractLoopFrames(firstHalfPath);
+        
+        // Step 4: Upload last frame to ImgBB
+        console.log('Uploading last frame to ImgBB...');
+        const lastFrameUrl = await uploadImageToKie(lastFrame, imgbbApiKey);
+
+        // Step 5: Generate second half (last frame back to original image)
+        console.log(`Generating second half (${halfDuration}s) - returning to original image...`);
+        const secondHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
+          input: {
+            image_url: lastFrameUrl,
+            prompt: "smooth transition back to starting position, seamless loop",
+            duration: String(Math.round(halfDuration)) as any,
+            resolution: "720p",
+            enable_safety_checker: true
+          },
+          logs: true,
+          onQueueUpdate: (update: any) => {
+            console.log('Second half generation:', update.status);
+          }
+        });
+
+        const secondHalfVideoUrl = (secondHalfResult as any).data?.video?.url;
+        if (!secondHalfVideoUrl) {
+          console.error('Second half result:', JSON.stringify(secondHalfResult, null, 2));
+          throw new Error('No video URL in second half generation result');
+        }
+
+        // Download second half
+        console.log('Downloading second half video...');
+        secondHalfPath = await downloadVideo(secondHalfVideoUrl);
+
+        // Step 6: Concatenate both halves
+        console.log('Concatenating into seamless loop...');
+        const timestamp = Date.now();
+        const filename = `seamless-loop-${timestamp}.mp4`;
+        finalLoopPath = path.join(os.tmpdir(), filename);
+        await concatenateVideos(firstHalfPath, secondHalfPath, finalLoopPath);
+
+        console.log('Image-to-loop created successfully!');
+
+        const downloadUrl = `/api/video/download-temp/${filename}`;
+
+        res.json({
+          success: true,
+          videoUrl: downloadUrl,
+          message: "Seamless loop created from image",
+          creditsUsed: LOOP_COST,
+          newBalance: user.credits - LOOP_COST
+        });
+
+      } catch (generationError: any) {
+        console.error('Image-to-loop generation failed:', generationError);
+        
+        // Refund credits on failure
+        await storage.updateUserCredits(userId, user.credits);
+        
+        // Clean up ALL files on failure
+        if (firstHalfPath) await cleanupFile(firstHalfPath);
+        if (secondHalfPath) await cleanupFile(secondHalfPath);
+        if (finalLoopPath) await cleanupFile(finalLoopPath);
+        
+        throw generationError;
+      } finally {
+        // Clean up intermediate files and uploaded image
+        await cleanupFile(imageFile.path);
+        if (firstHalfPath) await cleanupFile(firstHalfPath);
+        if (secondHalfPath) await cleanupFile(secondHalfPath);
+      }
+
+    } catch (error: any) {
+      console.error("Error creating loop from image:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Failed to create loop from image"
+      });
+    }
+  });
+
   // Upload mode: Convert existing video to seamless loop
   app.post('/api/video/generate-seamless-loop-upload', authMiddleware, upload.single('video'), async (req, res) => {
     try {

@@ -272,20 +272,41 @@
         <div class="info-box">
             <h3>How It Works</h3>
             <p><strong>Rule 1:</strong> First frame must equal last frame for a perfect loop</p>
-            <p><strong>The Solution:</strong> We use VEO 3's advanced "First and Last Frame to Video" mode</p>
-            <p>1. Provide first 50% of your video (upload OR generate from text)</p>
-            <p>2. AI generates second 50% that naturally returns to the starting frame</p>
+            <p><strong>The Solution:</strong> We use AI's advanced "First and Last Frame to Video" mode</p>
+            <p>1. Provide starting point (image, video, or text prompt)</p>
+            <p>2. AI generates motion that naturally returns to the starting frame</p>
             <p>3. Result: Perfect seamless loop with no jumps or reverses!</p>
-            <span class="cost-estimate">Cost: ~30 credits ($0.30)</span>
+            <span class="cost-estimate">Cost: 2 credits/second</span>
         </div>
 
         <div class="mode-selector">
-            <button class="mode-btn active" data-mode="upload">Upload Video</button>
-            <button class="mode-btn" data-mode="generate">Generate New</button>
+            <button class="mode-btn active" data-mode="image">🖼️ Image to Loop</button>
+            <button class="mode-btn" data-mode="upload">📹 Upload Video</button>
+            <button class="mode-btn" data-mode="generate">✨ Generate New</button>
+        </div>
+
+        <!-- Image Mode -->
+        <div class="panel active" id="image-panel">
+            <div class="upload-zone" id="image-zone">
+                <input type="file" id="image-file" accept="image/*">
+                <p style="font-size: 1.2rem; margin-bottom: 10px;">🖼️ Drop image here or click to browse</p>
+                <p style="color: #999;">Supports JPG, PNG, WebP - AI will animate it into a seamless loop</p>
+            </div>
+            <div id="image-preview"></div>
+            <div class="form-group">
+                <label for="image-duration">Loop Duration (seconds)</label>
+                <select id="image-duration">
+                    <option value="4">4 seconds</option>
+                    <option value="6">6 seconds</option>
+                    <option value="8">8 seconds (recommended)</option>
+                    <option value="10">10 seconds</option>
+                </select>
+            </div>
+            <button id="process-image-btn" disabled>Create Loop from Image</button>
         </div>
 
         <!-- Upload Mode -->
-        <div class="panel active" id="upload-panel">
+        <div class="panel" id="upload-panel">
             <div class="upload-zone" id="upload-zone">
                 <input type="file" id="video-file" accept="video/*">
                 <p style="font-size: 1.2rem; margin-bottom: 10px;">📹 Drop video here or click to browse</p>
@@ -425,6 +446,99 @@
                 status.textContent = `❌ Error: ${error.message}`;
             } finally {
                 processBtn.disabled = false;
+            }
+        });
+
+        // Image upload zone drag & drop
+        const imageZone = document.getElementById('image-zone');
+        const imageInput = document.getElementById('image-file');
+        const processImageBtn = document.getElementById('process-image-btn');
+        let selectedImage = null;
+
+        imageZone.addEventListener('click', () => imageInput.click());
+
+        imageZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageZone.classList.add('dragover');
+        });
+
+        imageZone.addEventListener('dragleave', () => {
+            imageZone.classList.remove('dragover');
+        });
+
+        imageZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type.startsWith('image/')) {
+                handleImageSelect(files[0]);
+            }
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageSelect(e.target.files[0]);
+            }
+        });
+
+        function handleImageSelect(file) {
+            selectedImage = file;
+            const preview = document.getElementById('image-preview');
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.innerHTML = `
+                    <img src="${e.target.result}" style="max-width: 100%; max-height: 300px; margin: 20px auto; display: block; border-radius: 12px; border: 2px solid rgba(255, 105, 180, 0.3);">
+                    <p style="color: #00ff00; text-align: center; margin: 10px 0;">
+                        ✅ Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </p>
+                `;
+            };
+            reader.readAsDataURL(file);
+            processImageBtn.disabled = false;
+        }
+
+        // Process image to loop
+        processImageBtn.addEventListener('click', async () => {
+            if (!selectedImage) return;
+
+            const duration = parseInt(document.getElementById('image-duration').value);
+            const status = document.getElementById('status');
+            status.className = 'status processing';
+            status.textContent = '⏳ Creating seamless loop from image... AI is animating your image...';
+            processImageBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedImage);
+                formData.append('duration', duration);
+
+                const response = await fetch('/api/video/generate-seamless-loop-image', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+
+                const result = await response.json();
+
+                if (result.videoUrl) {
+                    status.className = 'status success';
+                    status.textContent = '✅ Seamless loop created from image!';
+                    
+                    const videoEl = document.getElementById('result-video');
+                    const downloadBtn = document.getElementById('download-btn');
+                    const resultContainer = document.getElementById('result-container');
+                    
+                    videoEl.src = result.videoUrl;
+                    downloadBtn.href = result.videoUrl;
+                    resultContainer.classList.add('active');
+                } else {
+                    throw new Error(result.error || 'Failed to create loop from image');
+                }
+            } catch (error) {
+                status.className = 'status error';
+                status.textContent = `❌ Error: ${error.message}`;
+            } finally {
+                processImageBtn.disabled = false;
             }
         });
 
