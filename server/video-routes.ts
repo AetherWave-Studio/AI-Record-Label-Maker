@@ -19,6 +19,7 @@ import {
 } from "./videoUtils";
 import path from "path";
 import os from "os";
+import fs from "fs";
 import { writeFile } from "fs/promises";
 import multer from "multer";
 
@@ -91,7 +92,7 @@ const mockBackgroundRemoval = async (videoFile: File, format: 'webm' | 'mov' = '
 };
 
 export function setupVideoRoutes(app: Express) {
-  // Download temporary video files
+  // Download temporary video files - serves for both video playback and download
   app.get("/api/video/download-temp/:filename", async (req: Request, res: Response) => {
     try {
       const { filename } = req.params;
@@ -102,19 +103,28 @@ export function setupVideoRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid filename" });
       }
       
-      res.download(filePath, filename, (err) => {
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "File not found or expired" });
+      }
+      
+      // Serve file with proper headers for both streaming and download
+      // Don't use res.download() as it triggers cleanup on partial requests (206)
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.sendFile(filePath, (err) => {
         if (err) {
-          console.error("Download error:", err);
+          console.error("Error sending file:", err);
           if (!res.headersSent) {
             res.status(404).json({ error: "File not found" });
           }
         }
-        // Clean up file after download
-        cleanupFile(filePath).catch(console.error);
+        // Note: Files are NOT auto-cleaned up to allow multiple requests (video streaming, download)
+        // Consider implementing periodic cleanup or TTL-based cleanup in production
       });
     } catch (error) {
       console.error("Error serving download:", error);
-      res.status(500).json({ error: "Failed to download file" });
+      res.status(500).json({ error: "Failed to serve file" });
     }
   });
 
@@ -674,12 +684,17 @@ export function setupVideoRoutes(app: Express) {
         // Refund credits on failure
         await storage.updateUserCredits(userId, user.credits);
         
-        throw generationError;
-      } finally {
-        // Clean up temporary files
+        // Clean up ALL files on failure (including finalLoopPath since generation failed)
         if (firstHalfPath) await cleanupFile(firstHalfPath);
         if (secondHalfPath) await cleanupFile(secondHalfPath);
-        // Don't delete finalLoopPath yet - user needs to download it
+        if (finalLoopPath) await cleanupFile(finalLoopPath);
+        
+        throw generationError;
+      } finally {
+        // Clean up only intermediate files on success
+        // finalLoopPath will be cleaned up by download endpoint after user downloads
+        if (firstHalfPath) await cleanupFile(firstHalfPath);
+        if (secondHalfPath) await cleanupFile(secondHalfPath);
       }
 
     } catch (error: any) {
