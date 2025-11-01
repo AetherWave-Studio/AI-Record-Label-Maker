@@ -3,14 +3,27 @@ import { storage } from "./storage";
 import type { User } from "@shared/schema";
 import { fal } from "@fal-ai/client";
 import { uploadImageToKie } from "./kieClient";
+import { isAuthenticated } from "./replitAuth";
 import {
   extractLoopFrames,
   downloadVideo,
   concatenateVideos,
-  cleanupFile
+  cleanupFile,
+  getVideoDuration,
+  transcodeToH264
 } from "./videoUtils";
 import path from "path";
+import os from "os";
 import { writeFile } from "fs/promises";
+import multer from "multer";
+
+// Configure multer for video uploads
+const upload = multer({
+  dest: os.tmpdir(),
+  limits: {
+    fileSize: 100 * 1024 * 1024 // 100MB max
+  }
+});
 
 // Video generation models configuration
 const VIDEO_MODELS = {
@@ -73,6 +86,33 @@ const mockBackgroundRemoval = async (videoFile: File, format: 'webm' | 'mov' = '
 };
 
 export function setupVideoRoutes(app: Express) {
+  // Download temporary video files
+  app.get("/api/video/download-temp/:filename", async (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join(os.tmpdir(), filename);
+      
+      // Security: only allow files in temp directory with expected pattern
+      if (!filename.match(/^seamless-loop-\d+\.mp4$/)) {
+        return res.status(400).json({ error: "Invalid filename" });
+      }
+      
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error("Download error:", err);
+          if (!res.headersSent) {
+            res.status(404).json({ error: "File not found" });
+          }
+        }
+        // Clean up file after download
+        cleanupFile(filePath).catch(console.error);
+      });
+    } catch (error) {
+      console.error("Error serving download:", error);
+      res.status(500).json({ error: "Failed to download file" });
+    }
+  });
+
   // Get available video models
   app.get("/api/video/models", async (req: Request, res: Response) => {
     try {
@@ -641,6 +681,160 @@ export function setupVideoRoutes(app: Express) {
       res.status(500).json({
         success: false,
         error: error.message || "Failed to generate seamless loop"
+      });
+    }
+  });
+
+  // Upload mode: Convert existing video to seamless loop
+  app.post('/api/video/generate-seamless-loop-upload', isAuthenticated, upload.single('video'), async (req, res) => {
+    try {
+      const userId = req.user!.id;
+      const videoFile = req.file;
+
+      if (!videoFile) {
+        return res.status(400).json({
+          success: false,
+          error: 'No video file uploaded'
+        });
+      }
+
+      // Validate MIME type (security)
+      const allowedMimeTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo'];
+      if (!allowedMimeTypes.includes(videoFile.mimetype)) {
+        await cleanupFile(videoFile.path); // Clean up rejected file
+        return res.status(400).json({
+          success: false,
+          error: `Invalid file type. Allowed: ${allowedMimeTypes.join(', ')}`
+        });
+      }
+
+      // Get user for credit check
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+
+      // Detect uploaded video duration
+      console.log('Detecting uploaded video duration...');
+      const uploadedDuration = await getVideoDuration(videoFile.path);
+      
+      // For upload mode, we generate a second half matching the uploaded video duration
+      // Cost: Seedance Lite image-to-video at 2 credits/sec
+      const CREDITS_PER_SECOND = 2.0;
+      const uploadLoopCost = Math.ceil(CREDITS_PER_SECOND * uploadedDuration);
+      
+      if (user.credits < uploadLoopCost) {
+        await cleanupFile(videoFile.path); // Clean up before returning error
+        return res.status(400).json({
+          success: false,
+          error: `Insufficient credits. Required: ${uploadLoopCost} (${uploadedDuration}s × ${CREDITS_PER_SECOND} credits/sec), Available: ${user.credits}`
+        });
+      }
+
+      console.log(`Converting uploaded video (${uploadedDuration}s) to seamless loop for user ${userId}, cost: ${uploadLoopCost} credits`);
+
+      // Deduct credits upfront
+      const updatedUser = await storage.updateUser(userId, {
+        credits: user.credits - uploadLoopCost
+      });
+
+      let uploadedVideoPath: string | null = videoFile.path;
+      let transcodedVideoPath: string | null = null;
+      let secondHalfPath: string | null = null;
+      let finalLoopPath: string | null = null;
+
+      try {
+        // Step 1: Transcode uploaded video to H.264 MP4 for consistent concatenation
+        console.log('Transcoding uploaded video to H.264 MP4...');
+        const timestamp = Date.now();
+        transcodedVideoPath = path.join(os.tmpdir(), `transcoded-upload-${timestamp}.mp4`);
+        await transcodeToH264(uploadedVideoPath, transcodedVideoPath);
+        
+        // Step 2: Extract first and last frames from transcoded video
+        console.log('Extracting frames from transcoded video...');
+        const { firstFrame, lastFrame } = await extractLoopFrames(transcodedVideoPath);
+
+        // Step 2: Upload last frame to ImgBB for Seedance reference
+        console.log('Uploading reference frame to ImgBB...');
+        const imgbbApiKey = process.env.IMGBB_API_KEY;
+        if (!imgbbApiKey) {
+          throw new Error('IMGBB_API_KEY not configured - cannot upload reference frames');
+        }
+        const lastFrameUrl = await uploadImageToKie(lastFrame, imgbbApiKey);
+
+        // Step 3: Generate second half with Seedance Lite (image-to-video)
+        // This completes the loop by transitioning from last frame back to first frame
+        console.log(`Generating return journey (${uploadedDuration}s) with Seedance Lite...`);
+        
+        const secondHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
+          input: {
+            prompt: "smooth transition completing the seamless loop, return to starting position",
+            image_url: lastFrameUrl, // Start from last frame of uploaded video
+            duration: String(Math.round(uploadedDuration)) as any, // Match uploaded video duration
+            resolution: "720p",
+            enable_safety_checker: true
+          },
+          logs: true,
+          onQueueUpdate: (update: any) => {
+            console.log('Second half generation update:', update.status);
+          }
+        });
+
+        if (!secondHalfResult.data?.video?.url) {
+          throw new Error('Seedance Lite failed to generate second half video');
+        }
+
+        // Download second half
+        console.log('Downloading second half...');
+        secondHalfPath = await downloadVideo(secondHalfResult.data.video.url, 'loop-second-half');
+
+        // Step 4: Concatenate transcoded video + second half
+        console.log('Concatenating videos into seamless loop...');
+        finalLoopPath = path.join(os.tmpdir(), `seamless-loop-${timestamp}.mp4`);
+        await concatenateVideos(transcodedVideoPath, secondHalfPath, finalLoopPath);
+
+        console.log(`Seamless loop created successfully: ${finalLoopPath}`);
+
+        // Return success response with download URL
+        res.json({
+          success: true,
+          videoUrl: `/api/video/download-temp/${path.basename(finalLoopPath)}`,
+          message: `Seamless loop created successfully from ${uploadedDuration}s video!`,
+          duration: uploadedDuration * 2, // Total loop duration (original + generated)
+          creditsUsed: uploadLoopCost,
+          newBalance: user.credits - uploadLoopCost
+        });
+
+      } catch (generationError: any) {
+        console.error('Upload loop creation failed:', generationError);
+        
+        // Refund credits on failure - restore to original balance
+        try {
+          await storage.updateUser(userId, {
+            credits: user.credits // Restore original balance
+          });
+          console.log(`Refunded ${uploadLoopCost} credits to user ${userId}`);
+        } catch (refundError) {
+          console.error('Failed to refund credits:', refundError);
+        }
+        
+        throw generationError;
+      } finally {
+        // Clean up temporary files
+        if (uploadedVideoPath) await cleanupFile(uploadedVideoPath);
+        if (transcodedVideoPath) await cleanupFile(transcodedVideoPath);
+        if (secondHalfPath) await cleanupFile(secondHalfPath);
+        // Don't delete finalLoopPath yet - user needs to download it
+      }
+
+    } catch (error: any) {
+      console.error('Upload seamless loop error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message || 'Failed to create seamless loop from uploaded video'
       });
     }
   });

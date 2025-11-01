@@ -112,6 +112,26 @@ export async function trimToFirstHalf(inputPath: string, outputPath: string): Pr
 }
 
 /**
+ * Transcode video to H.264 MP4 for consistent concatenation
+ * @param inputPath Path to input video (any format)
+ * @param outputPath Path to output H.264 MP4
+ */
+export async function transcodeToH264(inputPath: string, outputPath: string): Promise<void> {
+  await ensureTmpDir();
+  
+  try {
+    // Transcode to H.264 MP4 with consistent parameters
+    const command = `ffmpeg -i "${inputPath}" -c:v libx264 -preset fast -crf 23 -c:a aac -b:a 128k "${outputPath}"`;
+    console.log('Transcoding video to H.264 MP4:', command);
+    
+    await execAsync(command);
+  } catch (error: any) {
+    console.error('Error transcoding video:', error);
+    throw new Error(`Failed to transcode video: ${error.message}`);
+  }
+}
+
+/**
  * Concatenate two videos
  * @param video1Path Path to first video
  * @param video2Path Path to second video

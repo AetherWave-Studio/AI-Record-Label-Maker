@@ -67,6 +67,7 @@ app.use((req, res, next) => {
   app.use('/playlists', express.static(path.join(rootDir, 'Playlists')));
   app.use('/featured-artist', express.static(path.join(rootDir, 'Featured Artist')));
   app.use('/video-generation', express.static(path.join(rootDir, 'video-generation')));
+  app.use('/seamless-loop-creator', express.static(path.join(rootDir, 'seamless-loop-creator')));
 
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
