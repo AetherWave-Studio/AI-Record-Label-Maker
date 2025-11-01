@@ -122,31 +122,43 @@ All credits work across both AI media generation and RPG features. Users can:
 
 **Location**: `/seamless-loop-creator/`
 
-A standalone video tool for creating perfect looping videos using AI-powered generation.
+A standalone video tool for creating perfect looping videos using AI-powered generation. **Complete suite with THREE modes** - nobody else offers this combination.
 
-**Two Modes:**
+**Three Modes:**
 
-1. **Text-to-Loop Mode** (Default)
-   - Generate seamless loops from text prompts
-   - Duration options: 4s, 8s, 12s, 16s
-   - Algorithm: Generate first half → extract first/last frames → generate second half from last frame → concatenate
+1. **Image-to-Loop Mode** (NEW! - Default)
+   - Upload a still image and describe the motion you want
+   - AI animates the image into a seamless looping video
+   - Accepts: JPG, PNG, WebP
+   - Required: Motion prompt (e.g., "camera slowly orbits 360 degrees around the subject")
+   - Duration options: 4s, 6s, 8s, 10s
+   - Algorithm: Upload image → generate first half with user prompt → extract last frame → generate second half (return to start) → concatenate
    - Cost: 2 credits/second (e.g., 16 credits for 8s loop)
+   - **Key Feature**: User-provided motion prompt guides both AI generation calls for dynamic animation
 
-2. **Upload Mode**
+2. **Upload Video Mode**
    - Convert existing videos to seamless loops
    - Accepts: MP4, WebM, QuickTime, AVI (auto-transcoded to H.264 MP4)
    - Algorithm: Transcode to H.264 → extract frames → generate return journey → concatenate
    - Cost: 2 credits/second × uploaded video duration
 
+3. **Text-to-Loop Mode**
+   - Generate seamless loops from text prompts only
+   - Duration options: 6s, 8s, 10s
+   - Algorithm: Generate first half → extract first/last frames → generate second half from last frame → concatenate
+   - Cost: 2 credits/second (e.g., 16 credits for 8s loop)
+
 **Technical Implementation:**
-- **AI Model**: Fal.ai Seedance Lite (chosen for frame-to-frame dependability)
+- **AI Model**: Fal.ai Seedance Lite (chosen for frame-to-frame dependability, supports both text-to-video and image-to-video modes)
 - **Video Processing**: FFmpeg (frame extraction, transcoding, concatenation)
-- **Frame Storage**: ImgBB (temporary frame hosting for AI reference)
+- **Frame Storage**: ImgBB (temporary frame hosting for AI reference, also used for user-uploaded images in Image-to-Loop mode)
 - **Download System**: Secure temp file download with auto-cleanup
 - **Credit System**: Upfront deduction with automatic refunds on failure
 - **Cross-Format Support**: Auto-transcoding ensures successful concatenation regardless of input format
+- **Buffer-to-Base64**: User-uploaded images converted to base64 before ImgBB upload
 
 **Backend Endpoints:**
+- `POST /api/video/generate-seamless-loop-image` - Image-to-loop generation (NEW!)
 - `POST /api/video/generate-seamless-loop` - Text-to-loop generation
 - `POST /api/video/generate-seamless-loop-upload` - Upload-based loop creation
 - `GET /api/video/download-temp/:filename` - Secure video download with cleanup
