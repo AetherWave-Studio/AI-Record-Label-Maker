@@ -365,9 +365,10 @@
                 const formData = new FormData();
                 formData.append('video', selectedFile);
 
-                const response = await fetch('/api/video/create-seamless-loop', {
+                const response = await fetch('/api/video/generate-seamless-loop-upload', {
                     method: 'POST',
-                    body: formData
+                    body: formData,
+                    credentials: 'include'
                 });
 
                 const result = await response.json();
@@ -411,7 +412,8 @@
                 const response = await fetch('/api/video/generate-seamless-loop', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt, duration: parseInt(duration) })
+                    body: JSON.stringify({ prompt, duration: parseInt(duration) }),
+                    credentials: 'include'
                 });
 
                 const result = await response.json();

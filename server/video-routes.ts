@@ -4,6 +4,11 @@ import type { User } from "@shared/schema";
 import { fal } from "@fal-ai/client";
 import { uploadImageToKie } from "./kieClient";
 import { isAuthenticated } from "./replitAuth";
+import { isDevAuthenticated } from "./devAuth";
+
+// Use dev-aware auth middleware
+const isDevelopment = process.env.NODE_ENV === "development";
+const authMiddleware = isDevelopment ? isDevAuthenticated : isAuthenticated;
 import {
   extractLoopFrames,
   downloadVideo,
@@ -526,7 +531,7 @@ export function setupVideoRoutes(app: Express) {
   });
 
   // SEAMLESS LOOP CREATOR - Generate new looping video from text
-  app.post("/api/video/generate-seamless-loop", async (req: Request, res: Response) => {
+  app.post("/api/video/generate-seamless-loop", authMiddleware, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       const { prompt, duration = 8 } = req.body;
@@ -569,9 +574,7 @@ export function setupVideoRoutes(app: Express) {
       console.log(`Starting seamless loop generation for user ${userId} with prompt: "${prompt}"`);
 
       // Deduct credits upfront using manual method since we need custom amount
-      const updatedUser = await storage.updateUser(userId, {
-        credits: user.credits - LOOP_GENERATION_COST
-      });
+      const updatedUser = await storage.updateUserCredits(userId, user.credits - LOOP_GENERATION_COST);
 
       let firstHalfPath: string | null = null;
       let secondHalfPath: string | null = null;
@@ -594,8 +597,9 @@ export function setupVideoRoutes(app: Express) {
           }
         });
 
-        const firstHalfVideoUrl = (firstHalfResult as any).video?.url;
+        const firstHalfVideoUrl = (firstHalfResult as any).data?.video?.url;
         if (!firstHalfVideoUrl) {
+          console.error('First half result structure:', JSON.stringify(firstHalfResult, null, 2));
           throw new Error('No video URL in first half generation result');
         }
 
@@ -634,8 +638,9 @@ export function setupVideoRoutes(app: Express) {
           }
         });
 
-        const secondHalfVideoUrl = (secondHalfResult as any).video?.url;
+        const secondHalfVideoUrl = (secondHalfResult as any).data?.video?.url;
         if (!secondHalfVideoUrl) {
+          console.error('Second half result structure:', JSON.stringify(secondHalfResult, null, 2));
           throw new Error('No video URL in second half generation result');
         }
 
@@ -645,16 +650,19 @@ export function setupVideoRoutes(app: Express) {
 
         // Step 5: Concatenate both halves
         console.log('Concatenating both halves into seamless loop...');
-        finalLoopPath = path.join('/tmp/video-processing', `seamless_loop_${Date.now()}.mp4`);
+        const timestamp = Date.now();
+        const filename = `seamless-loop-${timestamp}.mp4`; // Use hyphen to match download endpoint pattern
+        finalLoopPath = path.join(os.tmpdir(), filename);
         await concatenateVideos(firstHalfPath, secondHalfPath, finalLoopPath);
 
-        // TODO: Upload final loop to permanent storage and return URL
-        // For now, return success with temp path
         console.log('Seamless loop created successfully!');
+
+        // Return download URL instead of file path
+        const downloadUrl = `/api/video/download-temp/${filename}`;
 
         res.json({
           success: true,
-          videoUrl: finalLoopPath, // In production, upload to storage and return permanent URL
+          videoUrl: downloadUrl,
           message: "Seamless loop generated successfully",
           creditsUsed: LOOP_GENERATION_COST,
           newBalance: user.credits - LOOP_GENERATION_COST
@@ -664,9 +672,7 @@ export function setupVideoRoutes(app: Express) {
         console.error('Loop generation failed:', generationError);
         
         // Refund credits on failure
-        await storage.updateUser(userId, {
-          credits: user.credits // Restore original balance
-        });
+        await storage.updateUserCredits(userId, user.credits);
         
         throw generationError;
       } finally {
@@ -686,7 +692,7 @@ export function setupVideoRoutes(app: Express) {
   });
 
   // Upload mode: Convert existing video to seamless loop
-  app.post('/api/video/generate-seamless-loop-upload', isAuthenticated, upload.single('video'), async (req, res) => {
+  app.post('/api/video/generate-seamless-loop-upload', authMiddleware, upload.single('video'), async (req, res) => {
     try {
       const userId = req.user!.id;
       const videoFile = req.file;
@@ -737,9 +743,7 @@ export function setupVideoRoutes(app: Express) {
       console.log(`Converting uploaded video (${uploadedDuration}s) to seamless loop for user ${userId}, cost: ${uploadLoopCost} credits`);
 
       // Deduct credits upfront
-      const updatedUser = await storage.updateUser(userId, {
-        credits: user.credits - uploadLoopCost
-      });
+      const updatedUser = await storage.updateUserCredits(userId, user.credits - uploadLoopCost);
 
       let uploadedVideoPath: string | null = videoFile.path;
       let transcodedVideoPath: string | null = null;
@@ -813,9 +817,7 @@ export function setupVideoRoutes(app: Express) {
         
         // Refund credits on failure - restore to original balance
         try {
-          await storage.updateUser(userId, {
-            credits: user.credits // Restore original balance
-          });
+          await storage.updateUserCredits(userId, user.credits);
           console.log(`Refunded ${uploadLoopCost} credits to user ${userId}`);
         } catch (refundError) {
           console.error('Failed to refund credits:', refundError);
