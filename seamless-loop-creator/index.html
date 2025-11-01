@@ -194,16 +194,42 @@
             color: #ff4444;
         }
 
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .result-container.active {
+            display: block;
+        }
+
         .preview-video {
             width: 100%;
             max-width: 800px;
-            margin: 20px auto;
+            margin: 0 auto 20px auto;
             border-radius: 12px;
-            display: none;
+            border: 2px solid rgba(255, 105, 180, 0.3);
         }
 
-        .preview-video.active {
-            display: block;
+        .download-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #00ff88 0%, #00cc66 100%);
+            color: #0a0a0f;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 255, 136, 0.4);
         }
 
         .info-box {
@@ -287,7 +313,14 @@
         </div>
 
         <div class="status" id="status"></div>
-        <video class="preview-video" id="result-video" controls loop></video>
+        
+        <!-- Result Display -->
+        <div class="result-container" id="result-container">
+            <video class="preview-video" id="result-video" controls loop></video>
+            <a href="#" class="download-btn" id="download-btn" download="seamless-loop.mp4">
+                📥 Download Seamless Loop
+            </a>
+        </div>
     </div>
 
     <script>
@@ -304,9 +337,9 @@
                 document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
                 document.getElementById(`${mode}-panel`).classList.add('active');
                 
-                // Reset status
+                // Reset status and result
                 document.getElementById('status').className = 'status';
-                document.getElementById('result-video').classList.remove('active');
+                document.getElementById('result-container').classList.remove('active');
             });
         });
 
@@ -378,8 +411,12 @@
                     status.textContent = '✅ Seamless loop created successfully!';
                     
                     const videoEl = document.getElementById('result-video');
+                    const downloadBtn = document.getElementById('download-btn');
+                    const resultContainer = document.getElementById('result-container');
+                    
                     videoEl.src = result.videoUrl;
-                    videoEl.classList.add('active');
+                    downloadBtn.href = result.videoUrl;
+                    resultContainer.classList.add('active');
                 } else {
                     throw new Error(result.error || 'Failed to create loop');
                 }
@@ -423,8 +460,12 @@
                     status.textContent = '✅ Seamless loop generated successfully!';
                     
                     const videoEl = document.getElementById('result-video');
+                    const downloadBtn = document.getElementById('download-btn');
+                    const resultContainer = document.getElementById('result-container');
+                    
                     videoEl.src = result.videoUrl;
-                    videoEl.classList.add('active');
+                    downloadBtn.href = result.videoUrl;
+                    resultContainer.classList.add('active');
                 } else {
                     throw new Error(result.error || 'Failed to generate loop');
                 }
