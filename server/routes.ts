@@ -1440,8 +1440,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Album Art Generation with DALL-E 3 (Panel 1) or Fal.ai Nano Banana (Panel 3)
   app.post("/api/generate-art", authMiddleware, async (req: any, res) => {
+    const userId = getUserId(req);
+    
     try {
-      const userId = getUserId(req);
       const user = await storage.getUser(userId);
 
       if (!user) {
@@ -1881,32 +1882,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Music Video Generation with Fal.ai Seedance
   app.post("/api/generate-video-fal", authMiddleware, async (req: any, res) => {
+    const userId = getUserId(req);
+    
+    const {
+      prompt,
+      model, // Frontend sends model like 'seedance-lite' or 'seedance-pro'
+      imageData,
+      imageUrl,
+      image_url,
+      endImageData, // Support endImageData from frontend
+      imageMode = 'first-frame',
+      resolution = '720p',
+      aspectRatio, // For Pro Fast only: '16:9', '9:16', '1:1', '4:3', '21:9', '3:4', 'auto'
+      duration = '5',
+      cameraFixed = false,
+      seed = -1,
+      enableSafetyChecker = true
+    } = req.body;
+    
+    // Extract model version from model name (e.g., 'seedance-lite' -> 'lite', 'seedance-pro-fast' -> 'pro-fast')
+    const modelVersion = model ? model.replace('seedance-', '') || 'lite' : 'lite';
+    
+    let user;
+    
     try {
-      const userId = getUserId(req);
-      const user = await storage.getUser(userId);
+      user = await storage.getUser(userId);
 
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
-
-      const {
-        prompt,
-        model, // Frontend sends model like 'seedance-lite' or 'seedance-pro'
-        imageData,
-        imageUrl,
-        image_url,
-        endImageData, // Support endImageData from frontend
-        imageMode = 'first-frame',
-        resolution = '720p',
-        aspectRatio, // For Pro Fast only: '16:9', '9:16', '1:1', '4:3', '21:9', '3:4', 'auto'
-        duration = '5',
-        cameraFixed = false,
-        seed = -1,
-        enableSafetyChecker = true
-      } = req.body;
-      
-      // Extract model version from model name (e.g., 'seedance-lite' -> 'lite', 'seedance-pro-fast' -> 'pro-fast')
-      const modelVersion = model ? model.replace('seedance-', '') || 'lite' : 'lite';
       
       // Support end_image_url field (endImageData is the new frontend field)
       const end_image_url = endImageData;
@@ -2098,7 +2102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Automatically refund credits on API failure
       // Note: Video generation uses custom credit calculation, so we refund using the same method
-      const hasUnlimitedVideo = ['all_access'].includes(user.subscriptionPlan);
+      const hasUnlimitedVideo = user ? ['all_access'].includes(user.subscriptionPlan) : false;
 
       if (!hasUnlimitedVideo) {
         try {
