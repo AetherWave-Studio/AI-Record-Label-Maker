@@ -118,6 +118,45 @@ All credits work across both AI media generation and RPG features. Users can:
 - Feed integrated into home page as primary landing experience
 - Links to band detail pages for deeper exploration
 
+### Seamless Loop Creator
+
+**Location**: `/seamless-loop-creator/`
+
+A standalone video tool for creating perfect looping videos using AI-powered generation.
+
+**Two Modes:**
+
+1. **Text-to-Loop Mode** (Default)
+   - Generate seamless loops from text prompts
+   - Duration options: 4s, 8s, 12s, 16s
+   - Algorithm: Generate first half → extract first/last frames → generate second half from last frame → concatenate
+   - Cost: 2 credits/second (e.g., 16 credits for 8s loop)
+
+2. **Upload Mode**
+   - Convert existing videos to seamless loops
+   - Accepts: MP4, WebM, QuickTime, AVI (auto-transcoded to H.264 MP4)
+   - Algorithm: Transcode to H.264 → extract frames → generate return journey → concatenate
+   - Cost: 2 credits/second × uploaded video duration
+
+**Technical Implementation:**
+- **AI Model**: Fal.ai Seedance Lite (chosen for frame-to-frame dependability)
+- **Video Processing**: FFmpeg (frame extraction, transcoding, concatenation)
+- **Frame Storage**: ImgBB (temporary frame hosting for AI reference)
+- **Download System**: Secure temp file download with auto-cleanup
+- **Credit System**: Upfront deduction with automatic refunds on failure
+- **Cross-Format Support**: Auto-transcoding ensures successful concatenation regardless of input format
+
+**Backend Endpoints:**
+- `POST /api/video/generate-seamless-loop` - Text-to-loop generation
+- `POST /api/video/generate-seamless-loop-upload` - Upload-based loop creation
+- `GET /api/video/download-temp/:filename` - Secure video download with cleanup
+
+**Security Features:**
+- MIME type validation (video formats only)
+- File size limits (100MB max)
+- Filename pattern validation for downloads
+- Automatic cleanup of temporary files
+
 ## External Dependencies
 
 ### Third-Party Services
@@ -127,9 +166,11 @@ All credits work across both AI media generation and RPG features. Users can:
 -   **ttapi.io Midjourney API**: Primary Midjourney provider delivering reliable results with consistent ~30-40s generation times. Available to Studio+ users with three speed modes: Fast (3 credits), Turbo (6 credits), and Relax (3 credits). Generates 4 high-quality Midjourney v7 image variants per request. Features comprehensive timeout + auto-refund system with automatic credit refunds for metered users.
 -   **OpenAI API**: For DALL-E 3 album art generation (Panel 1) and image generation (Panel 3 for Studio+ users).
 -   **Fal.ai Nano Banana**: For fast image generation in Panel 3, available to all users including Free tier.
+-   **Fal.ai Seedance Lite**: For AI seamless loop video generation with text-to-video and image-to-video modes. Used in Seamless Loop Creator at 2 credits/second pricing.
 -   **Fal.ai Seedance**: For AI music video generation, supporting text-to-video, image-to-video, and reference-to-video modes with Lite/Pro variants. Features quality-based credit pricing and specific restrictions for free accounts.
 -   **Replit AI Integrations**: For OpenAI chat functionalities.
 -   **Google Fonts**: Used for the Inter font family.
+-   **ImgBB API**: For temporary frame image hosting during seamless loop generation.
 
 ### Key Libraries & Tools
 
