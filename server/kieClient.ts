@@ -15,16 +15,20 @@ const MAX_POLL_ATTEMPTS = 200; // ~10 minutes max (200 * 3s = 600s)
 // Construct proxy URL from individual environment variables or use WEBSHARE_PROXY
 let PROXY_URL: string | undefined;
 
-if (process.env.WEBSHARE_PROXY) {
-  PROXY_URL = process.env.WEBSHARE_PROXY;
-} else if (process.env.PROXY_HOST && process.env.PROXY_PORT && process.env.PROXY_USERNAME && process.env.PROXY_PASSWORD) {
-  // Construct from individual components
-  const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD } = process.env;
-  PROXY_URL = `http://${PROXY_USERNAME}:${PROXY_PASSWORD}@${PROXY_HOST}:${PROXY_PORT}`;
-  console.log(`🔧 Using Webshare proxy: ${PROXY_USERNAME}@${PROXY_HOST}:${PROXY_PORT}`);
-}
+// TEMPORARY: Testing direct connection without proxy
+console.log('🧪 Testing KIE.ai with DIRECT connection (proxy disabled)');
+const proxyAgent = undefined;
 
-const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
+// if (process.env.WEBSHARE_PROXY) {
+//   PROXY_URL = process.env.WEBSHARE_PROXY;
+// } else if (process.env.PROXY_HOST && process.env.PROXY_PORT && process.env.PROXY_USERNAME && process.env.PROXY_PASSWORD) {
+//   // Construct from individual components
+//   const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD } = process.env;
+//   PROXY_URL = `http://${PROXY_USERNAME}:${PROXY_PASSWORD}@${PROXY_HOST}:${PROXY_PORT}`;
+//   console.log(`🔧 Using Webshare proxy: ${PROXY_USERNAME}@${PROXY_HOST}:${PROXY_PORT}`);
+// }
+
+// const proxyAgent = PROXY_URL ? new HttpsProxyAgent(PROXY_URL) : undefined;
 
 /**
  * Upload a base64 image to ImgBB (free image hosting)
