@@ -22,13 +22,14 @@ async function ensureTmpDir() {
  */
 export async function saveVideoMetadata(options: {
   filename: string;
-  mode: 'image-to-loop' | 'upload-to-loop' | 'text-to-loop';
+  mode: 'image-to-loop' | 'upload-to-loop' | 'text-to-loop' | 'text-to-loop-luma' | 'image-to-loop-luma';
   duration: number;
   creditsUsed: number;
   userPrompt: string;
   aiPrompts?: {
-    firstHalf: string;
-    secondHalf: string;
+    firstHalf?: string;
+    secondHalf?: string;
+    luma?: string;
   };
   sourceFile?: string;
   outputSpecs?: any;

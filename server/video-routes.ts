@@ -3,6 +3,7 @@ import { storage } from "./storage";
 import type { User } from "@shared/schema";
 import { fal } from "@fal-ai/client";
 import { uploadImageToKie } from "./kieClient";
+import { lumaTextToLoop, lumaImageToLoop, lumaVideoToLoop } from "./lumaClient";
 import { isAuthenticated } from "./replitAuth";
 import { isDevAuthenticated } from "./devAuth";
 
@@ -546,11 +547,14 @@ export function setupVideoRoutes(app: Express) {
     }
   });
 
-  // SEAMLESS LOOP CREATOR - Generate new looping video from text
+  // SEAMLESS LOOP CREATOR - Generate new looping video from text using Luma Ray 2 Flash
   app.post("/api/video/generate-seamless-loop", authMiddleware, async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
-      const { prompt, duration = 8 } = req.body;
+      const { prompt } = req.body;
+      
+      // Parse duration to number (frontend sends string)
+      const durationNum = Number(req.body.duration) || 5;
 
       if (!userId) {
         return res.status(401).json({
@@ -566,6 +570,14 @@ export function setupVideoRoutes(app: Express) {
         });
       }
 
+      // Validate duration (Luma Ray 2 Flash only supports 5s or 9s)
+      if (durationNum !== 5 && durationNum !== 9) {
+        return res.status(400).json({
+          success: false,
+          error: "Duration must be 5 or 9 seconds for Luma Ray 2 Flash"
+        });
+      }
+
       // Get user and check credits
       const user = await storage.getUser(userId);
       if (!user) {
@@ -575,10 +587,9 @@ export function setupVideoRoutes(app: Express) {
         });
       }
 
-      // Cost: Seedance Lite for 8s loop = 16 credits (2 credits per second)
-      const halfDuration = duration / 2;
-      const CREDITS_PER_SECOND = 2.0; // Seedance Lite: 8 credits / 4s = 2 credits/sec
-      const LOOP_GENERATION_COST = Math.ceil(CREDITS_PER_SECOND * duration); // Total for both halves
+      // Cost: Luma Ray 2 Flash = 2 credits per second (same as before, but better quality!)
+      const CREDITS_PER_SECOND = 2.0;
+      const LOOP_GENERATION_COST = Math.ceil(CREDITS_PER_SECOND * durationNum);
       
       if (user.credits < LOOP_GENERATION_COST) {
         return res.status(400).json({
@@ -587,133 +598,74 @@ export function setupVideoRoutes(app: Express) {
         });
       }
 
-      console.log(`Starting seamless loop generation for user ${userId} with prompt: "${prompt}"`);
+      console.log(`🎬 Starting Luma seamless loop generation for user ${userId} with prompt: "${prompt}"`);
 
-      // Deduct credits upfront using manual method since we need custom amount
-      const updatedUser = await storage.updateUserCredits(userId, user.credits - LOOP_GENERATION_COST);
+      // ✅ FIXED: Deduct credits AFTER all validation passes
+      await storage.updateUserCredits(userId, user.credits - LOOP_GENERATION_COST);
 
-      let firstHalfPath: string | null = null;
-      let secondHalfPath: string | null = null;
       let finalLoopPath: string | null = null;
 
       try {
-        // Step 1: Generate first half with Seedance Lite (text-to-video)
-        console.log(`Generating first half (${halfDuration}s) with Seedance Lite...`);
+        // Generate seamless loop with Luma Ray 2 Flash (single AI call!)
+        console.log(`Generating ${durationNum}s seamless loop with Luma Ray 2 Flash...`);
         
-        const firstHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/text-to-video", {
-          input: {
-            prompt: `${prompt} (first half of looping motion)`,
-            duration: String(Math.round(halfDuration)) as any, // Cast to match Fal.ai's string literal union type
-            resolution: "720p",
-            enable_safety_checker: true
-          },
-          logs: true,
-          onQueueUpdate: (update: any) => {
-            console.log('First half generation update:', update.status);
-          }
+        const lumaResult = await lumaTextToLoop({
+          prompt: prompt,
+          duration: `${durationNum}s` as "5s" | "9s",
+          aspect_ratio: "16:9",
+          loop: true // Enable native loop mode
         });
 
-        const firstHalfVideoUrl = (firstHalfResult as any).data?.video?.url;
-        if (!firstHalfVideoUrl) {
-          console.error('First half result structure:', JSON.stringify(firstHalfResult, null, 2));
-          throw new Error('No video URL in first half generation result');
+        if (lumaResult.status === "failed" || !lumaResult.videoUrl) {
+          throw new Error(lumaResult.error || 'Luma generation failed');
         }
 
-        // Download first half
-        console.log('Downloading first half video...');
-        firstHalfPath = await downloadVideo(firstHalfVideoUrl);
-
-        // Step 2: Extract first and last frames from first half
-        console.log('Extracting loop frames from first half...');
-        const { firstFrame, lastFrame } = await extractLoopFrames(firstHalfPath);
-
-        // Step 3: Upload frames to ImgBB for Seedance reference
-        console.log('Uploading reference frames to ImgBB...');
-        const imgbbApiKey = process.env.IMGBB_API_KEY;
-        if (!imgbbApiKey) {
-          throw new Error('IMGBB_API_KEY not configured - cannot upload reference frames');
-        }
-        const firstFrameUrl = await uploadImageToKie(firstFrame, imgbbApiKey);
-        const lastFrameUrl = await uploadImageToKie(lastFrame, imgbbApiKey);
-
-        // Step 4: Generate second half with Seedance Lite (image-to-video)
-        // Using first-frame mode: start with last frame of first half, return to first frame
-        console.log(`Generating second half (${halfDuration}s) - completing the loop...`);
-        
-        const secondHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
-          input: {
-            prompt: `${prompt} (completing the loop back to start)`,
-            image_url: lastFrameUrl, // Start from last frame of first half
-            duration: String(Math.round(halfDuration)) as any, // Cast to match Fal.ai's string literal union type
-            resolution: "720p",
-            enable_safety_checker: true
-          },
-          logs: true,
-          onQueueUpdate: (update: any) => {
-            console.log('Second half generation update:', update.status);
-          }
-        });
-
-        const secondHalfVideoUrl = (secondHalfResult as any).data?.video?.url;
-        if (!secondHalfVideoUrl) {
-          console.error('Second half result structure:', JSON.stringify(secondHalfResult, null, 2));
-          throw new Error('No video URL in second half generation result');
-        }
-
-        // Download second half
-        console.log('Downloading second half video...');
-        secondHalfPath = await downloadVideo(secondHalfVideoUrl);
-
-        // Step 5: Concatenate both halves
-        console.log('Concatenating both halves into seamless loop...');
+        // Download video from Luma
+        console.log('Downloading Luma-generated seamless loop...');
         const timestamp = Date.now();
-        const filename = `seamless-loop-${timestamp}.mp4`; // Use hyphen to match download endpoint pattern
-        finalLoopPath = path.join(os.tmpdir(), filename);
-        await concatenateVideos(firstHalfPath, secondHalfPath, finalLoopPath);
+        const filename = `seamless-loop-${timestamp}.mp4`;
+        finalLoopPath = await downloadVideo(lumaResult.videoUrl);
+        
+        // Move to proper filename
+        const properPath = path.join(os.tmpdir(), filename);
+        fs.renameSync(finalLoopPath, properPath);
+        finalLoopPath = properPath;
 
-        console.log('Seamless loop created successfully!');
+        console.log('✅ Luma seamless loop created successfully!');
 
-        // Save metadata for prompt testing and optimization
+        // Save metadata for prompt testing
         await saveVideoMetadata({
           filename: filename,
-          mode: 'text-to-loop',
-          duration: duration,
+          mode: 'text-to-loop-luma',
+          duration: durationNum,
           creditsUsed: LOOP_GENERATION_COST,
           userPrompt: prompt,
           aiPrompts: {
-            firstHalf: `${prompt} (first half of looping motion)`,
-            secondHalf: `${prompt} (completing the loop back to start)`
+            luma: `${prompt}, seamless loop, continuous motion`
           }
         });
 
-        // Return download URL instead of file path
+        // Return download URL
         const downloadUrl = `/api/video/download-temp/${filename}`;
 
         res.json({
           success: true,
           videoUrl: downloadUrl,
-          message: "Seamless loop generated successfully",
+          message: "Seamless loop generated successfully with Luma Ray 2 Flash",
           creditsUsed: LOOP_GENERATION_COST,
           newBalance: user.credits - LOOP_GENERATION_COST
         });
 
       } catch (generationError: any) {
-        console.error('Loop generation failed:', generationError);
+        console.error('❌ Luma loop generation failed:', generationError);
         
         // Refund credits on failure
         await storage.updateUserCredits(userId, user.credits);
         
-        // Clean up ALL files on failure (including finalLoopPath since generation failed)
-        if (firstHalfPath) await cleanupFile(firstHalfPath);
-        if (secondHalfPath) await cleanupFile(secondHalfPath);
+        // Clean up files on failure
         if (finalLoopPath) await cleanupFile(finalLoopPath);
         
         throw generationError;
-      } finally {
-        // Clean up only intermediate files on success
-        // finalLoopPath will be cleaned up by download endpoint after user downloads
-        if (firstHalfPath) await cleanupFile(firstHalfPath);
-        if (secondHalfPath) await cleanupFile(secondHalfPath);
       }
 
     } catch (error: any) {
@@ -725,13 +677,20 @@ export function setupVideoRoutes(app: Express) {
     }
   });
 
-  // IMAGE-TO-LOOP: Create seamless loop from single image
+  // IMAGE-TO-LOOP: Create seamless loop from single image using Luma Ray 2 Flash
   app.post('/api/video/generate-seamless-loop-image', authMiddleware, upload.single('image'), async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const userId = (req as any).user?.id;
       const imageFile = req.file;
-      const duration = parseInt(req.body.duration) || 8;
+      const duration = parseInt(req.body.duration) || 5; // Luma supports 5s or 9s
       const userPrompt = req.body.prompt || '';
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          error: 'Authentication required'
+        });
+      }
 
       if (!imageFile) {
         return res.status(400).json({
@@ -743,7 +702,16 @@ export function setupVideoRoutes(app: Express) {
       if (!userPrompt.trim()) {
         return res.status(400).json({
           success: false,
-          error: 'Motion prompt is required'
+          error: 'Motion prompt is required - describe how the image should animate'
+        });
+      }
+
+      // Validate duration (Luma only supports 5s or 9s)
+      if (duration !== 5 && duration !== 9) {
+        await cleanupFile(imageFile.path);
+        return res.status(400).json({
+          success: false,
+          error: 'Duration must be 5 or 9 seconds for Luma Ray 2 Flash'
         });
       }
 
@@ -766,28 +734,26 @@ export function setupVideoRoutes(app: Express) {
         });
       }
 
-      const halfDuration = duration / 2;
-      const LOOP_COST = duration * 2; // 2 credits per second
+      const LOOP_COST = duration * 2; // 2 credits per second (same pricing)
 
       // Check credits
       if (user.credits < LOOP_COST) {
+        await cleanupFile(imageFile.path);
         return res.status(402).json({
           success: false,
           error: `Insufficient credits. Required: ${LOOP_COST}, Available: ${user.credits}`
         });
       }
 
-      console.log(`Creating ${duration}s loop from image for user ${userId}, cost: ${LOOP_COST} credits`);
+      console.log(`🎬 Creating ${duration}s Luma loop from image for user ${userId}, cost: ${LOOP_COST} credits`);
 
       // Deduct credits upfront
       await storage.updateUserCredits(userId, user.credits - LOOP_COST);
 
-      let firstHalfPath: string | null = null;
-      let secondHalfPath: string | null = null;
       let finalLoopPath: string | null = null;
 
       try {
-        // Step 1: Upload image to ImgBB
+        // Step 1: Upload image to ImgBB (Luma needs a public URL)
         console.log('Uploading image to ImgBB...');
         const imgbbApiKey = process.env.IMGBB_API_KEY;
         if (!imgbbApiKey) {
@@ -796,89 +762,46 @@ export function setupVideoRoutes(app: Express) {
         
         const imageBuffer = fs.readFileSync(imageFile.path);
         const base64Image = imageBuffer.toString('base64');
-        const originalImageUrl = await uploadImageToKie(base64Image, imgbbApiKey);
-        console.log('Original image uploaded:', originalImageUrl);
+        const imageUrl = await uploadImageToKie(base64Image, imgbbApiKey);
+        console.log('Image uploaded successfully:', imageUrl);
 
-        // Step 2: Generate first half (image-to-video)
-        console.log(`Generating first half (${halfDuration}s) from image with prompt: "${userPrompt}"...`);
-        const firstHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
-          input: {
-            image_url: originalImageUrl,
-            prompt: userPrompt,
-            duration: String(Math.round(halfDuration)) as any,
-            resolution: "720p",
-            enable_safety_checker: true
-          },
-          logs: true,
-          onQueueUpdate: (update: any) => {
-            console.log('First half generation:', update.status);
-          }
-        });
-
-        const firstHalfVideoUrl = (firstHalfResult as any).data?.video?.url;
-        if (!firstHalfVideoUrl) {
-          console.error('First half result:', JSON.stringify(firstHalfResult, null, 2));
-          throw new Error('No video URL in first half generation result');
-        }
-
-        // Download first half
-        console.log('Downloading first half video...');
-        firstHalfPath = await downloadVideo(firstHalfVideoUrl);
-
-        // Step 3: Extract last frame from first half
-        console.log('Extracting last frame...');
-        const { lastFrame } = await extractLoopFrames(firstHalfPath);
+        // Step 2: Generate seamless loop with Luma Ray 2 Flash (single AI call!)
+        console.log(`Generating ${duration}s seamless loop from image with Luma...`);
         
-        // Step 4: Upload last frame to ImgBB
-        console.log('Uploading last frame to ImgBB...');
-        const lastFrameUrl = await uploadImageToKie(lastFrame, imgbbApiKey);
-
-        // Step 5: Generate second half (last frame back to original image)
-        console.log(`Generating second half (${halfDuration}s) - returning to original image...`);
-        const returnPrompt = `${userPrompt}, smooth return to starting position, seamless loop`;
-        const secondHalfResult = await fal.subscribe("fal-ai/bytedance/seedance/v1/lite/image-to-video", {
-          input: {
-            image_url: lastFrameUrl,
-            prompt: returnPrompt,
-            duration: String(Math.round(halfDuration)) as any,
-            resolution: "720p",
-            enable_safety_checker: true
-          },
-          logs: true,
-          onQueueUpdate: (update: any) => {
-            console.log('Second half generation:', update.status);
-          }
+        const lumaResult = await lumaImageToLoop({
+          prompt: userPrompt,
+          image_url: imageUrl,
+          duration: `${duration}s` as "5s" | "9s",
+          aspect_ratio: "16:9",
+          loop: true // Enable native loop mode
         });
 
-        const secondHalfVideoUrl = (secondHalfResult as any).data?.video?.url;
-        if (!secondHalfVideoUrl) {
-          console.error('Second half result:', JSON.stringify(secondHalfResult, null, 2));
-          throw new Error('No video URL in second half generation result');
+        if (lumaResult.status === "failed" || !lumaResult.videoUrl) {
+          throw new Error(lumaResult.error || 'Luma image-to-loop generation failed');
         }
 
-        // Download second half
-        console.log('Downloading second half video...');
-        secondHalfPath = await downloadVideo(secondHalfVideoUrl);
-
-        // Step 6: Concatenate both halves
-        console.log('Concatenating into seamless loop...');
+        // Step 3: Download video from Luma
+        console.log('Downloading Luma-generated seamless loop...');
         const timestamp = Date.now();
         const filename = `seamless-loop-${timestamp}.mp4`;
-        finalLoopPath = path.join(os.tmpdir(), filename);
-        await concatenateVideos(firstHalfPath, secondHalfPath, finalLoopPath);
+        finalLoopPath = await downloadVideo(lumaResult.videoUrl);
+        
+        // Move to proper filename
+        const properPath = path.join(os.tmpdir(), filename);
+        fs.renameSync(finalLoopPath, properPath);
+        finalLoopPath = properPath;
 
-        console.log('Image-to-loop created successfully!');
+        console.log('✅ Luma image-to-loop created successfully!');
 
-        // Save metadata for prompt testing and optimization
+        // Save metadata for prompt testing
         await saveVideoMetadata({
           filename: filename,
-          mode: 'image-to-loop',
+          mode: 'image-to-loop-luma',
           duration: duration,
           creditsUsed: LOOP_COST,
           userPrompt: userPrompt,
           aiPrompts: {
-            firstHalf: userPrompt,
-            secondHalf: returnPrompt
+            luma: `${userPrompt}, seamless loop, continuous motion, smooth return to starting position`
           },
           sourceFile: imageFile.originalname
         });
@@ -888,28 +811,24 @@ export function setupVideoRoutes(app: Express) {
         res.json({
           success: true,
           videoUrl: downloadUrl,
-          message: "Seamless loop created from image",
+          message: "Seamless loop created from image with Luma Ray 2 Flash",
           creditsUsed: LOOP_COST,
           newBalance: user.credits - LOOP_COST
         });
 
       } catch (generationError: any) {
-        console.error('Image-to-loop generation failed:', generationError);
+        console.error('❌ Luma image-to-loop generation failed:', generationError);
         
         // Refund credits on failure
         await storage.updateUserCredits(userId, user.credits);
         
-        // Clean up ALL files on failure
-        if (firstHalfPath) await cleanupFile(firstHalfPath);
-        if (secondHalfPath) await cleanupFile(secondHalfPath);
+        // Clean up files on failure
         if (finalLoopPath) await cleanupFile(finalLoopPath);
         
         throw generationError;
       } finally {
-        // Clean up intermediate files and uploaded image
+        // Clean up uploaded image file
         await cleanupFile(imageFile.path);
-        if (firstHalfPath) await cleanupFile(firstHalfPath);
-        if (secondHalfPath) await cleanupFile(secondHalfPath);
       }
 
     } catch (error: any) {
@@ -924,7 +843,7 @@ export function setupVideoRoutes(app: Express) {
   // Upload mode: Convert existing video to seamless loop
   app.post('/api/video/generate-seamless-loop-upload', authMiddleware, upload.single('video'), async (req, res) => {
     try {
-      const userId = req.user!.id;
+      const userId = (req as any).user?.id;
       const videoFile = req.file;
 
       if (!videoFile) {
@@ -1023,7 +942,7 @@ export function setupVideoRoutes(app: Express) {
 
         // Download second half
         console.log('Downloading second half...');
-        secondHalfPath = await downloadVideo(secondHalfResult.data.video.url, 'loop-second-half');
+        secondHalfPath = await downloadVideo(secondHalfResult.data.video.url);
 
         // Step 4: Concatenate transcoded video + second half
         console.log('Concatenating videos into seamless loop...');
