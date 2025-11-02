@@ -93,14 +93,14 @@ const mockBackgroundRemoval = async (videoFile: File, format: 'webm' | 'mov' = '
 };
 
 export function setupVideoRoutes(app: Express) {
-  // Download temporary video files - serves for both video playback and download
+  // Download temporary video files AND metadata - serves for both video playback and metadata download
   app.get("/api/video/download-temp/:filename", async (req: Request, res: Response) => {
     try {
       const { filename } = req.params;
       const filePath = path.join(os.tmpdir(), filename);
       
-      // Security: only allow files in temp directory with expected pattern
-      if (!filename.match(/^seamless-loop-\d+\.mp4$/)) {
+      // Security: only allow video (.mp4) and metadata (.json) files with expected pattern
+      if (!filename.match(/^seamless-loop-\d+\.(mp4|json)$/)) {
         return res.status(400).json({ error: "Invalid filename" });
       }
       
@@ -109,10 +109,15 @@ export function setupVideoRoutes(app: Express) {
         return res.status(404).json({ error: "File not found or expired" });
       }
       
+      // Determine content type and disposition based on file extension
+      const isJson = filename.endsWith('.json');
+      const contentType = isJson ? 'application/json' : 'video/mp4';
+      const disposition = isJson ? 'attachment' : 'attachment'; // Both downloadable
+      
       // Serve file with proper headers for both streaming and download
       // Don't use res.download() as it triggers cleanup on partial requests (206)
-      res.setHeader('Content-Type', 'video/mp4');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `${disposition}; filename="${filename}"`);
       res.sendFile(filePath, (err) => {
         if (err) {
           console.error("Error sending file:", err);
