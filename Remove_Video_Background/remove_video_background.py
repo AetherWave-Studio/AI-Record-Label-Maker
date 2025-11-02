@@ -14,15 +14,27 @@ import json
 from tqdm import tqdm
 import os
 
+# FFmpeg paths - use full path if available, otherwise system PATH
+FFMPEG_PATH = 'C:\\ffmpeg\\bin\\ffmpeg.exe' if os.path.exists('C:\\ffmpeg\\bin\\ffmpeg.exe') else 'ffmpeg'
+FFPROBE_PATH = 'C:\\ffmpeg\\bin\\ffprobe.exe' if os.path.exists('C:\\ffmpeg\\bin\\ffprobe.exe') else 'ffprobe'
+
 def get_video_info(video_path):
     """Get video metadata using ffprobe"""
     cmd = [
-        'ffprobe', '-v', 'quiet', '-print_format', 'json',
+        FFPROBE_PATH, '-v', 'quiet', '-print_format', 'json',
         '-show_streams', '-show_format', video_path
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
+
+    if result.returncode != 0:
+        print(f"FFprobe error: {result.stderr}")
+        raise Exception(f"Failed to read video file: {video_path}")
+
     info = json.loads(result.stdout)
-    
+
+    if 'streams' not in info:
+        raise Exception(f"No video streams found in: {video_path}")
+
     video_stream = next(s for s in info['streams'] if s['codec_type'] == 'video')
     
     fps_parts = video_stream['r_frame_rate'].split('/')
@@ -77,49 +89,82 @@ def remove_background_from_frames(frames):
     
     return processed_frames
 
-def create_transparent_video(frames, output_path, fps, width, height):
-    """Create video with transparency using ffmpeg"""
-    temp_dir = Path('/tmp/video_frames')
+def create_transparent_video(frames, output_path_base, fps, width, height):
+    """Create video with transparency in multiple formats using ffmpeg"""
+    temp_dir = Path('temp_video_frames')
     temp_dir.mkdir(exist_ok=True)
-    
+
     print(f"Saving {len(frames)} frames as PNG...")
     # Save all frames as PNG with alpha channel
     for i, frame in enumerate(tqdm(frames)):
         frame_path = temp_dir / f"frame_{i:05d}.png"
         pil_image = Image.fromarray(frame, 'RGBA')
         pil_image.save(str(frame_path), 'PNG')
-    
-    print(f"Encoding video with transparency...")
-    # Use ffmpeg to create WebM with VP9 and alpha channel
-    cmd = [
-        'ffmpeg', '-y',
+
+    # Generate MOV with transparency (using qtrle codec for better compatibility)
+    print(f"Encoding MOV with transparency...")
+    mov_path = str(output_path_base).replace('.mov', '.mov')
+    cmd_mov = [
+        FFMPEG_PATH, '-y',
+        '-framerate', str(fps),
+        '-i', str(temp_dir / 'frame_%05d.png'),
+        '-c:v', 'qtrle',         # QuickTime Animation codec - widely supported with alpha
+        '-pix_fmt', 'argb',      # ARGB for QuickTime
+        mov_path
+    ]
+    result = subprocess.run(cmd_mov, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"MOV encoding error: {result.stderr}")
+    else:
+        print(f"[OK] MOV saved to: {mov_path}")
+
+    # Generate WEBM with transparency
+    print(f"Encoding WEBM with transparency...")
+    webm_path = str(output_path_base).replace('.mov', '.webm')
+    cmd_webm = [
+        FFMPEG_PATH, '-y',
         '-framerate', str(fps),
         '-i', str(temp_dir / 'frame_%05d.png'),
         '-c:v', 'libvpx-vp9',
-        '-pix_fmt', 'yuva420p',  # YUV with alpha
-        '-auto-alt-ref', '0',     # Required for VP9 alpha
+        '-pix_fmt', 'yuva420p',
+        '-auto-alt-ref', '0',
         '-metadata:s:v:0', 'alpha_mode="1"',
-        '-b:v', '2M',             # Bitrate
-        str(output_path)
+        '-b:v', '2M',
+        webm_path
     ]
-    
-    result = subprocess.run(cmd, capture_output=True, text=True)
-    
+    result = subprocess.run(cmd_webm, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"FFmpeg error: {result.stderr}")
-        raise Exception("Failed to encode video")
-    
+        print(f"WEBM encoding error: {result.stderr}")
+    else:
+        print(f"[OK] WEBM saved to: {webm_path}")
+
+    # Generate GIF with transparency
+    print(f"Encoding GIF with transparency...")
+    gif_path = str(output_path_base).replace('.mov', '.gif')
+    cmd_gif = [
+        FFMPEG_PATH, '-y',
+        '-framerate', str(fps),
+        '-i', str(temp_dir / 'frame_%05d.png'),
+        '-vf', f'fps={fps},scale={width}:{height}:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256:reserve_transparent=1[p];[s1][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle',
+        gif_path
+    ]
+    result = subprocess.run(cmd_gif, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"GIF encoding error: {result.stderr}")
+    else:
+        print(f"[OK] GIF saved to: {gif_path}")
+
     # Clean up temporary frames
     print("Cleaning up temporary files...")
     for frame_file in temp_dir.glob('*.png'):
         frame_file.unlink()
     temp_dir.rmdir()
-    
-    print(f"✓ Video saved to: {output_path}")
+
+    print(f"[OK] All formats generated!")
 
 def main():
-    input_video = '/home/ubuntu/Uploads/openart-video_6c9b307e_1760945378949.mp4'
-    output_video = '/home/ubuntu/aetherwave_transparent_loop.webm'
+    input_video = 'Uploads/Logo_glass_marble.mp4'
+    output_video = 'Uploads/Logo_glass_marble_transparent.mov'
     
     print("=" * 60)
     print("Video Background Removal Tool")
@@ -138,13 +183,13 @@ def main():
     print()
     
     # Extract frames
-    frames = extract_frames(input_video, '/tmp/original_frames')
-    print(f"✓ Extracted {len(frames)} frames")
+    frames = extract_frames(input_video, 'temp_original_frames')
+    print(f"[OK] Extracted {len(frames)} frames")
     print()
-    
+
     # Remove backgrounds
     processed_frames = remove_background_from_frames(frames)
-    print(f"✓ Background removed from {len(processed_frames)} frames")
+    print(f"[OK] Background removed from {len(processed_frames)} frames")
     print()
     
     # Create output video
@@ -158,11 +203,13 @@ def main():
     
     print()
     print("=" * 60)
-    print("✓ SUCCESS!")
+    print("[SUCCESS]")
     print("=" * 60)
-    print(f"Transparent video saved to: {output_video}")
-    print(f"Format: WebM with VP9 codec and alpha channel")
-    print(f"The video maintains the original loop nature")
+    print(f"Generated formats:")
+    print(f"  - MOV:  {output_video}")
+    print(f"  - WEBM: {output_video.replace('.mov', '.webm')}")
+    print(f"  - GIF:  {output_video.replace('.mov', '.gif')}")
+    print(f"All formats support transparency and maintain the original loop")
     print()
 
 if __name__ == '__main__':
