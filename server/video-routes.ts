@@ -15,7 +15,8 @@ import {
   concatenateVideos,
   cleanupFile,
   getVideoDuration,
-  transcodeToH264
+  transcodeToH264,
+  saveVideoMetadata
 } from "./videoUtils";
 import path from "path";
 import os from "os";
@@ -667,6 +668,19 @@ export function setupVideoRoutes(app: Express) {
 
         console.log('Seamless loop created successfully!');
 
+        // Save metadata for prompt testing and optimization
+        await saveVideoMetadata({
+          filename: filename,
+          mode: 'text-to-loop',
+          duration: duration,
+          creditsUsed: LOOP_GENERATION_COST,
+          userPrompt: prompt,
+          aiPrompts: {
+            firstHalf: `${prompt} (first half of looping motion)`,
+            secondHalf: `${prompt} (completing the loop back to start)`
+          }
+        });
+
         // Return download URL instead of file path
         const downloadUrl = `/api/video/download-temp/${filename}`;
 
@@ -850,6 +864,20 @@ export function setupVideoRoutes(app: Express) {
 
         console.log('Image-to-loop created successfully!');
 
+        // Save metadata for prompt testing and optimization
+        await saveVideoMetadata({
+          filename: filename,
+          mode: 'image-to-loop',
+          duration: duration,
+          creditsUsed: LOOP_COST,
+          userPrompt: userPrompt,
+          aiPrompts: {
+            firstHalf: userPrompt,
+            secondHalf: returnPrompt
+          },
+          sourceFile: imageFile.originalname
+        });
+
         const downloadUrl = `/api/video/download-temp/${filename}`;
 
         res.json({
@@ -998,6 +1026,20 @@ export function setupVideoRoutes(app: Express) {
         await concatenateVideos(transcodedVideoPath, secondHalfPath, finalLoopPath);
 
         console.log(`Seamless loop created successfully: ${finalLoopPath}`);
+
+        // Save metadata for prompt testing and optimization
+        await saveVideoMetadata({
+          filename: path.basename(finalLoopPath),
+          mode: 'upload-to-loop',
+          duration: uploadedDuration * 2, // Total loop duration
+          creditsUsed: uploadLoopCost,
+          userPrompt: 'smooth transition completing the seamless loop, return to starting position',
+          aiPrompts: {
+            firstHalf: 'Original uploaded video',
+            secondHalf: 'smooth transition completing the seamless loop, return to starting position'
+          },
+          sourceFile: videoFile.originalname
+        });
 
         // Return success response with download URL
         res.json({

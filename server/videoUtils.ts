@@ -3,6 +3,7 @@ import { promisify } from 'util';
 import { writeFile, unlink, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
+import os from 'os';
 
 const execAsync = promisify(exec);
 
@@ -13,6 +14,50 @@ const TMP_DIR = '/tmp/video-processing';
 async function ensureTmpDir() {
   if (!existsSync(TMP_DIR)) {
     await mkdir(TMP_DIR, { recursive: true });
+  }
+}
+
+/**
+ * Save metadata JSON file alongside video for testing and prompt optimization
+ */
+export async function saveVideoMetadata(options: {
+  filename: string;
+  mode: 'image-to-loop' | 'upload-to-loop' | 'text-to-loop';
+  duration: number;
+  creditsUsed: number;
+  userPrompt: string;
+  aiPrompts?: {
+    firstHalf: string;
+    secondHalf: string;
+  };
+  sourceFile?: string;
+  outputSpecs?: any;
+}): Promise<void> {
+  try {
+    const metadataFilename = options.filename.replace('.mp4', '.json');
+    const metadataPath = path.join(os.tmpdir(), metadataFilename);
+    
+    const metadata = {
+      filename: options.filename,
+      mode: options.mode,
+      duration: options.duration,
+      creditsUsed: options.creditsUsed,
+      timestamp: new Date().toISOString(),
+      userPrompt: options.userPrompt,
+      aiPrompts: options.aiPrompts,
+      sourceFile: options.sourceFile,
+      outputSpecs: options.outputSpecs || {
+        format: 'H.264 MP4',
+        resolution: '960x960',
+        fps: 24
+      }
+    };
+    
+    await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+    console.log(`Metadata saved: ${metadataPath}`);
+  } catch (error) {
+    console.error('Error saving metadata:', error);
+    // Don't throw - metadata saving is optional
   }
 }
 

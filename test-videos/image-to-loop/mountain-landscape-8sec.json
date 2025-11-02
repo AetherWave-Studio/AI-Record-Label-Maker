@@ -1,0 +1,19 @@
+{
+  "filename": "mountain-landscape-8sec.mp4",
+  "mode": "image-to-loop",
+  "duration": 8,
+  "creditsUsed": 16,
+  "timestamp": "2025-11-02T00:33:56Z",
+  "userPrompt": "camera slowly pans left to right across the landscape, smooth gimbal movement",
+  "aiPrompts": {
+    "firstHalf": "camera slowly pans left to right across the landscape, smooth gimbal movement",
+    "secondHalf": "camera slowly pans left to right across the landscape, smooth gimbal movement, smooth return to starting position, seamless loop"
+  },
+  "sourceImage": "Mountain_sunset_landscape_scene_4e9a8a71.png",
+  "outputSpecs": {
+    "format": "H.264 MP4",
+    "resolution": "960x960",
+    "fps": 24,
+    "fileSize": "8.5 MB"
+  }
+}
