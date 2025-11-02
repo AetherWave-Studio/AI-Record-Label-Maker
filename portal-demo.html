@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal System Demo - AetherWave Studio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: #0d0b15;
+            color: #e9e8ff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .demo-header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, #ff2ea6 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .demo-header p {
+            color: #b7b3d9;
+            font-size: 1.1rem;
+        }
+
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Entry Portal */
+        .entry-portal {
+            background: linear-gradient(135deg, rgba(255, 46, 166, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(255, 46, 166, 0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .entry-portal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .portal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #ff2ea6, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: portalFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes portalFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-10px) scale(1.05); }
+        }
+
+        .portal-icon::before {
+            content: '';
+            position: absolute;
+            inset: -10px;
+            background: radial-gradient(circle, rgba(255, 46, 166, 0.3), transparent);
+            border-radius: 50%;
+            animation: portalGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes portalGlow {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        .portal-icon svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+            z-index: 1;
+            position: relative;
+        }
+
+        .portal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #ff2ea6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .portal-description {
+            text-align: center;
+            color: #b7b3d9;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .portal-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #ff2ea6, #8b5cf6);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .portal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 46, 166, 0.3);
+            background: linear-gradient(135deg, #ff40a6, #9b6cf6);
+        }
+
+        /* Exit Portal */
+        .exit-portal-demo {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 1000;
+        }
+
+        .exit-portal-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .exit-portal-button:hover {
+            transform: scale(1.1);
+        }
+
+        .exit-portal-ring {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .exit-portal-ring::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            background: linear-gradient(45deg, #ff2ea6, #8b5cf6, #667eea, #764ba2);
+            border-radius: 50%;
+            animation: exitPortalGlow 3s ease-in-out infinite;
+            filter: blur(10px);
+            opacity: 0.6;
+        }
+
+        .exit-portal-core {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            border: 2px solid #ff2ea6;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 4px 20px rgba(255, 46, 166, 0.3);
+            animation: exitPortalRotate 4s linear infinite;
+        }
+
+        @keyframes exitPortalGlow {
+            0%, 100% { opacity: 0.6; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        @keyframes exitPortalRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .exit-portal-label {
+            background: rgba(30, 30, 46, 0.9);
+            border: 1px solid rgba(255, 46, 166, 0.3);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            color: #e9e8ff;
+        }
+
+        .exit-portal-button:hover .exit-portal-label {
+            background: rgba(255, 46, 166, 0.2);
+            border-color: #ff2ea6;
+            color: #fff;
+        }
+
+        /* Background Animation */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb1 {
+            width: 300px;
+            height: 300px;
+            background: #ff2ea6;
+            top: 10%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .orb2 {
+            width: 200px;
+            height: 200px;
+            background: #8b5cf6;
+            bottom: 20%;
+            right: 15%;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(30px, -30px); }
+            66% { transform: translate(-20px, 20px); }
+        }
+
+        .instructions {
+            background: rgba(30, 30, 46, 0.5);
+            border: 1px solid rgba(255, 46, 166, 0.2);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .instructions h3 {
+            color: #ff2ea6;
+            margin-bottom: 1rem;
+        }
+
+        .instructions ul {
+            list-style: none;
+            color: #b7b3d9;
+        }
+
+        .instructions li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .instructions li::before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="bg-orb orb1"></div>
+        <div class="bg-orb orb2"></div>
+    </div>
+
+    <div class="demo-container">
+        <header class="demo-header">
+            <h1>🚪 Portal Navigation System</h1>
+            <p>Complete demo of the Ghost Musician ↔ AetherWave Studio portal system</p>
+        </header>
+
+        <div class="instructions">
+            <h3>How It Works:</h3>
+            <ul>
+                <li><strong>Entry Portal</strong>: From Ghost Musician Profile to AetherWave Studio</li>
+                <li><strong>Exit Portal</strong>: From any AetherWave page back to Profile</li>
+                <li><strong>Visual Effects</strong>: Animated portals with particle effects and glowing</li>
+                <li><strong>Seamless Integration</strong>: Consistent design across both platforms</li>
+            </ul>
+        </div>
+
+        <div class="portal-grid">
+            <!-- Entry Portal Demo -->
+            <div class="entry-portal">
+                <div class="portal-icon">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                </div>
+                <h2 class="portal-title">Enter AetherWave Studio</h2>
+                <p class="portal-description">
+                    Step through the portal to access AI-powered media generation tools and create stunning content with cutting-edge artificial intelligence.
+                </p>
+                <button class="portal-button" onclick="alert('Portal activated! This would navigate to /static/aimusic-media.html')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                    </svg>
+                    Enter Portal
+                </button>
+            </div>
+
+            <!-- Features Demo -->
+            <div class="entry-portal">
+                <div class="portal-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                    </svg>
+                </div>
+                <h2 class="portal-title">Dynamic Media Library</h2>
+                <p class="portal-description">
+                    Automatically rotating background tiles with your images, videos, and gradients. Add new media on the fly with simple JavaScript commands.
+                </p>
+                <button class="portal-button" onclick="alert('Media library activated! This would open the tiled background system')">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    View Media System
+                </button>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>✨ Completed Features:</h3>
+            <ul>
+                <li><strong>Portal Entry Component</strong>: Animated portal card for Ghost Musician profiles</li>
+                <li><strong>Exit Portal Component</strong>: Floating return portal for all AetherWave pages</li>
+                <li><strong>Tiled Background System</strong>: Dynamic media rotation with auto-rotation</li>
+                <li><strong>Modular Navigation</strong>: Shared navigation across all static pages</li>
+                <li><strong>Visual Effects</strong>: Particle animations, glowing effects, smooth transitions</li>
+                <li><strong>Mobile Responsive</strong>: Works perfectly on all screen sizes</li>
+                <li><strong>Easy Configuration</strong>: Add media and adjust settings via JavaScript</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Exit Portal Demo -->
+    <div class="exit-portal-demo">
+        <a href="#" class="exit-portal-button" onclick="alert('Exit portal activated! This would navigate back to user profile'); return false;">
+            <div class="exit-portal-ring">
+                <div class="exit-portal-core">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9,22 9,12 15,12 15,22"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="exit-portal-label">Return to Profile</div>
+        </a>
+    </div>
+</body>
+</html>

@@ -63,6 +63,7 @@
     "framer-motion": "^11.13.1",
     "gsap": "^3.13.0",
     "https-proxy-agent": "^7.0.6",
+    "imgbb": "^1.0.48",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.453.0",
     "memoizee": "^0.4.17",

@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { ArrowLeft, User, Music, Trophy, Play, Star, Users, Crown, Zap, Coins, Camera, Upload } from "lucide-react";
+import { PortalNavSimple } from "@/components/portal-nav-simple";
 import type { User as UserType, ArtistCard, Release } from "@shared/schema";
 
 interface UserStats {
@@ -45,39 +46,69 @@ export function UserProfile() {
     enabled: !!userId,
   });
 
-  // Fetch user's artist cards
-  const { data: userCards, isLoading: cardsLoading } = useQuery<ArtistCard[]>({
-    queryKey: [`/api/users/${userId}/cards`],
-    enabled: !!userId,
-  });
-
-  // Fetch user's releases
-  const { data: userReleases, isLoading: releasesLoading } = useQuery<Release[]>({
-    queryKey: [`/api/users/${userId}/releases`],
-    enabled: !!userId,
-  });
-
   const isOwnProfile = currentUser?.id === userId;
+
+  // Fetch user's artist cards (bands)
+  const { data: userCards, isLoading: cardsLoading } = useQuery<ArtistCard[]>({
+    queryKey: ["/api/bands"],
+    enabled: !!userId && isOwnProfile, // Only fetch for own profile since /api/bands uses auth
+  });
+
+  // For other users, we'll need to implement a public endpoint for their cards
+  // TODO: Implement /api/users/${userId}/cards endpoint for public profiles
+  const publicUserCards: ArtistCard[] = [];
+  const publicCardsLoading = false;
+
+  // Combine cards for display
+  const displayCards = isOwnProfile ? userCards : publicUserCards;
+  const displayCardsLoading = isOwnProfile ? cardsLoading : publicCardsLoading;
+
+  // TODO: Implement releases endpoint when available
+  const userReleases: Release[] = [];
+  const releasesLoading = false;
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch credits for own profile only
   const { data: creditData } = useQuery({
-    queryKey: ["/api/credits"],
+    queryKey: ["/api/user/credits"],
     retry: false,
     enabled: isAuthenticated && isOwnProfile,
   });
-  const isLoading = userLoading || cardsLoading || releasesLoading;
+  const isLoading = userLoading || displayCardsLoading || releasesLoading;
 
-  // Calculate user stats
+  // Calculate user stats from bands data
+  const totalStreams = displayCards?.reduce((sum, card) => {
+    const bandData = card.artistData as any;
+    return sum + (bandData.totalStreams || 0);
+  }, 0) || 0;
+
+  const totalFame = displayCards?.reduce((sum, card) => {
+    const bandData = card.artistData as any;
+    return sum + (bandData.fame || 0);
+  }, 0) || 0;
+
+  // Calculate level based on total fame
+  const calculateLevel = (fame: number) => {
+    if (fame < 100) return "Fan";
+    if (fame < 500) return "Artist";
+    if (fame < 2000) return "Producer";
+    if (fame < 5000) return "A&R";
+    return "Label Executive";
+  };
+
+  const calculatedLevel = calculateLevel(totalFame);
+  const calculatedExperience = totalFame * 10; // Simple XP calculation
+  const calculatedInfluence = Math.floor(totalFame / 2); // Simple influence calculation
+
   const userStats: UserStats = {
-    totalCards: userCards?.length || 0,
+    totalCards: displayCards?.length || 0,
     totalReleases: userReleases?.length || 0,
-    totalStreams: user?.totalStreams || 0,
-    fame: user?.fame || 1,
-    level: user?.level || "Fan",
-    experience: user?.experience || 0,
-    influence: user?.influence || 0,
+    totalStreams: totalStreams,
+    fame: totalFame || 1,
+    level: calculatedLevel,
+    experience: calculatedExperience,
+    influence: calculatedInfluence,
     credits: isOwnProfile ? ((creditData as any)?.credits || 0) : 0,
   };
 
@@ -155,6 +186,11 @@ export function UserProfile() {
 
   return (
     <div className="min-h-screen bg-black">
+      {/* DEBUG TEST - Remove this later */}
+      <div style={{position: 'fixed', top: '10px', left: '10px', background: 'red', color: 'white', padding: '10px', zIndex: 9999}}>
+        DEBUG: User Profile Page Loaded - {user?.username}
+      </div>
+
       {/* Header */}
       <header className="p-6">
         <div className="max-w-6xl mx-auto">
@@ -205,10 +241,11 @@ export function UserProfile() {
                 </Avatar>
                 
                 {/* Profile Image Upload Button - Only on own profile */}
-                {isOwnProfile && (
-                  <ProfileImageUpload 
-                    subscriptionTier={user.subscriptionTier || "Free"}
-                    canUploadProfileImages={user.canUploadProfileImages || false}
+                {/* TODO: Implement profile image upload endpoints */}
+                {isOwnProfile && false && (
+                  <ProfileImageUpload
+                    subscriptionTier={user.subscriptionPlan || "Free"}
+                    canUploadProfileImages={false} // Disabled until endpoints are implemented
                     onImageUpdated={() => {
                       queryClient.invalidateQueries({ queryKey: [`/api/users/${userId}`] });
                     }}
@@ -338,8 +375,8 @@ export function UserProfile() {
                           </div>
                         </div>
                       ))
-                    ) : userCards && userCards.length > 0 ? (
-                      userCards.slice(0, 3).map((card) => {
+                    ) : displayCards && displayCards.length > 0 ? (
+                      displayCards.slice(0, 3).map((card) => {
                         const artistData = card.artistData as any;
                         return (
                           <div key={card.id} className="flex items-center gap-3 p-3 bg-deep-slate/40 rounded-lg">
@@ -396,6 +433,29 @@ export function UserProfile() {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* AetherWave Studio Portal - Always visible for testing */}
+              <Card className="bg-gradient-to-br from-purple-900/20 via-pink-900/20 to-indigo-900/20 border-purple-500/30 backdrop-blur-sm mt-8">
+                <CardContent className="p-6 text-center">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 mb-2">
+                    Enter AetherWave Studio
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Step through the portal to access AI-powered media generation tools
+                  </p>
+                  <a href="/static/aimusic-media.html" className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg transition-all">
+                    <Sparkles className="w-4 h-4" />
+                    Enter Portal
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <div className="mt-4 text-xs text-gray-500">
+                    DEBUG: Portal should be visible on all profiles
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Artist Collection Tab */}
@@ -407,9 +467,9 @@ export function UserProfile() {
                 </Badge>
               </div>
 
-              {userCards && userCards.length > 0 ? (
+              {displayCards && displayCards.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {userCards.map((card) => {
+                  {displayCards.map((card) => {
                     const artistData = card.artistData as any;
                     return (
                       <Link key={card.id} href={`/artist/${card.id}`}>

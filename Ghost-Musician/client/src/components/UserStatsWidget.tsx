@@ -20,10 +20,7 @@ export function UserStatsWidget({
 }: UserStatsWidgetProps) {
   return (
     <div
-      className="sticky top-24 w-full bg-black/70 backdrop-blur-2xl rounded-3xl p-6 border border-white/5"
-      style={{
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)',
-      }}
+      className="sticky top-24 w-full bg-black/70 backdrop-blur-2xl rounded-3xl p-6 border border-purple-500/20 enhanced-glass portal-glow interactive-element"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-6">

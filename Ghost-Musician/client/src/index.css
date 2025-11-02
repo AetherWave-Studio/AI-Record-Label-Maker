@@ -218,3 +218,93 @@
     animation: slide-up-fade-in 0.2s ease-out forwards;
   }
 }
+
+/* Portal Enhancement Styles - Synced with AetherWave Studio */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes animate-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: animate-gradient 3s ease-in-out infinite;
+}
+
+/* AetherWave-inspired enhancements */
+.portal-glow {
+  position: relative;
+}
+
+.portal-glow::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #ff2ea6, #8b5cf6, #667eea);
+  border-radius: inherit;
+  opacity: 0.3;
+  filter: blur(8px);
+  animation: portal-glow-pulse 2s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes portal-glow-pulse {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+}
+
+/* Better micro-interactions */
+.interactive-element {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-element:hover {
+  transform: translateY(-1px);
+}
+
+.interactive-element:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+}
+
+/* Premium accent colors matching AetherWave */
+.premium-accent {
+  background: linear-gradient(45deg, #ff2ea6, #8b5cf6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Enhanced backdrop effects */
+.enhanced-glass {
+  background: rgba(13, 11, 21, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Smooth scrolling for better UX */
+html {
+  scroll-behavior: smooth;
+}
