@@ -113,7 +113,7 @@ export function setupVideoRoutes(app: Express) {
       // Determine content type and disposition based on file extension
       const isJson = filename.endsWith('.json');
       const contentType = isJson ? 'application/json' : 'video/mp4';
-      const disposition = isJson ? 'attachment' : 'attachment'; // Both downloadable
+      const disposition = isJson ? 'attachment' : 'inline'; // JSON downloads, videos play inline
       
       // Serve file with proper headers for both streaming and download
       // Don't use res.download() as it triggers cleanup on partial requests (206)
@@ -624,13 +624,30 @@ export function setupVideoRoutes(app: Express) {
         console.log('Downloading Luma-generated seamless loop...');
         const timestamp = Date.now();
         const filename = `seamless-loop-${timestamp}.mp4`;
-        finalLoopPath = await downloadVideo(lumaResult.videoUrl);
+        const tempDownloadPath = await downloadVideo(lumaResult.videoUrl);
         
-        // Move to proper filename
-        const properPath = path.join(os.tmpdir(), filename);
-        fs.renameSync(finalLoopPath, properPath);
-        finalLoopPath = properPath;
-
+        // Apply FFmpeg faststart to move moov atom to beginning for browser playback
+        console.log('Applying FFmpeg faststart for browser streaming...');
+        const faststartPath = path.join(os.tmpdir(), filename);
+        const { execSync } = await import('child_process');
+        
+        try {
+          execSync(`ffmpeg -i "${tempDownloadPath}" -c copy -movflags +faststart "${faststartPath}"`, {
+            stdio: 'pipe' // Suppress FFmpeg output
+          });
+          console.log('✅ Faststart applied successfully');
+        } catch (ffmpegError) {
+          console.error('FFmpeg faststart failed:', ffmpegError);
+          // Fallback: use original file if faststart fails
+          fs.renameSync(tempDownloadPath, faststartPath);
+        } finally {
+          // Clean up temp download file
+          if (fs.existsSync(tempDownloadPath)) {
+            fs.unlinkSync(tempDownloadPath);
+          }
+        }
+        
+        finalLoopPath = faststartPath;
         console.log('✅ Luma seamless loop created successfully!');
 
         // Save metadata for prompt testing
@@ -784,13 +801,30 @@ export function setupVideoRoutes(app: Express) {
         console.log('Downloading Luma-generated seamless loop...');
         const timestamp = Date.now();
         const filename = `seamless-loop-${timestamp}.mp4`;
-        finalLoopPath = await downloadVideo(lumaResult.videoUrl);
+        const tempDownloadPath = await downloadVideo(lumaResult.videoUrl);
         
-        // Move to proper filename
-        const properPath = path.join(os.tmpdir(), filename);
-        fs.renameSync(finalLoopPath, properPath);
-        finalLoopPath = properPath;
-
+        // Apply FFmpeg faststart to move moov atom to beginning for browser playback
+        console.log('Applying FFmpeg faststart for browser streaming...');
+        const faststartPath = path.join(os.tmpdir(), filename);
+        const { execSync } = await import('child_process');
+        
+        try {
+          execSync(`ffmpeg -i "${tempDownloadPath}" -c copy -movflags +faststart "${faststartPath}"`, {
+            stdio: 'pipe' // Suppress FFmpeg output
+          });
+          console.log('✅ Faststart applied successfully');
+        } catch (ffmpegError) {
+          console.error('FFmpeg faststart failed:', ffmpegError);
+          // Fallback: use original file if faststart fails
+          fs.renameSync(tempDownloadPath, faststartPath);
+        } finally {
+          // Clean up temp download file
+          if (fs.existsSync(tempDownloadPath)) {
+            fs.unlinkSync(tempDownloadPath);
+          }
+        }
+        
+        finalLoopPath = faststartPath;
         console.log('✅ Luma image-to-loop created successfully!');
 
         // Save metadata for prompt testing

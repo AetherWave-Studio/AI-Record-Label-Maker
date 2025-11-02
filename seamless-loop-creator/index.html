@@ -346,6 +346,17 @@
     </div>
 
     <script>
+        // Auto-login for development mode
+        (async () => {
+            try {
+                // Attempt dev login to establish session
+                await fetch('/api/dev/login', { credentials: 'include' });
+            } catch (e) {
+                // Silently fail if not in dev mode or endpoint doesn't exist
+                console.log('Dev login not available or failed');
+            }
+        })();
+
         // Mode switching
         document.querySelectorAll('.mode-btn').forEach(btn => {
             btn.addEventListener('click', () => {
