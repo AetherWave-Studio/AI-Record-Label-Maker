@@ -851,7 +851,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { vocalGenderPreference } = req.body;
       const user = await storage.updateUserVocalPreference(userId, vocalGenderPreference);
-      
+
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
@@ -859,6 +859,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ success: true, vocalGenderPreference: user.vocalGenderPreference });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get user profile by ID
+  app.get("/api/users/:userId", authMiddleware, async (req, res) => {
+    try {
+      const requestedUserId = req.params.userId;
+      const user = await storage.getUser(requestedUserId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Return user profile data (excluding sensitive fields)
+      res.json({
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username,
+        profileImageUrl: user.profileImageUrl,
+        subscriptionPlan: user.subscriptionPlan,
+        credits: user.credits,
+        dailyLoginStreak: user.dailyLoginStreak,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      });
+    } catch (error: any) {
+      console.error('Error fetching user profile:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Get bands - alias to /api/rpg/bands for backward compatibility
+  app.get("/api/bands", authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bands = await storage.getUserBands(userId);
+
+      // Return bands array directly for compatibility with user-profile query
+      res.status(200).json(bands);
+    } catch (error: any) {
+      console.error('Error fetching bands:', error);
+      res.status(500).json({ error: 'Failed to fetch bands' });
     }
   });
 
@@ -874,6 +918,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cb(null, true);
       } else {
         cb(new Error('Invalid file type. Only audio files are allowed.'));
+      }
+    }
+  });
+
+  // Configure multer for image uploads (profile pictures)
+  const uploadImage = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB max for profile images
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
       }
     }
   });
@@ -3273,6 +3333,244 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup video generation and editing routes
   setupVideoRoutes(app);
+
+  // Profile image upload endpoint using IMGBB
+  app.post("/api/user/profile-image", authMiddleware, (req, res, next) => {
+    console.log("Profile image upload route hit, before multer");
+    next();
+  }, uploadImage.single("profileImage"), (req, res, next) => {
+    console.log("After multer, file present:", !!req.file);
+    next();
+  }, async (req: any, res) => {
+    try {
+      console.log("Profile image upload request received");
+
+      if (!req.file) {
+        console.log("No file provided in request");
+        return res.status(400).json({
+          error: "No image file provided"
+        });
+      }
+
+      const userId = req.user?.id;
+      console.log("User ID from request:", userId);
+      if (!userId) {
+        console.log("User not authenticated");
+        return res.status(401).json({
+          error: "User not authenticated"
+        });
+      }
+
+      // Convert buffer to base64 for IMGBB upload
+      const base64Image = req.file.buffer.toString("base64");
+
+      console.log("Uploading to IMGBB for user:", userId);
+      console.log("IMGBB API Key present:", !!process.env.IMGBB_API_KEY);
+      console.log("Base64 image length:", base64Image.length);
+      console.log("Using corrected base64 format (no data URL prefix) - Fixed!");
+
+      // Upload to IMGBB (send raw base64 without data URL prefix)
+      const imgbbResponse = await fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          key: process.env.IMGBB_API_KEY || "your_imgbb_api_key_here", // You'll need to set this
+          image: base64Image,
+          name: `profile-${userId}-${Date.now()}`,
+          expiration: 0, // No expiration
+        }),
+      });
+
+      if (!imgbbResponse.ok) {
+        const errorText = await imgbbResponse.text();
+        console.error("IMGBB API Error Response:", errorText);
+        throw new Error(`Failed to upload image to IMGBB: ${imgbbResponse.status} ${errorText}`);
+      }
+
+      const imgbbResult = await imgbbResponse.json();
+
+      if (!imgbbResult.success) {
+        throw new Error(imgbbResult.error?.message || "IMGBB upload failed");
+      }
+
+      const imageUrl = imgbbResult.data.url;
+
+      // Update user profile image URL in database
+      await storage.updateUserProfileImage(userId, imageUrl);
+
+      console.log("Profile image uploaded for user:", userId, "URL:", imageUrl);
+
+      res.status(200).json({
+        success: true,
+        profileImageUrl: imageUrl
+      });
+
+    } catch (error: any) {
+      console.error("Error uploading profile image:", error);
+      res.status(500).json({
+        error: "Failed to upload profile image",
+        message: error.message
+      });
+    }
+  });
+
+  // ============================================================================
+  // DEV LOGIN/REGISTER ROUTES (for testing multiple users)
+  // ============================================================================
+  if (isDevelopment) {
+    // Schema for user registration
+    const registerSchema = z.object({
+      username: z.string().min(3, "Username must be at least 3 characters"),
+      password: z.string().min(6, "Password must be at least 6 characters"),
+      firstName: z.string().optional(),
+      lastName: z.string().optional(),
+    });
+
+    // Register a new test user
+    app.post("/api/register", async (req, res) => {
+      try {
+        const validatedData = registerSchema.parse(req.body);
+        const { username, password, firstName, lastName } = validatedData;
+
+        // Check if username already exists
+        const existingUsers = await storage.getAllUsers();
+        const existingUser = existingUsers.find(u => u.username === username);
+        if (existingUser) {
+          return res.status(400).json({ message: "Username already exists" });
+        }
+
+        // Create new user with generated ID
+        const userId = `test-user-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+        const newUser = {
+          id: userId,
+          username,
+          email: `${username}@test.local`,
+          firstName: firstName || username,
+          lastName: lastName || 'User',
+          profileImageUrl: null,
+          vocalGenderPreference: 'm',
+          credits: 1000,
+          subscriptionPlan: 'creator' as const,
+          lastCreditReset: new Date(),
+          welcomeBonusClaimed: 1,
+          stripeCustomerId: null,
+          stripeSubscriptionId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        await storage.upsertUser(newUser);
+        console.log('✅ New test user registered:', { id: userId, username, email: newUser.email });
+
+        // Auto-login after registration by setting session
+        req.session.devUser = {
+          claims: {
+            sub: newUser.id,
+            email: newUser.email,
+            first_name: newUser.firstName,
+            last_name: newUser.lastName,
+            profile_image_url: newUser.profileImageUrl,
+          },
+          expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week from now
+        };
+
+        res.status(201).json({
+          message: "User registered successfully",
+          user: {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+            subscriptionPlan: newUser.subscriptionPlan,
+            credits: newUser.credits,
+          }
+        });
+      } catch (error: any) {
+        console.error("Registration error:", error);
+        if (error instanceof z.ZodError) {
+          return res.status(400).json({
+            message: "Invalid input",
+            errors: error.errors
+          });
+        }
+        res.status(500).json({ message: "Registration failed", error: error.message });
+      }
+    });
+
+    // Login with username/password for test users
+    app.post("/api/login", async (req, res) => {
+      try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+          return res.status(400).json({ message: "Username and password required" });
+        }
+
+        // Get all users and find matching username
+        const users = await storage.getAllUsers();
+        const user = users.find(u => u.username === username);
+
+        if (!user) {
+          return res.status(401).json({ message: "Invalid username or password" });
+        }
+
+        // For dev testing, accept any password for existing test users
+        // In production, you'd hash and verify passwords properly
+        console.log('✅ Test user logged in:', { id: user.id, username: user.username });
+
+        // Set session
+        req.session.devUser = {
+          claims: {
+            sub: user.id,
+            email: user.email,
+            first_name: user.firstName,
+            last_name: user.lastName,
+            profile_image_url: user.profileImageUrl,
+          },
+          expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60), // 1 week from now
+        };
+
+        res.json({
+          message: "Login successful",
+          user: {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            subscriptionPlan: user.subscriptionPlan,
+            credits: user.credits,
+          }
+        });
+      } catch (error: any) {
+        console.error("Login error:", error);
+        res.status(500).json({ message: "Login failed", error: error.message });
+      }
+    });
+
+    // Logout
+    app.post("/api/logout", (req, res) => {
+      req.session.destroy(() => {
+        console.log('👋 User logged out');
+        res.json({ message: "Logout successful" });
+      });
+    });
+  }
+
+  // Add multer error handling
+  app.use((err: any, req: any, res: any, next: any) => {
+    if (err instanceof multer.MulterError) {
+      console.error("Multer error:", err);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large' });
+      }
+      return res.status(400).json({ error: 'File upload error: ' + err.message });
+    }
+    next(err);
+  });
 
   const httpServer = createServer(app);
 

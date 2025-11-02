@@ -101,15 +101,17 @@ def create_transparent_video(frames, output_path_base, fps, width, height):
         pil_image = Image.fromarray(frame, 'RGBA')
         pil_image.save(str(frame_path), 'PNG')
 
-    # Generate MOV with transparency (using qtrle codec for better compatibility)
-    print(f"Encoding MOV with transparency...")
+    # Generate MOV with transparency using Apple ProRes 4444 (compressed with alpha)
+    print(f"Encoding MOV with transparency (compressed)...")
     mov_path = str(output_path_base).replace('.mov', '.mov')
     cmd_mov = [
         FFMPEG_PATH, '-y',
         '-framerate', str(fps),
         '-i', str(temp_dir / 'frame_%05d.png'),
-        '-c:v', 'qtrle',         # QuickTime Animation codec - widely supported with alpha
-        '-pix_fmt', 'argb',      # ARGB for QuickTime
+        '-c:v', 'prores_ks',     # Apple ProRes 4444 - supports alpha channel with good compression
+        '-pix_fmt', 'yuva444p10le',  # 10-bit YUVA with alpha
+        '-profile:v', '4',       # ProRes 4444 profile (highest quality with alpha)
+        '-vendor', 'ap10',       # Apple vendor ID
         mov_path
     ]
     result = subprocess.run(cmd_mov, capture_output=True, text=True)
@@ -118,26 +120,7 @@ def create_transparent_video(frames, output_path_base, fps, width, height):
     else:
         print(f"[OK] MOV saved to: {mov_path}")
 
-    # Generate WEBM with transparency
-    print(f"Encoding WEBM with transparency...")
-    webm_path = str(output_path_base).replace('.mov', '.webm')
-    cmd_webm = [
-        FFMPEG_PATH, '-y',
-        '-framerate', str(fps),
-        '-i', str(temp_dir / 'frame_%05d.png'),
-        '-c:v', 'libvpx-vp9',
-        '-pix_fmt', 'yuva420p',
-        '-auto-alt-ref', '0',
-        '-metadata:s:v:0', 'alpha_mode="1"',
-        '-b:v', '2M',
-        webm_path
-    ]
-    result = subprocess.run(cmd_webm, capture_output=True, text=True)
-    if result.returncode != 0:
-        print(f"WEBM encoding error: {result.stderr}")
-    else:
-        print(f"[OK] WEBM saved to: {webm_path}")
-
+  
     # Generate GIF with transparency
     print(f"Encoding GIF with transparency...")
     gif_path = str(output_path_base).replace('.mov', '.gif')
@@ -162,9 +145,25 @@ def create_transparent_video(frames, output_path_base, fps, width, height):
 
     print(f"[OK] All formats generated!")
 
+def find_video_file():
+    """Find the first video file in the Uploads directory"""
+    uploads_dir = Path('Uploads')
+    video_extensions = ['.mp4', '.avi', '.mov', '.mkv', '.webm']
+
+    if not uploads_dir.exists():
+        raise Exception("Uploads directory not found")
+
+    for ext in video_extensions:
+        for video_file in uploads_dir.glob(f'*{ext}'):
+            return str(video_file)
+
+    raise Exception(f"No video files found in Uploads directory")
+
 def main():
-    input_video = 'Uploads/Logo_glass_marble.mp4'
-    output_video = 'Uploads/Logo_glass_marble_transparent.mov'
+    # Dynamically find video file in Uploads folder
+    input_video = find_video_file()
+    input_path = Path(input_video)
+    output_video = f'Uploads/{input_path.stem}_transparent.mov'
     
     print("=" * 60)
     print("Video Background Removal Tool")
@@ -206,10 +205,9 @@ def main():
     print("[SUCCESS]")
     print("=" * 60)
     print(f"Generated formats:")
-    print(f"  - MOV:  {output_video}")
-    print(f"  - WEBM: {output_video.replace('.mov', '.webm')}")
+    print(f"  - MOV:  {output_video} (compressed with ProRes 4444)")
     print(f"  - GIF:  {output_video.replace('.mov', '.gif')}")
-    print(f"All formats support transparency and maintain the original loop")
+    print(f"Both formats support transparency and maintain the original loop")
     print()
 
 if __name__ == '__main__':

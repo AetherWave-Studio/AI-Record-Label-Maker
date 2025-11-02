@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//e/Gits/AetherWaveStudio-Platform/AI-Record-Label-Maker/static/**)",
+      "Read(//e/Gits/AetherWaveStudio-Platform/AI-Record-Label-Maker/Ghost-Musician/client/**)",
+      "Bash(npm run dev:*)",
+      "Read(//e/Gits/AetherWaveStudio-Platform/AI-Record-Label-Maker/**)",
+      "Bash(pkill:*)",
+      "Bash(python:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -11,6 +11,7 @@ neonConfig.webSocketConstructor = ws;
 export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
   // Credit operations
   updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
@@ -26,6 +27,7 @@ export interface IStorage {
   completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }>;
   // User preference operations
   updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined>;
+  updateUserProfileImage(userId: string, profileImageUrl: string): Promise<User | undefined>;
   
   // Daily login operations
   recordDailyLogin(userId: string): Promise<{ 
@@ -128,6 +130,10 @@ export class MemStorage implements IStorage {
 
   async getUser(id: string): Promise<User | undefined> {
     return this.users.get(id);
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -363,6 +369,16 @@ export class MemStorage implements IStorage {
     return user;
   }
 
+  async updateUserProfileImage(userId: string, profileImageUrl: string): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+
+    user.profileImageUrl = profileImageUrl;
+    user.updatedAt = new Date();
+    this.users.set(userId, user);
+    return user;
+  }
+
   async resetDailyCredits(userId: string): Promise<void> {
     // Stub implementation for MemStorage
     const user = this.users.get(userId);
@@ -497,6 +513,10 @@ export class DbStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const result = await this.db.select().from(users).where(eq(users.id, id)).limit(1);
     return result[0];
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await this.db.select().from(users);
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
@@ -762,6 +782,19 @@ export class DbStorage implements IStorage {
       .update(users)
       .set({
         vocalGenderPreference,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    return result[0];
+  }
+
+  async updateUserProfileImage(userId: string, profileImageUrl: string): Promise<User | undefined> {
+    const result = await this.db
+      .update(users)
+      .set({
+        profileImageUrl,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId))

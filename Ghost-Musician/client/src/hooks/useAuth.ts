@@ -32,16 +32,17 @@ interface AuthResponse {
 
 export function useAuth() {
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/user"],
+    queryKey: ["/api/auth/user"],
     retry: false,
   });
 
-  const authData = data as AuthResponse | undefined;
+  // The API returns user directly, not wrapped in an AuthResponse
+  const user = data as User | undefined;
 
   return {
-    user: authData?.user,
+    user,
     isLoading,
-    isAuthenticated: !!authData?.user,
+    isAuthenticated: !!user,
   };
 }
 
@@ -62,7 +63,7 @@ export function useLogin() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
   });
 }
@@ -84,7 +85,7 @@ export function useRegister() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
   });
 }

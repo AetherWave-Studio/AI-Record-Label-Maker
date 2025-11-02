@@ -1,0 +1,340 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <title>AetherWave Audio player</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light only" />
+  <meta name="description" content="Streaming music player" />
+  <meta property="og:site_name" content="AetherWave Audio player" />
+  <meta property="og:title" content="AetherWave Audio player" />
+  <meta property="og:type" content="website" />
+  <meta property="og:description" content="Streaming music player" />
+  <meta property="og:image" content="https://aetherwaveaudio.carrd.co/assets/images/share.jpg?v=47789245" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:url" content="https://aetherwaveaudio.carrd.co" />
+  <meta property="twitter:card" content="summary_large_image" />
+  <link rel="canonical" href="https://aetherwaveaudio.carrd.co" />
+  <link rel="icon" type="image/png" href="assets/images/favicon.png?v=47789245" />
+  <link rel="apple-touch-icon" href="assets/images/apple-touch-icon.png?v=47789245" />
+  <!-- Shared Navigation CSS -->
+ <link rel="stylesheet" href="/static/assets/css/navigation.css">
+
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Ffooter.css?alt=media&token=4f8bebd7-80e6-4bd6-8910-08b844e467f9" rel="stylesheet">
+		
+  <link href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9ce7aa2-0609-46cc-92a8-169d8d8ca076" rel="stylesheet">
+  <style>
+    .center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+	html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,tab,mark,audio,video{margin:0;padding:0;border:0;font-size:100%;font:inherit;vertical-align:baseline;}article,aside,details,figcaption,figure,footer,header,hgroup,menu,section{displle,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,section,summary,timeay:block;}body{line-height:1;}ol,ul{list-style:none;}blockquote,q{quotes:none;}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none;}table{border-collapse:collapse;border-spacing:0;}body{-webkit-text-size-adjust:none}mark{background-color:transparent;color:inherit}input::-moz-focus-inner{border:0;padding:0}input[type="text"],input[type="email"],select,textarea{-moz-appearance:none;-webkit-appearance:none;-ms-appearance:none;appearance:none}*, *:before, *:after {box-sizing: border-box;}body {line-height: 1.0;min-height: var(--viewport-height);min-width: 320px;overflow-x: hidden;word-wrap: break-word;background-color: #2C003E;}
+
+    :root {--background-height: 100vh;--site-language-alignment: left;--site-language-direction: ltr;--site-language-flex-alignment: flex-start;--site-language-indent-left: 1;--site-language-indent-right: 0;--site-language-margin-left: 0;--site-language-margin-right: auto;--viewport-height: 100vh;}
+    html {font-size: 18pt;}u {text-decoration: underline;}strong {color: inherit;font-weight: bolder;}em {font-style: italic;}code {background-color: rgba(144,144,144,0.25);border-radius: 0.25em;font-family: 'Lucida Console', 'Courier New', monospace;font-size: 0.9em;font-weight: normal;letter-spacing: 0;margin: 0 0.25em;padding: 0.25em 0.5em;text-indent: 0;}
+    mark {background-color: rgba(144,144,144,0.25);}spoiler-text {-webkit-text-stroke: 0;background-color: rgba(32,32,32,0.75);text-shadow: none;text-stroke: 0;color: transparent;cursor: pointer;transition: color 0.1s ease-in-out;}spoiler-text.active {color: #FFFF;cursor: text;}s {text-decoration: line-through;}sub {font-size: smaller;vertical-align: sub;}sup {font-size: smaller;vertical-align: super;}
+    a {color: inherit;text-decoration: underline;transition: color 0.25s ease;}a[onclick]:not([href]) {cursor: pointer;}unloaded-script {display: none;}
+    #wrapper {-webkit-overflow-scrolling: touch;align-items: center;display: flex;flex-direction: column;justify-content: center;min-height: var(--viewport-height);overflow: hidden;position: relative;z-index: 2;padding: 1.5rem;}
+    #main {--alignment: var(--site-language-alignment);--flex-alignment: var(--site-language-flex-alignment);--indent-left: var(--site-language-indent-left);--indent-right: var(--site-language-indent-right);--margin-left: var(--site-language-margin-left);--margin-right: var(--site-language-margin-right);--border-radius-tl: 0;--border-radius-tr: 0;--border-radius-br: 0;--border-radius-bl: 0;align-items: center;display: flex;flex-grow: 0;flex-shrink: 0;justify-content: center;max-width: 100%;position: relative;text-align: var(--alignment);z-index: 1;background-color: #2C003E;}
+    #main > .inner {--padding-horizontal: 2.75rem;--padding-vertical: 3rem;--spacing: 0.75rem;--width: 80rem;border-radius: var(--border-radius-tl) var(--border-radius-tr) var(--border-radius-br) var(--border-radius-bl);max-width: 100%;position: relative;width: var(--width);z-index: 1;padding: var(--padding-vertical) var(--padding-horizontal);}
+    #main > .inner > * {margin-top: var(--spacing);margin-bottom: var(--spacing);}#main > .inner > :first-child {margin-top: 0 !important;}#main > .inner > :last-child {margin-bottom: 0 !important;}
+    #main > .inner > .full {margin-left: calc(var(--padding-horizontal) * -1);max-width: calc(100% + calc(var(--padding-horizontal) * 2) + 0.4725px);width: calc(100% + calc(var(--padding-horizontal) * 2) + 0.4725px);}
+    #main > .inner > .full:first-child {border-top-left-radius: inherit;border-top-right-radius: inherit;margin-top: calc(var(--padding-vertical) * -1) !important;}
+    #main > .inner > .full:last-child {border-bottom-left-radius: inherit;border-bottom-right-radius: inherit;margin-bottom: calc(var(--padding-vertical) * -1) !important;}
+    #main > .inner > .full.screen {border-radius: 0 !important;max-width: 100vw;position: relative;width: 100vw;left: 50%;margin-left: -50vw;right: auto;}
+    body.is-instant #main, body.is-instant #main > .inner > *,body.is-instant #main > .inner > section > * {transition: none !important;}body.is-instant:after {display: none !important;transition: none !important;}
+    h1, h2, h3, p {direction: var(--site-language-direction);position: relative;}h1 span.p, h2 span.p, h3 span.p, p span.p {display: block;position: relative;}
+    h1 span[style], h2 span[style], h3 span[style], p span[style], h1 strong, h2 strong, h3 strong, p strong, h1 a, h2 a, h3 a, p a, h1 code, h2 code, h3 code, p mark, h1 spoiler-text, h2 spoiler-text, h3 spoiler-text, p spoiler-text {-webkit-text-fill-color: currentcolor;}
+    #text01 {color: #0000;font-family: '-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica Neue','Arial',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';font-size: 2em;line-height: 1.5;font-weight: 700;}
+    #text02 {color: #0000;font-family: '-apple-system','BlinkMacSystemFont','Segoe UI','Roboto','Helvetica Neue','Arial',sans-serif,'Apple Color Emoji','Segoe UI Emoji','Segoe UI Symbol';font-size: 1em;line-height: 1.5;font-weight: 400;}
+    @media (max-width: 1680px) {html {font-size: 13pt;}}
+    @media (max-width: 1280px) {html {font-size: 13pt;}}
+    @media (max-width: 980px) {html {font-size: 11pt;}}
+    @media (max-width: 736px) {html {font-size: 11pt;}#main > .inner {--padding-horizontal: 2rem;--padding-vertical: 3rem;--spacing: 0.75rem;}#text01 {width: 100%;font-size: 2em;line-height: 1.5;}#text02 {width: 100%;font-size: 1em;line-height: 1.5;}}
+    @media (max-width: 480px) {#main > .inner {--spacing: 0.65625rem;}}
+    @media (max-width: 360px) {#main > .inner {--padding-horizontal: 1.5rem;--padding-vertical: 2.25rem;--spacing: 0.5625rem;}#text01 {font-size: 1.5em;}#text02 {font-size: 1em;}}
+  </style>
+</head>
+<body>
+  <!-- Aether Navigation Bar -->
+<header>
+		<div>
+			<a href="https://aetherwavestudio.com/"><img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FAetherWave%20Banner%20pinwhite1920x192.png?alt=media&token=0f9154af-2d16-4a4f-8822-4c641355c377" alt="Aetherwave-Banner" style="width: 100%; max-width: 1920px; border-radius: 10px;"></a>
+		   <!-- Navigation will be injected here -->
+			<div id="navigation-container"></div>
+		</div>
+		
+</header>
+
+  <div id="wrapper">
+    <div id="main">
+      <div class="inner">
+        <h1 id="text01">Music Player (Featured Release)</h1>
+        <p id="text02">AetherWave Audio Player</p>
+
+        <div id="embed01">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <title>Aetherwave Studio · Listen</title>
+            <meta name="description" content="Stream Ghosts Online — “You Didn’t Need to Bring Him” across Spotify, Apple Music, and YouTube Music." />
+            <meta property="og:type" content="website" />
+            <meta property="og:title" content="Aetherwave Studio · Listen" />
+            <meta property="og:description" content="Ghosts Online — “You Didn’t Need to Bring Him.” Stream it now." />
+            <meta property="og:image" content="https://dl.dropboxusercontent.com/scl/fi/yr0sfud3t7jomku634vm5/ghost_gum_1x1_w_watermark.png?rlkey=pwnzlgdshsc4t5nmmf4orge8t&st=18jrdkuv" />
+            <meta property="og:url" content="https://aetherwaveaudio.carrd.co/" /> $1
+            <link rel="canonical" href="https://aetherwaveaudio.carrd.co/" />
+            <style>
+              :root { --bg: #0a0b10; --panel: #12131a; --text: #f3f4f6; --muted: #a1a6b3; --accent: #ff2a9e; --border: #222431; --radius: 18px; }
+              * { box-sizing: border-box; } html, body { height: 100%; }
+              body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: radial-gradient(1200px 1200px at 80% -10%, rgba(255,42,158,0.12), transparent 60%), var(--bg); color: var(--text); line-height: 1.5; display: flex; flex-direction: column; }
+              .container { width: min(100%, 960px); margin: 0 auto; padding: 24px; }
+              .hero { display: grid; gap: 24px; grid-template-columns: 120px 1fr; align-items: center; }
+              .cover { width: 120px; height: 120px; border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+              .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+              h1 { margin: 0 0 4px; font-size: clamp(20px, 2.8vw, 36px); letter-spacing: 0.3px; }
+              .subtitle { color: var(--muted); font-size: 14px; }
+              .cta-row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+              .btn { appearance: none; border: 1px solid var(--border); background: linear-gradient(180deg, #1a1b25, #12131a); color: var(--text); padding: 10px 14px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; transition: transform .06s ease, border-color .2s ease, box-shadow .2s ease; }
+              .btn:hover { transform: translateY(-1px); border-color: #2f3245; box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+              .btn.accent { border-color: rgba(255,42,158,0.6); box-shadow: 0 8px 24px rgba(255,42,158,0.15); }
+              .panel { background: linear-gradient(180deg, #12131a, #0f1016); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+              .stack { display: grid; gap: 16px; }
+              .embeds { display: grid; gap: 16px; margin-top: 22px; }
+              .embed { border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: #0c0d14; }
+              .note { color: var(--muted); font-size: 13px; margin-top: 8px; }
+              footer { margin-top: auto; padding: 20px 0 40px; color: var(--muted); font-size: 13px; text-align: center; }
+              @media (max-width: 640px) { .hero { grid-template-columns: 80px 1fr; } .cover { width: 80px; height: 80px; border-radius: 12px; } .cta-row { gap: 8px; } }
+            </style>
+            <script type="application/ld+json">
+              {
+                "@context": "https://schema.org",
+                "@type": "MusicRecording",
+                "name": "You Didn’t Need to Bring Him",
+                "byArtist": {"@type": "MusicGroup", "name": "Ghosts Online"},
+                "inAlbum": {"@type": "MusicAlbum", "name": "Single"},
+                "image": "https://dl.dropboxusercontent.com/scl/fi/yr0sfud3t7jomku634vm5/ghost_gum_1x1_w_watermark.png?rlkey=pwnzlgdshsc4t5nmmf4orge8t&st=18jrdkuv",
+                "url": "https://aetherwaveaudio.carrd.co/",
+                "sameAs": [
+                  "https://open.spotify.com/track/5TKjymguifI3ZBFhNqWomi",
+                  "https://music.apple.com/us/song/you-didnt-need-to-bring-him-18-uncensored/1833472227",
+                  "https://music.youtube.com/watch?v=fTWxQ5IJkMg"
+                ]
+              }
+            </script>
+          </head>
+        </div>
+
+        <div id="embed02">
+          <body>
+            <div class="container">
+              <section class="panel stack">
+                <div class="hero">
+                  <div class="cover">
+                    <img src="https://dl.dropboxusercontent.com/scl/fi/yr0sfud3t7jomku634vm5/ghost_gum_1x1_w_watermark.png?rlkey=pwnzlgdshsc4t5nmmf4orge8t&st=18jrdkuv" alt="Ghosts Online — You Didn’t Need to Bring Him cover" />
+                  </div>
+                  <div>
+                    <h1>Ghosts Online — “You Didn’t Need to Bring Him”</h1>
+                    <div class="subtitle">Aetherwave Studio • New Release</div>
+                    <div class="cta-row">
+                      <a class="btn accent" href="https://open.spotify.com/track/5TKjymguifI3ZBFhNqWomi" target="_blank" rel="noopener">Listen Now</a>
+                      <a class="btn" href="#" onclick="openDownloadModal(event)">📥 Download</a>
+                      <a class="btn" href="https://open.spotify.com/track/5TKjymguifI3ZBFhNqWomi" target="_blank" rel="noopener">Spotify</a>
+                      <a class="btn" href="https://music.apple.com/us/song/you-didnt-need-to-bring-him-18-uncensored/1833472227" target="_blank" rel="noopener">Apple Music</a>
+                      <a class="btn" href="https://music.youtube.com/watch?v=fTWxQ5IJkMg" target="_blank" rel="noopener">YouTube Music</a>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="embeds">
+                  <div class="embed">
+                    <iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/5TKjymguifI3ZBFhNqWomi?utm_source=generator" width="100%" height="152" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+                  </div>
+                  <div class="embed">
+                    <iframe width="100%" height="315" src="https://www.youtube.com/embed/fTWxQ5IJkMg" title="YouTube player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                  </div>
+                </div>
+
+                <p class="note">Tip: Use the big “Listen Now” button as the URL for your Facebook Page’s action button. On mobile, this makes discovery frictionless.</p>
+              </section>
+
+              <footer> © <span id="year"></span> Aetherwave Studio • #AetherWaveStudio </footer>
+            </div>
+
+            <script>
+              // set current year
+              document.getElementById('year').textContent = new Date().getFullYear();
+            </script>
+
+            <!-- Download Email Modal -->
+            <div id="downloadModal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="downloadTitle">
+              <div class="modal-content" role="document">
+                <h2 id="downloadTitle">Get Your Download</h2>
+                <p>Please enter your email address:</p>
+                <form id="emailForm">
+                  <input type="email" id="userEmail" placeholder="you@example.com" required>
+                  <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeDownloadModal()">Cancel</button>
+                    <button type="submit" class="btn accent">Submit & Download</button>
+                  </div>
+                  <div class="privacy-note">We'll never share your email.</div>
+                </form>
+              </div>
+            </div>
+
+            <style>
+              /* Modal styling */
+              .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(2px); }
+              .modal.open { display: flex; align-items: center; justify-content: center; }
+              .modal-content { background: var(--panel, #12131a); color: var(--text, #f3f4f6); padding: 24px; border-radius: 16px; width: min(90vw, 400px); border: 1px solid var(--border, #222431); box-shadow: 0 12px 40px rgba(0,0,0,0.5); animation: modalPop 0.2s ease-out; }
+              @keyframes modalPop { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+              .modal-content h2 { margin: 0 0 8px 0; font-size: 20px; color: var(--text, #f3f4f6); }
+              .modal-content p { margin: 0 0 16px 0; color: var(--muted, #a1a6b3); font-size: 14px; }
+              .modal-content input[type="email"] { width: 100%; padding: 12px; background: #0a0b10; color: var(--text, #f3f4f6); border: 1px solid var(--border, #222431); border-radius: 10px; outline: none; margin-bottom: 16px; font-size: 14px; }
+              .modal-content input[type="email"]:focus { border-color: var(--accent, #ff2a9e); box-shadow: 0 0 0 3px rgba(255,42,158,0.2); }
+              .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+              .privacy-note { font-size: 12px; color: var(--muted, #a1a6b3); margin-top: 8px; text-align: center; }
+            </style>
+
+            <script>
+              const DOWNLOAD_URL = "https://www.dropbox.com/scl/fi/sbzgautxce2idqb8oqax7/Ghosts-Online.mp3?rlkey=r8ufm6z2vffronlbea27xeejc&st=ld43d4lt&dl=1";
+
+              // === Email gate toggle (OFF by default) ===
+              const EMAIL_GATE_ENABLED = false;
+
+              const modal = document.getElementById('downloadModal');
+              const emailInput = document.getElementById('userEmail');
+              const form = document.getElementById('emailForm');
+
+              // Direct download helper (used when gate is OFF)
+              function directDownload() {
+                const a = document.createElement('a');
+                a.href = DOWNLOAD_URL;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+              }
+
+              function openDownloadModal(e) {
+                if (e) e.preventDefault();
+
+                // Bypass modal entirely when gate is disabled
+                if (EMAIL_GATE_ENABLED === false) {
+                  directDownload();
+                  return;
+                }
+
+                // Existing behavior (modal)
+                modal.classList.add('open');
+                modal.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
+                setTimeout(() => emailInput.focus(), 50);
+              }
+
+              function closeDownloadModal() {
+                modal.classList.remove('open');
+                modal.setAttribute('aria-hidden', 'true');
+                document.body.style.overflow = '';
+              }
+
+              // Close on backdrop click
+              modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeDownloadModal();
+              });
+
+              // Close on Escape key
+              window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('open')) closeDownloadModal();
+              });
+
+              // Email submit -> trigger download
+              form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const email = emailInput.value.trim();
+                if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                  alert('Please enter a valid email address');
+                  emailInput.focus();
+                  return;
+                }
+                console.log('Captured email:', email);
+                closeDownloadModal();
+
+                // Create anchor to trigger download
+                directDownload();
+              });
+            </script>
+			<!-- Shared Navigation JavaScript -->
+<script src="/static/assets/js/navigation.js"></script>
+          </body>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ✅ Toast container -->
+  <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;"></div>
+
+  <script>
+    // ✅ Show toast
+    function showToast(message) {
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.style.background = '#4caf50';
+      toast.style.color = 'white';
+      toast.style.padding = '10px 16px';
+      toast.style.marginTop = '8px';
+      toast.style.borderRadius = '6px';
+      toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+      toast.style.fontSize = '14px';
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.4s ease';
+      document.getElementById('toast-container').appendChild(toast);
+      requestAnimationFrame(() => { toast.style.opacity = '1'; });
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 4000);
+    }
+
+    // ✅ Trigger the download
+    function startDownload(url) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Ghosts-Online.mp3";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      showToast("✅ Your download has started!");
+    }
+
+    // ✅ (Unused here, keeping for later) Submits email then downloads via Netlify proxy
+    async function submitEmail(event) {
+      event.preventDefault();
+      const email = document.getElementById("emailInput")?.value;
+      try {
+        await fetch("https://proxy.aetherwavestudio.com/.netlify/functions/proxy", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email })
+        });
+        document.getElementById("downloadModal").style.display = "none";
+        startDownload("/downloads/Ghosts-Online.mp3");
+      } catch (error) {
+        showToast("❌ Something went wrong. Please try again.");
+      }
+    }
+
+    // Debug helper (commented)
+    // async function testProxy() { ... }
+  </script>
+   <footer>
+        <div class="container">
+            &copy; 2025 Aetherwave Studio. All rights reserved. | <a href="https://privacy.aetherwavestudio.com/">Privacy Policy</a> | <a href="https://privacy.aetherwavestudio.com/">Terms of Service</a>
+            <br>Created by Andrew Froehlich, CEO & Founder Aetherwave Studio | <a href="https://www.facebook.com/groups/2142548066240224">AI MUSIC ALLIANCE</a>
+        </div>
+    </footer>
+	
+</body>
+</html

@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherWave Studio - Playlists Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Ffooter.css?alt=media&token=4f8bebd7-80e6-4bd6-8910-08b844e467f9" rel="stylesheet">
+  <!-- Shared Navigation CSS -->
+  <link rel="stylesheet" href="/static/assets/css/navigation.css">
+  <style>
+   
+:root{
+    --bg:#0b0b12; --ink:#eef1ff; --muted:#bfc1d3; --accent:#ff2fa6; --accent2:#35d0ff; --panel:#141428; --br:16px;
+    --aw-pink:#e15afd; --aw-neon:#00F5A0; --aw-ink:#eef1ff;
+    }
+    *{box-sizing:border-box}
+    body{
+    margin:0; color:var(--ink); font-family:Inter,system-ui,sans-serif;
+    background: 
+    radial-gradient(900px 600px at 90% -10%,rgba(255,47,166,.12),transparent 40%),
+    radial-gradient(700px 500px at -10% 110%,rgba(53,208,255,.10),transparent 40%),
+    linear-gradient(180deg,#0a0a12,#0a0a11);
+    }
+    header { text-align: center; padding: 0px 0; }
+    h1,.brand-title{font-family:Orbitron,Inter,system-ui,sans-serif}
+    h1{margin:0;font-size:18px}
+    .wrap{max-width:920px;margin:0 auto;padding:0 12px 28px}
+
+    /* Player layout: controls on top, grid of tracks below */
+    .player{display:grid;grid-template-rows:auto 1fr;gap:20px}
+    .player-top{grid-row:1}
+    .tracks-grid{grid-row:2;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media (max-width:1024px){.tracks-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:680px){.tracks-grid{grid-template-columns:1fr}}
+
+    .card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:var(--br);padding:14px}
+    .track{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:8px;border-radius:12px;cursor:pointer}
+    .track:hover{background:#0f0f1c}
+    .track.active{outline:1px solid rgba(255,255,255,.18);background:#0f0f1c}
+    .cover{width:56px;height:56px;border-radius:10px;background:#1a1a2a;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
+    .cover img{width:100%;height:100%;object-fit:cover}
+    .meta{display:flex;flex-direction:column;gap:2px}
+    .title{font-weight:600}
+    .artist,.dur{font-size:12px;color:var(--muted)}
+    .controls{display:grid;grid-template-columns:1fr;gap:10px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap} /* allow wrap so nothing disappears */
+    button{padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:linear-gradient(180deg,rgba(255,47,166,.25),rgba(53,208,255,.15));color:#fff;cursor:pointer}
+    button.ghost{background:#0f0f1c;min-width:96px} /* prevent pill collapse */
+
+    .seek{display:flex;align-items:center;gap:8px}
+    .time{font-size:12px;color:var(--muted);width:64px;text-align:center}
+
+    .badge{padding:4px 8px;border-radius:999px;background:#0f0f1c;border:1px solid rgba(255,255,255,.15);font-size:12px;color:var(--muted)}
+    .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#0f0f1c;border:1px solid rgba(255,255,255,.15);padding:10px 12px;border-radius:12px;font-size:13px;color:var(--muted);display:none}
+
+    /* Admin panel */
+    .admin{position:fixed;inset:auto 12px 12px auto;max-width:380px;background:var(--panel);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.4);display:none}
+    .admin.show{display:block}
+    .admin label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+    .admin .row{margin-top:8px}
+
+    /* Ultra-tight Masthead with proportional banner cap */
+    .masthead{
+    position:relative;width:100%;min-height:80px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+    border-bottom:1px solid rgba(255,255,255,.10);
+    background-image:
+    linear-gradient(180deg, rgba(10,10,18,.85), rgba(10,10,17,.90)),
+    url('');
+    background-repeat:no-repeat,no-repeat;
+    background-position:center,center;
+    /* gradient fills box; banner image shown at fixed height, keeps aspect ratio */
+    background-size:100% 100%, auto 72px;
+    }
+    .mast-inner{position:relative;z-index:1;text-align:center;padding:2px 6px}
+    .brand-image{display:block;margin:0 auto 2px;height:58px;filter:drop-shadow(0 6px 24px rgba(255,47,166,.18))}
+    .brand-title{margin:0;font-size:clamp(18px,2.4vw,26px);letter-spacing:.6px;color:var(--aw-ink)}
+    .tagline{margin-top:0;font-size:12px;color:#cfd3ff;opacity:.9;letter-spacing:.3px}
+    @media (min-width:900px){
+    .masthead{min-height:96px;background-size:100% 100%, auto 86px}
+    .brand-image{height:72px}
+    }
+
+
+    /* Neon animations */
+    @keyframes pinkPulse{
+    0%,100%{box-shadow:0 0 8px rgba(255,47,166,.55),0 0 16px rgba(255,47,166,.35),0 0 24px rgba(255,47,166,.20)}
+    50%{box-shadow:0 0 14px rgba(255,47,166,.85),0 0 28px rgba(255,47,166,.55),0 0 42px rgba(255,47,166,.30)}
+    }
+    @keyframes coverPulse{
+    0%,100%{filter:drop-shadow(0 0 6px rgba(255,47,166,.85)) drop-shadow(0 0 14px rgba(255,47,166,.45))}
+    50%{filter:drop-shadow(0 0 10px rgba(255,47,166,1)) drop-shadow(0 0 22px rgba(255,47,166,.60))}
+    }
+    @keyframes neonBreath{
+    0%,100%{box-shadow:0 0 8px rgba(0,245,160,.55),0 0 16px rgba(0,245,160,.35)}
+    50%{box-shadow:0 0 16px rgba(0,245,160,.85),0 0 28px rgba(0,245,160,.55)}
+    }
+
+    /* Active card glow + cover aura */
+    .track.active{outline:1px solid rgba(255,47,166,.6);background:rgba(20,10,18,.92);animation:pinkPulse 2.2s ease-in-out infinite;transition:box-shadow .3s,outline .3s,background .3s}
+    .track .cover img{transition:filter .3s}
+    .track.active .cover img{animation:coverPulse 2.2s ease-in-out infinite}
+    .track:hover{box-shadow:0 0 6px rgba(255,47,166,.40),0 0 12px rgba(255,47,166,.25);transition:box-shadow .25s}
+    .track:hover .cover img{filter:drop-shadow(0 0 4px rgba(255,47,166,.5))}
+
+    /* Range sliders — base, centered thumbs, breathing, and JS-driven fill */
+    input[type="range"]{ -webkit-appearance:none; appearance:none; width:100%; height:14px; border-radius:999px; background:linear-gradient(90deg, rgba(0,245,160,.25), rgba(0,245,160,.10)); border:1px solid rgba(255,255,255,.12); outline:none}
+    input[type="range"]::-webkit-slider-runnable-track{height:6px}
+    input[type="range"]::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:0; height:0; background:transparent; border:0; box-shadow:none; cursor:pointer; }
+    input[type="range"]::-moz-range-thumb{ visibility: hidden; width:0; height:0; }
+    input[type="range"]::-ms-thumb{ width:0; height:0; background:transparent; border:0; }
+    input[type="range"]:focus { outline: none; }
+
+    /* breathing while playing */
+    .playing #seek,.playing #vol{animation:neonBreath 2.4s ease-in-out infinite;background:linear-gradient(90deg, rgba(0,245,160,.35), rgba(0,245,160,.15))}
+
+    /* slider fill (will be updated by JS) */
+    #seek,#vol{
+    background:linear-gradient(to right,
+    var(--aw-neon) 0%,
+    var(--aw-neon) 0%,
+    rgba(255,255,255,0.1) 0%,
+    rgba(255,255,255,0.1) 100%);
+    }
+    #seek::-webkit-slider-runnable-track,#vol::-webkit-slider-runnable-track{height:6px;border-radius:999px;background:transparent}
+    #seek::-moz-range-track,#vol::-moz-range-track{height:6px;border-radius:999px;background:transparent}
+
+    /* Hide Admin button by default; show in admin mode */
+    #btnAdmin { display: none; }
+    body.admin-mode #btnAdmin { display: inline-block; }
+
+
+   :root {
+      --aetherwave-pink: #ff2ea6;
+      --aetherwave-purple: #8b5cf6;
+      --dark-bg: #0d0b15;
+      --card-bg: #1a1625;
+      --text-primary: #e9e8ff;
+      --text-muted: #b7b3d9;
+      --border-color: #2d2640;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Animated Background */
+    .bg-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15), transparent 50%),
+                  radial-gradient(ellipse at 80% 70%, rgba(255, 46, 166, 0.12), transparent 50%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.3;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 15s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 400px;
+      height: 400px;
+      background: var(--aetherwave-pink);
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 300px;
+      height: 300px;
+      background: var(--aetherwave-purple);
+      bottom: 20%;
+      right: 15%;
+      animation-delay: 5s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+      20%, 40%, 60%, 80% { transform: translateX(5px); }
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: .5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+      background: url('/assets/header-panel_1761541736595.png') no-repeat center center, rgba(13, 11, 21, 0.8);
+      background-size: cover;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+
+    .logo-icon2 {
+      width: 75px;
+      height: 75px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: white;
+    }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--text-primary);
+    }
+
+    .nav-btn {
+      padding: 0.5rem 1.25rem;
+      background: var(--aetherwave-pink);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 46, 166, 0.4);
+    }
+
+    /* Main Content (placeholder styles - override as needed) */
+    main {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      max-width: 1600px;
+      margin: 0 auto;
+      width: 100%;
+      min-height: 0;
+    }
+
+    /* Add the rest of your styles from index.html here if needed for consistency */
+    /* (I truncated the full styles for brevity, but paste the entire <style> block from your index if you want everything) */
+
+    /* Mobile-First Responsive Design */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(13, 11, 21, 0.98);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border-color);
+      padding: 0.5rem 0;
+      z-index: 999;
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Tablet Breakpoint (768px - 1024px) */
+    @media (max-width: 1024px) {
+      /* Adjust as in index */
+    }
+
+    /* Mobile Breakpoint (≤768px) */
+    @media (max-width: 768px) {
+      /* Adjust as in index */
+    }
+
+    /* Extra small phones (≤375px) */
+    @media (max-width: 375px) {
+      /* Adjust as in index */
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-container">
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <header>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="/" class="logo">
+        <div class="logo-icon2">
+          <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
+        </div>
+        <span>
+          <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
+        </span>
+      </a>
+    </div>
+	<nav>
+    <!-- Navigation will be injected here -->
+	<div id="navigation-container"></div>
+      <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
+        <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
+        <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
+          <!-- Credits Badge -->
+          <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
+            <span id="credits-count">0</span>
+          </div>
+          <!-- Quest Gift Box Icon -->
+          <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
+            <span style="font-size: 1.3rem;">🎁</span>
+            <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
+          </div>
+          <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
+            <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
+            <span id="user-name" style="color: var(--text-primary); font-size: 0.9rem;" data-testid="text-username"></span>
+          </div>
+          <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="row">
+	<!--<span class="badge" id="count">0 tracks</span>-->
+	<button class="ghost" id="btnAdmin" title="Open Admin (Ctrl+.)">Admin</button>
+</div>
+
+<div class="wrap">
+	<div class="player">
+<!-- Player controls on top -->
+
+		<div class="card player-top" class="centered-text">
+	<h1>AI MUSIC ALLIANCE — MEMBERS ONLY</h1>
+	<span class="badge" id="count">0 tracks</span>
+	<div class="controls">
+	<div class="row">
+	<button id="prev">⏮</button>
+	<button id="play">▶️</button>
+	<button id="next">⏭</button>
+	<button class="ghost" id="shuffle">Shuffle</button>
+	<button class="ghost" id="repeat">Repeat: Off</button>
+	<button class="ghost" id="share">Share</button>
+	<button id="updatePlaylist" class="ghost">Update Playlist</button>
+</div>
+<div class="seek">
+<span class="time" id="cur">0:00</span>
+<input id="seek" max="1000" min="0" step="1" type="range" value="0"/>
+<span class="time" id="dur">0:00</span>
+</div>
+<div class="row">
+<label style="font-size:12px;color:var(--muted)">Vol</label>
+<input id="vol" max="1" min="0" step="0.01" type="range"/>
+</div>
+</div>
+<audio id="audio"></audio>
+</div>
+<!-- Tracks grid below -->
+<div class="tracks-grid" id="list"></div>
+</div>
+</div>
+<!-- Admin -->
+<div aria-label="Admin" class="admin" id="admin" role="dialog">
+<strong>Admin</strong>
+<label>Remote playlist URL</label>
+<input id="remoteUrl" placeholder="https://.../playlist.json OR .../exec?route=playlist&amp;callback=awp" style="width:100%;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:#0f0f1c;color:#fff"/>
+<div class="row">
+<button id="load">Load Remote</button>
+<button class="ghost" id="save">Save as default</button>
+<button class="ghost" id="clear">Clear</button>
+</div>
+<label><input id="showPrivate" type="checkbox"/> Show private (adds &amp;admin=1)</label>
+<div class="fine" style="font-size:12px;color:var(--muted);margin-top:8px">Tip: If CORS blocks fetch, append <code>&amp;callback=awp</code> for JSONP, or host <code>playlist.json</code> next to this file.</div>
+</div>
+<div class="toast" id="toast"></div>
+  </main>
+
+  <!-- Add any shared scripts or modals here if needed (e.g., from index.html) -->
+  <script>
+    // Shared JS logic (e.g., auth handling, modals) can go here
+	(function(){
+    const ls = (k,v)=> (v===undefined? localStorage.getItem(k): (localStorage.setItem(k,v),v));
+    const ss = (k,v)=> (v===undefined? sessionStorage.getItem(k): (sessionStorage.setItem(k,v),v));
+    const $ = id=>document.getElementById(id);
+    const fmt = s=>{s=Math.floor(s||0);const m=Math.floor(s/60),sec=('0'+(s%60)).slice(-2);return m+':'+sec};
+
+    const audio=$('audio'), listEl=$('list'), seek=$('seek'), vol=$('vol'), cur=$('cur'), dur=$('dur');
+    const btnPlay=$('play'), btnPrev=$('prev'), btnNext=$('next'), btnShuffle=$('shuffle'), btnRepeat=$('repeat'), btnShare=$('share');
+    const count=$('count'), admin=$('admin'), btnAdmin=$('btnAdmin'), remoteUrl=$('remoteUrl'), showPrivate=$('showPrivate');
+    const btnLoad=$('load'), btnSave=$('save'), btnClear=$('clear');
+    const toast=(m)=>{const t=$('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1400);};
+
+    let tracks=[]; let idx=-1; let shuffle=false;
+
+    // --- Admin mode detection & UI gating ---
+    const params = new URLSearchParams(location.search);
+    const isAdmin = params.get('admin') === '1';
+    if (isAdmin) {
+    admin.classList.add('show');
+    document.body.classList.add('admin-mode'); // reveal #btnAdmin via CSS
+    }
+
+    // Preserve ?admin=1 on internal links (same-origin or relative)
+    if (isAdmin) {
+    const origin = location.origin;
+    document.addEventListener('DOMContentLoaded', () => {
+    const links = document.querySelectorAll('a[href]');
+    links.forEach(a => {
+    const href = a.getAttribute('href');
+    if (!href) return;
+    if (/^(mailto:|tel:|javascript:|#)/i.test(href)) return;
+    let url; try { url = new URL(href, location.href); } catch { return; }
+    if (url.origin !== origin) return;
+    if (!url.searchParams.has('admin')) {
+    url.searchParams.set('admin','1');
+    a.setAttribute('href', url.toString());
+    }
+    });
+    });
+    }
+
+    // restore settings
+    vol.value = ls('awp:vol') || 0.9; audio.volume = parseFloat(vol.value);
+    shuffle = ls('awp:shuffle')==='1'; btnShuffle.classList.toggle('active', shuffle);
+
+    // --- Robust repeat state (guards NaN/undefined) ---
+    function getStoredRepeat(){
+    const raw = ls('awp:repeat');
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && [0,1,2].includes(n) ? n : 0;
+    }
+    let repeat = getStoredRepeat();
+    function setRepeat(val){
+    repeat = [0,1,2].includes(val) ? val : 0;
+    ls('awp:repeat', String(repeat));
+    btnRepeat.textContent = ['Repeat: Off','Repeat: All','Repeat: One'][repeat];
+    }
+    setRepeat(repeat);
+
+    remoteUrl.value = ls('awp:remotePlaylist') || '';
+
+    // autoplay helper (gesture unlock if blocked)
+    async function tryAutoplay(){
+    try{ await audio.play(); btnPlay.textContent='⏸'; }
+    catch(e){
+    const unlock=async()=>{ try{ await audio.play(); btnPlay.textContent='⏸'; } finally{
+    window.removeEventListener('pointerdown',unlock); window.removeEventListener('keydown',unlock);
+    }};
+    window.addEventListener('pointerdown',unlock,{once:true});
+    window.addEventListener('keydown',unlock,{once:true});
+    }
+    }
+    function setSrc(t){ if(!t) return; audio.src=t.url; tryAutoplay(); btnPlay.textContent='⏸'; }
+
+    function render(){
+    listEl.innerHTML='';
+    tracks.forEach((t,i)=>{
+    const row=document.createElement('div'); row.className='track'+(i===idx?' active':''); row.dataset.i=i;
+    const cov=document.createElement('div'); cov.className='cover'; cov.innerHTML=`<img alt="" src="${t.cover||''}">`;
+    const meta=document.createElement('div'); meta.className='meta'; meta.innerHTML=`<div class="title">${t.title||'Untitled'}</div><div class="artist">${t.artist||''}</div>`;
+    const d=document.createElement('div'); d.className='dur'; d.textContent=t.duration?fmt(t.duration):'';
+    row.append(cov,meta,d); listEl.appendChild(row);
+    });
+    count.textContent = tracks.length + (tracks.length===1?' track':' tracks');
+    }
+    function select(i){ if(i<0||i>=tracks.length) return; idx=i; render(); setSrc(tracks[idx]); ls('awp:lastTrackId', tracks[idx].id || ''); }
+
+    // interactions
+    listEl.addEventListener('click',(e)=>{ const row=e.target.closest('.track'); if(!row) return; select(parseInt(row.dataset.i,10)); });
+    btnPlay.addEventListener('click',()=>{ if(audio.paused){audio.play(); btnPlay.textContent='⏸';} else {audio.pause(); btnPlay.textContent='▶️';} });
+    btnPrev.addEventListener('click',()=>{ select(Math.max(0,idx-1)); });
+    btnNext.addEventListener('click', next);
+    btnShuffle.addEventListener('click',()=>{ shuffle=!shuffle; ls('awp:shuffle', shuffle?'1':'0'); btnShuffle.classList.toggle('active', shuffle); });
+    btnRepeat.addEventListener('click',()=> setRepeat((repeat+1)%3));
+    btnShare.addEventListener('click',()=>{
+    if(idx<0) return; const t=tracks[idx]; const u=new URL(location.href);
+    u.searchParams.set('track', t.id||idx); u.searchParams.set('t', Math.floor(audio.currentTime));
+    if (isAdmin) u.searchParams.set('admin','1');
+    navigator.clipboard.writeText(u.toString()); toast('Link copied');
+    });
+
+    // slider syncing + breathing toggle
+    audio.addEventListener('play', ()=>document.body.classList.add('playing'));
+    audio.addEventListener('pause',()=>document.body.classList.remove('playing'));
+    audio.addEventListener('ended',()=>document.body.classList.remove('playing'));
+
+    seek.addEventListener('input',()=>{ if(audio.duration){ audio.currentTime=(seek.value/1000)*audio.duration; } updateSliderFill(seek); });
+    audio.addEventListener('timeupdate',()=>{ if(audio.duration){ seek.value=Math.floor((audio.currentTime/audio.duration)*1000); cur.textContent=fmt(audio.currentTime); updateSliderFill(seek);} });
+    audio.addEventListener('loadedmetadata',()=>{ dur.textContent=fmt(audio.duration); });
+    audio.addEventListener('ended',()=>{ if(repeat===2){ audio.currentTime=0; audio.play(); return;} next(); });
+    vol.addEventListener('input',()=>{ audio.volume=parseFloat(vol.value); ls('awp:vol', vol.value); updateSliderFill(vol); });
+
+    function next(){
+    if(shuffle){ select(Math.floor(Math.random()*tracks.length)); return; }
+    const n = idx+1; if(n<tracks.length){ select(n); } else if(repeat===1){ select(0); } else { btnPlay.textContent='▶️'; }
+    }
+
+    // Admin panel toggler (button only visible in admin-mode)
+    function toggleAdmin(force){ admin.classList.toggle('show', force!==undefined?force:!admin.classList.contains('show')); }
+    btnAdmin.addEventListener('click',()=>toggleAdmin());
+    document.addEventListener('keydown',(e)=>{ if(e.ctrlKey && e.key=='.'){ e.preventDefault(); toggleAdmin(); } });
+    btnSave.addEventListener('click',()=>{ if(remoteUrl.value){ ls('awp:remotePlaylist', remoteUrl.value); toast('Saved'); }});
+    btnClear.addEventListener('click',()=>{ localStorage.removeItem('awp:remotePlaylist'); toast('Cleared'); });
+    btnLoad.addEventListener('click',async()=>{ if(!remoteUrl.value) return; await loadPlaylistFromUrl(remoteUrl.value,true); });
+    showPrivate.addEventListener('change',()=>{ sessionStorage.setItem('awp:private', showPrivate.checked?'1':'0'); toast('Private '+(showPrivate.checked?'on':'off')); });
+
+    // slider fill helper
+    function updateSliderFill(el){
+    const min=parseFloat(el.min||0), max=parseFloat(el.max||100), val=parseFloat(el.value||0);
+    const pct=((val-min)/(max-min))*100;
+    el.style.background = `linear-gradient(to right, var(--aw-neon) ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+    }
+
+    // loader with JSONP support + same-origin JSON
+    async function loadPlaylistFromUrl(url, andRender){
+  let u; try{ u=new URL(url, location.href); console.log('Fetching:', u.toString()); }
+  catch{ toast('Bad URL'); return; }
+    if(sessionStorage.getItem('awp:private')==='1'){ u.searchParams.set('admin','1'); }
+    const isSameOrigin=u.origin===location.origin;
+    const hasCallback=u.searchParams.has('callback');
+
+    if(!isSameOrigin && hasCallback){ // JSONP
+    await new Promise((resolve,reject)=>{
+    const cb='awp_cb_'+Math.random().toString(36).slice(2);
+    u.searchParams.set('callback',cb);
+    const s=document.createElement('script');
+    window[cb]=(data)=>{ try{ applyPlaylist(data); if(andRender){render(); selectInitial();} toast('Playlist loaded'); resolve();}
+    catch(e){ reject(e);} finally{ delete window[cb]; s.remove(); } };
+    s.onerror=()=>{ delete window[cb]; s.remove(); toast('Failed to load playlist'); reject(new Error('JSONP failed')); };
+    s.src=u.toString(); document.head.appendChild(s);
+    });
+    return;
+    }
+
+    try{
+    const res=await fetch(u.toString());
+    const data=await res.json();
+    applyPlaylist(data);
+    if(andRender){ render(); selectInitial(); }
+    toast('Playlist loaded');
+    }catch(e){ console.error(e); toast('Fetch failed'); }
+    }
+
+   function applyPlaylist(data){
+  console.log('Received data:', data);
+  tracks = Array.isArray(data?.tracks)? data.tracks : [];
+  tracks = tracks.map((t,i)=>({ id:t.id||String(i), title:t.title||'Untitled', artist:t.artist||'', url:t.url, cover:t.cover||'', duration:Number(t.duration||0) }))
+  .filter(t=>!!t.url);
+  console.log('Processed tracks:', tracks);
+}
+
+    function selectInitial(){
+    const p=new URLSearchParams(location.search);
+    const tid=p.get('track'); const at=parseInt(p.get('t')||'0',10);
+    let i=0; if(tid){ i=tracks.findIndex(t=>(t.id||'')===tid); if(i<0) i=0; }
+    select(i); if(at>0 && audio.duration){ audio.currentTime=Math.min(at, audio.duration-1); }
+    }
+const btnUpdate = $('updatePlaylist');
+btnUpdate.addEventListener('click', async () => {
+  const playlistUrl = 'https://script.google.com/macros/s/AKfycbwmwrK-IECfGV0_OPkJfYPmbgseC7KBHw7ikP_Ds-ip6-34g9ilh5DkiWL0g-DR65ur/exec';
+  await loadPlaylistFromUrl(playlistUrl + '?t=' + Date.now(), true);
+  toast('Playlist updated');
+});
+    // boot: use web app URL for playlist
+(async function(){
+  const playlistUrl = 'https://script.google.com/macros/s/AKfycbwmwrK-IECfGV0_OPkJfYPmbgseC7KBHw7ikP_Ds-ip6-34g9ilh5DkiWL0g-DR65ur/exec';
+  await loadPlaylistFromUrl(playlistUrl + '?t=' + Date.now(), true);
+  updateSliderFill(seek); updateSliderFill(vol);
+})();
+  })();
+  </script>
+  <!-- Shared Navigation JavaScript -->
+
+   <!--<footer>
+        <div class="container">
+            &copy; 2025 Aetherwave Studio. All rights reserved. | <a href="https://aetherwavestudio.com/privacy-policy/">Privacy Policy</a> | <a href="https://aetherwavestudio.com/privacy-policy/">Terms of Service</a>
+            <br>Created by Andrew Froehlich, CEO & Founder Aetherwave Studio | <a href="https://www.facebook.com/groups/2142548066240224">AI MUSIC ALLIANCE</a>
+        </div>
+    </footer>-->
+	<script src="/static/assets/js/navigation.js"></script>
+</body>
+</html>

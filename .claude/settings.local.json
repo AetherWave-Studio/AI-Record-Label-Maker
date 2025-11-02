@@ -18,7 +18,11 @@
       "Bash(else echo \"DATABASE_URL not set, checking .env...\")",
       "Bash(fi)",
       "Bash(export:*)",
-      "Bash(node fix-dev-user.js:*)"
+      "Bash(node fix-dev-user.js:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(start:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []
