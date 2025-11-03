@@ -240,6 +240,24 @@
             transform: translateZ(0);
             will-change: transform;
         }
+		kard {
+			flex-shrink: 0;
+            width: min(20vw, 320px); /* Flexible width with max cap */
+            height: min(12vw, 180px); /* Flexible height with max cap */
+            min-width: 200px; /* Minimum usable width */
+            min-height: 112px; /* Maintain aspect ratio */
+            border-radius: 0.75em; /* Relative to font size */
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+            background: url('"\public\assets\Danique.gif"');
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            /* Force hardware acceleration */
+            transform: translateZ(0);
+            will-change: transform;
+		}
 
         .card:hover {
             transform: scale(1.05) translateZ(0);
@@ -781,6 +799,10 @@
                 font-size: 12px;
             }
         }
+		  /* Or for even higher priority */
+		  .card-thumbnail img.custom-thumbnail {
+			z-index: 100 !important;
+		  }
 
         /* Performance optimizations */
         * {
@@ -797,6 +819,11 @@
                 transition-duration: 0.01ms !important;
             }
         }
+		kard {
+		}
+		
+		
+		
     </style>
 </head>
 <body>
@@ -837,9 +864,9 @@
         <div class="row-container">
             <div class="row row-1">
                 <div class="row-wrapper">
-                <div class="card" data-title="Two Minute Papers" data-subscribers="4.8M" data-description="Cutting-edge research in computer graphics and AI. Exploring latest papers in machine learning, neural networks, and artificial intelligence." data-image="https://img.youtube.com/vi/Tj5B5u9tr3Y/maxresdefault.jpg" data-channel-url="https://www.youtube.com/c/TwoMinutePapers">
+                <div class="card" data-title="Two Minute Papers" data-subscribers="4.8M" data-description="Cutting-edge research in computer graphics and AI. Exploring latest papers in machine learning, neural networks, and artificial intelligence." data-image="https://www.youtube.com/c/TwoMinutePapers" data-channel-url="https://www.youtube.com/c/TwoMinutePapers">
                     <div class="card-thumbnail">
-                        <img src="https://img.youtube.com/vi/Tj5B5u9tr3Y/maxresdefault.jpg" alt="Two Minute Papers" loading="lazy">
+                        <img class="custom-thumbnail" src="https://img.youtube.com/vi/Tj5B5u9tr3Y/maxresdefault.jpg" alt="Two Minute Papers" loading="lazy">
                         <div class="play-button">▶️</div>
                     </div>
                     <div class="card-overlay">
@@ -847,9 +874,9 @@
                         <div class="card-subscribers">4.8M subscribers</div>
                     </div>
                 </div>
-                <div class="card" data-title="Fireship" data-subscribers="3.2M" data-description="Fast-paced tutorials on modern web development, AI, and cloud computing. Learn cutting-edge tech in 100 seconds or less." data-image="https://img.youtube.com/vi/okpt--6_atQ/maxresdefault.jpg" data-channel-url="https://www.youtube.com/c/Fireship">
-                    <div class="card-thumbnail">
-                        <img src="https://img.youtube.com/vi/okpt--6_atQ/maxresdefault.jpg" alt="Fireship" loading="lazy">
+				
+				
+                <div class="kard" name="Danique" text="Fast-paced tutorials on modern web development, AI, and cloud computing. Learn cutting-edge tech in 100 seconds or less." style="background-image: url('path/to/your/image.jpg');"alt="Fireship">
                         <div class="play-button">▶️</div>
                     </div>
                     <div class="card-overlay">
@@ -857,6 +884,8 @@
                         <div class="card-subscribers">3.2M subscribers</div>
                     </div>
                 </div>
+				
+				
                 <div class="card" data-title="Lex Fridman" data-subscribers="4.7M" data-description="Deep conversations with the brightest minds in AI, science, technology, philosophy, and humanity. Long-form podcast episodes." data-image="https://img.youtube.com/vi/L_Guz73e6fw/maxresdefault.jpg" data-channel-url="https://www.youtube.com/c/lexfridman">
                     <div class="card-thumbnail">
                         <img src="https://img.youtube.com/vi/L_Guz73e6fw/maxresdefault.jpg" alt="Lex Fridman" loading="lazy">
@@ -878,8 +907,8 @@
                     </div>
                 </div>
                 <div class="card" data-title="GameXplain" data-subscribers="2.8M" data-description="Everything Nintendo! Mario Bros, Zelda, Pokemon, and all Nintendo games. In-depth analysis, news, reviews, and retrospectives of classic and modern Nintendo titles." data-image="https://img.youtube.com/vi/Fj1Z6JYQJjQ/maxresdefault.jpg" data-channel-url="https://www.youtube.com/c/GameXplain">
-                    <div class="card-thumbnail">
-                        <img src="https://img.youtube.com/vi/17F1m5cy2_s/maxresdefault.jpg" alt="The AI Advantage" loading="lazy">
+                    <div class="card-thumbnail"https://img.youtube.com/vi/17F1m5cy2_s/maxresdefault.jpg>
+                        <img src="" alt="The AI Advantage">
                         <div class="play-button">▶️</div>
                     </div>
                     <div class="card-overlay">
@@ -887,18 +916,18 @@
                         <div class="card-subscribers">420K subscribers</div>
                     </div>
                 </div>
-                <div class="card" data-title="Fitness Pro" data-subscribers="2.1M" data-description="Transform your body and mind with our fitness programs. Workouts, nutrition tips, and wellness advice from certified trainers." data-image="https://img.youtube.com/vi/U0sEoQA2bN8/maxresdefault.jpg">
+                <div class="card" data-title="Greg Eisenberg" data-subscribers="2.1M" data-description="Transform your body and mind with our fitness programs. Workouts, nutrition tips, and wellness advice from certified trainers." data-image="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Youtube%20Thumbnails%2FGreg_Eisenberg.gif?alt=media&token=96d38403-35f1-4bce-b173-1a88140e3228">
                     <div class="card-thumbnail">
-                        <img src="https://img.youtube.com/vi/U0sEoQA2bN8/maxresdefault.jpg" alt="Fitness Pro" loading="lazy">
+                        <img src="https://img.youtube.com/vi/U0sEoQA2bN8/maxresdefault.jpg" alt="Greg Eisenberg">
                         <div class="play-button">▶️</div>
                     </div>
                     <div class="card-overlay">
-                        <div class="card-title">Fitness Pro</div>
+                        <div class="card-title">AI for Humans</div>
                         <div class="card-subscribers">2.1M views</div>
                     </div>
                 </div>
-                <div class="card" data-title="Art Studio" data-subscribers="680K" data-description="Unleash your creativity with our art tutorials. Digital art, painting, sculpture, and design techniques for all skill levels.">
-                    <div class="card-thumbnail">🎨</div>
+                <div class="card" data-title="AI for Humans" data-subscribers="680K" data-description="Unleash your creativity with our art tutorials. Digital art, painting, sculpture, and design techniques for all skill levels.">
+                    <div class="card-thumbnail"><src='https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Youtube%20Thumbnails%2FAIfor_Humans.gif?alt=media&token=e32c57d7-574b-4109-b48e-16c40ab43fe6'></div>
                     <div class="card-overlay">
                         <div class="card-title">Art Studio</div>
                         <div class="card-subscribers">680K subscribers</div>
@@ -1020,7 +1049,7 @@
                 </div>
                 <div class="card" data-title="AetherWaveStudio" data-subscribers="1.4M" data-description="AI Music and Media Generation. AI Music Human Soul Immersive Sound." data-image="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Youtube%20Thumbnails%2Faetherwavestudio.gif?alt=media&token=c0f56e46-8a5e-4bb0-88a0-f4d107eda2c8">
                     <div class="card-thumbnail">
-                        <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Youtube%20Thumbnails%2Faetherwavestudio.gif?alt=media&token=c0f56e46-8a5e-4bb0-88a0-f4d107eda2c8" alt="AI Services" loading="lazy">
+                        <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Youtube%20Thumbnails%2Faetherwavestudio.gif?alt=media&token=c0f56e46-8a5e-4bb0-88a0-f4d107eda2c8" alt="AI Services">
                         <div class="play-button">▶️</div>
                     </div>
                     <div class="card-overlay">
@@ -1187,10 +1216,10 @@
                         <div class="card-subscribers">3.0M subscribers</div>
                     </div>
                 </div>
-                <div class="card" data-title="Coffee Culture" data-subscribers="820K" data-description="Explore the world of coffee. Brewing techniques, bean reviews, and cafe culture from coffee enthusiasts worldwide.">
-                    <div class="card-thumbnail">☕</div>
+                <div class="card" data-title="Alan Souls" data-subscribers="820K" data-description="Explore the world of coffee. Brewing techniques, bean reviews, and cafe culture from coffee enthusiasts worldwide.">
+                    <div class="card-thumbnail"><img class="custom-thumbnail" src='https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Youtube%20Thumbnails%2FScreenshot%202025-11-02%20164620.png?alt=media&token=c0c0bc59-8bf8-4c69-bec3-f61c9b0bbb9b'></div>
                     <div class="card-overlay">
-                        <div class="card-title">Coffee Culture</div>
+                        <div class="card-title">Alan Souls</div>
                         <div class="card-subscribers">820K subscribers</div>
                     </div>
                 </div>
@@ -1812,7 +1841,7 @@
 
         // Convert YouTube cards to channel thumbnails during scroll to prevent WebGL overflow
         function setupScrollOptimization() {
-            const cards = document.querySelectorAll('.card[data-image]');
+            const cards = document.querySelectorAll('.card[data-video-id]');
 
             cards.forEach(card => {
                 const videoId = card.dataset.videoId;

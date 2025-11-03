@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Studio - Ghost Musician</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+  <style>
+    :root {
+      --aetherwave-pink: #ff2ea6;
+      --aetherwave-purple: #8b5cf6;
+      --aetherwave-blue: #3b82f6;
+      --aetherwave-cyan: #06b6d4;
+      --dark-bg: #0d0b15;
+      --card-bg: #1a1625;
+      --card-hover: #221b2e;
+      --text-primary: #e9e8ff;
+      --text-secondary: #b7b3d9;
+      --text-muted: #7e7a9c;
+      --border-color: #2d2640;
+      --success-color: #2ed573;
+      --warning-color: #ffa502;
+      --error-color: #ff4757;
+      --input-bg: #12101a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--dark-bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background: radial-gradient(ellipse at 20% 30%, rgba(139, 92, 246, 0.15), transparent 50%),
+                  radial-gradient(ellipse at 80% 70%, rgba(255, 46, 166, 0.12), transparent 50%),
+                  radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.08), transparent 50%);
+    }
+
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.3;
+      animation: gridMove 30s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(60px, 60px); }
+    }
+
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .orb-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--aetherwave-pink);
+      top: 10%;
+      left: 10%;
+      animation-delay: 0s;
+    }
+
+    .orb-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--aetherwave-purple);
+      bottom: 15%;
+      right: 10%;
+      animation-delay: 7s;
+    }
+
+    .orb-3 {
+      width: 350px;
+      height: 350px;
+      background: var(--aetherwave-cyan);
+      top: 50%;
+      left: 60%;
+      animation-delay: 12s;
+      opacity: 0.3;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(40px, -40px) scale(1.1); }
+      66% { transform: translate(-30px, 30px) scale(0.9); }
+    }
+
+    /* Header */
+    header {
+      position: relative;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 2rem;
+      background: rgba(13, 11, 21, 0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.25rem;
+      transition: transform 0.2s;
+    }
+
+    .logo:hover {
+      transform: translateX(-4px);
+    }
+
+    .logo i {
+      font-size: 1.75rem;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .credit-display {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .credit-display i {
+      color: var(--aetherwave-cyan);
+      font-size: 1.1rem;
+    }
+
+    .btn-primary {
+      padding: 0.625rem 1.25rem;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 46, 166, 0.3);
+    }
+
+    /* Main Container */
+    .container {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Page Header */
+    .page-header {
+      margin-bottom: 2.5rem;
+      text-align: center;
+    }
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple), var(--aetherwave-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.125rem;
+    }
+
+    /* Tab Navigation */
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 0.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.875rem 1.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 12px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      background: var(--card-hover);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(255, 46, 166, 0.2), rgba(139, 92, 246, 0.2));
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 46, 166, 0.3);
+    }
+
+    .tab-btn i {
+      font-size: 1.25rem;
+    }
+
+    /* Tab Content */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card-title i {
+      color: var(--aetherwave-purple);
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input, .form-textarea, .form-select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .form-input:focus, .form-textarea:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--aetherwave-purple);
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    /* Model Selection Grid */
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .model-card {
+      padding: 1.25rem;
+      background: var(--input-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .model-card:hover {
+      border-color: var(--aetherwave-purple);
+      transform: translateY(-2px);
+    }
+
+    .model-card.selected {
+      border-color: var(--aetherwave-pink);
+      background: linear-gradient(135deg, rgba(255, 46, 166, 0.1), rgba(139, 92, 246, 0.1));
+    }
+
+    .model-name {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .model-badge {
+      padding: 0.25rem 0.5rem;
+      background: var(--aetherwave-purple);
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .model-description {
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .model-specs {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .model-spec {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Slider Controls */
+    .slider-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .slider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .slider-value {
+      padding: 0.25rem 0.75rem;
+      background: var(--input-bg);
+      border-radius: 8px;
+      font-weight: 600;
+      color: var(--aetherwave-cyan);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      background: var(--input-bg);
+      border-radius: 4px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      cursor: pointer;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(255, 46, 166, 0.4);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      cursor: pointer;
+      border-radius: 50%;
+      border: none;
+    }
+
+    /* Image Upload */
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      background: var(--input-bg);
+    }
+
+    .upload-area:hover {
+      border-color: var(--aetherwave-purple);
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .upload-area.has-image {
+      border-color: var(--success-color);
+      background: rgba(46, 213, 115, 0.05);
+    }
+
+    .upload-icon {
+      font-size: 3rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .upload-text {
+      color: var(--text-secondary);
+      margin-bottom: 0.5rem;
+    }
+
+    .upload-hint {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .preview-image {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    /* Generate Button */
+    .btn-generate {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 1.125rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+
+    .btn-generate:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255, 46, 166, 0.4);
+    }
+
+    .btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-generate i {
+      font-size: 1.5rem;
+    }
+
+    /* Progress Card */
+    .progress-card {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .progress-card.active {
+      display: block;
+      animation: fadeIn 0.3s;
+    }
+
+    .spinner {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1.5rem;
+      border: 4px solid var(--border-color);
+      border-top: 4px solid var(--aetherwave-pink);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-text {
+      font-size: 1.125rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-subtitle {
+      color: var(--text-secondary);
+    }
+
+    /* Video Result */
+    .result-card {
+      display: none;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+
+    .result-card.active {
+      display: block;
+      animation: fadeIn 0.5s;
+    }
+
+    .result-video {
+      width: 100%;
+      max-height: 600px;
+      border-radius: 12px;
+      margin-bottom: 1.5rem;
+      background: #000;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-secondary {
+      padding: 0.75rem 1.5rem;
+      background: var(--card-hover);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-color);
+      transform: translateY(-2px);
+    }
+
+    /* Project Library */
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .project-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .project-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .project-thumbnail {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--input-bg);
+      position: relative;
+    }
+
+    .project-thumbnail video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .project-info {
+      padding: 1rem;
+    }
+
+    .project-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      animation: slideIn 0.3s ease;
+      max-width: 400px;
+    }
+
+    .toast.success { border-left: 4px solid var(--success-color); }
+    .toast.error { border-left: 4px solid var(--error-color); }
+    .toast.warning { border-left: 4px solid var(--warning-color); }
+
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .toast i {
+      font-size: 1.5rem;
+    }
+
+    .toast.success i { color: var(--success-color); }
+    .toast.error i { color: var(--error-color); }
+    .toast.warning i { color: var(--warning-color); }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .page-title {
+        font-size: 1.75rem;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .model-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .result-actions {
+        flex-direction: column;
+      }
+
+      .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .header-actions {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-container">
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <a href="../" class="logo">
+      <i class="ri-film-line"></i>
+      <span>Ghost Musician Video Studio</span>
+    </a>
+    <div class="header-actions">
+      <div class="credit-display">
+        <i class="ri-coin-line"></i>
+        <span id="creditBalance">Loading...</span>
+      </div>
+      <a href="../../client/src/pages/buy-credits.tsx" class="btn-primary">
+        <i class="ri-add-line"></i>
+        Buy Credits
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1 class="page-title">Video Generation & Editing Studio</h1>
+      <p class="page-subtitle">Create stunning AI-powered videos for your virtual artists</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('generate')" data-tab="generate">
+        <i class="ri-magic-line"></i>
+        <span>Generate</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('edit')" data-tab="edit">
+        <i class="ri-scissors-line"></i>
+        <span>Edit</span>
+      </button>
+      <button class="tab-btn" onclick="switchTab('projects')" data-tab="projects">
+        <i class="ri-folder-video-line"></i>
+        <span>My Projects</span>
+      </button>
+    </div>
+
+    <!-- Generate Tab -->
+    <div id="generate-tab" class="tab-content active">
+      <!-- Model Selection -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="ri-cpu-line"></i>
+            Select AI Model
+          </h2>
+        </div>
+
+        <div class="model-grid">
+          <div class="model-card selected" data-model="veo3_fast">
+            <div class="model-name">
+              VEO 3 Fast
+              <span class="model-badge">Premium</span>
+            </div>
+            <div class="model-description">
+              Google's latest video model. 8s fixed duration, ultra-fast generation.
+            </div>
+            <div class="model-specs">
+              <div class="model-spec">
+                <i class="ri-flashlight-line"></i>
+                <span>30 credits</span>
+              </div>
+              <div class="model-spec">
+                <i class="ri-time-line"></i>
+                <span>~2 mins</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="model-card" data-model="sora2">
+            <div class="model-name">
+              SORA 2
+              <span class="model-badge">Premium</span>
+            </div>
+            <div class="model-description">
+              OpenAI's powerful model. 10-15s videos with cinematic quality.
+            </div>
+            <div class="model-specs">
+              <div class="model-spec">
+                <i class="ri-flashlight-line"></i>
+                <span>15 credits/10s</span>
+              </div>
+              <div class="model-spec">
+                <i class="ri-time-line"></i>
+                <span>~3-5 mins</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="model-card" data-model="seedance-lite">
+            <div class="model-name">
+              Seedance Lite
+              <span class="model-badge" style="background: var(--aetherwave-cyan);">Fast</span>
+            </div>
+            <div class="model-description">
+              Quick and affordable. Perfect for rapid prototyping and iterations.
+            </div>
+            <div class="model-specs">
+              <div class="model-spec">
+                <i class="ri-flashlight-line"></i>
+                <span>8 credits/5s</span>
+              </div>
+              <div class="model-spec">
+                <i class="ri-time-line"></i>
+                <span>~1-2 mins</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="model-card" data-model="seedance-pro">
+            <div class="model-name">
+              Seedance Pro
+              <span class="model-badge">High Quality</span>
+            </div>
+            <div class="model-description">
+              Professional quality with advanced controls. Up to 4K resolution.
+            </div>
+            <div class="model-specs">
+              <div class="model-spec">
+                <i class="ri-flashlight-line"></i>
+                <span>15 credits/5s</span>
+              </div>
+              <div class="model-spec">
+                <i class="ri-time-line"></i>
+                <span>~2-4 mins</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generation Settings -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="ri-settings-3-line"></i>
+            Generation Settings
+          </h2>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Prompt</label>
+          <textarea class="form-textarea" id="promptInput" placeholder="Describe your video scene in detail... (e.g., 'A cinematic shot of a futuristic city at sunset with flying cars')"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Aspect Ratio</label>
+          <select class="form-select" id="aspectRatio">
+            <option value="16:9">16:9 (Landscape - YouTube)</option>
+            <option value="9:16">9:16 (Portrait - TikTok/Reels)</option>
+            <option value="1:1">1:1 (Square - Instagram)</option>
+            <option value="4:3">4:3 (Classic Landscape)</option>
+            <option value="21:9">21:9 (Ultra-Wide Cinematic)</option>
+          </select>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <label class="form-label">Duration</label>
+            <span class="slider-value" id="durationValue">5s</span>
+          </div>
+          <input type="range" id="durationSlider" min="5" max="15" value="5" step="1">
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-header">
+            <label class="form-label">Resolution (Seedance only)</label>
+            <span class="slider-value" id="resolutionValue">720p</span>
+          </div>
+          <select class="form-select" id="resolution">
+            <option value="480p">480p (SD)</option>
+            <option value="720p" selected>720p (HD)</option>
+            <option value="1080p">1080p (Full HD)</option>
+            <option value="4k">4K (Ultra HD - Pro only)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Reference Image (Optional)</label>
+          <div class="upload-area" id="uploadArea">
+            <i class="ri-image-add-line upload-icon"></i>
+            <p class="upload-text">Click to upload or drag and drop</p>
+            <p class="upload-hint">PNG, JPG up to 10MB</p>
+            <input type="file" id="imageInput" accept="image/*" style="display: none;">
+            <img id="previewImage" class="preview-image" style="display: none;">
+          </div>
+        </div>
+
+        <button class="btn-generate" id="generateBtn">
+          <i class="ri-play-circle-line"></i>
+          <span>Generate Video</span>
+        </button>
+      </div>
+
+      <!-- Progress Card -->
+      <div class="progress-card" id="progressCard">
+        <div class="spinner"></div>
+        <p class="progress-text" id="progressText">Initializing generation...</p>
+        <p class="progress-subtitle">This may take a few minutes</p>
+      </div>
+
+      <!-- Result Card -->
+      <div class="result-card" id="resultCard">
+        <video id="resultVideo" class="result-video" controls></video>
+        <div class="result-actions">
+          <button class="btn-secondary" onclick="downloadVideo()">
+            <i class="ri-download-line"></i>
+            Download
+          </button>
+          <button class="btn-secondary" onclick="saveProject()">
+            <i class="ri-save-line"></i>
+            Save to Projects
+          </button>
+          <button class="btn-secondary" onclick="switchTab('edit')">
+            <i class="ri-scissors-line"></i>
+            Edit Video
+          </button>
+          <button class="btn-secondary" onclick="resetGeneration()">
+            <i class="ri-refresh-line"></i>
+            Generate Another
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Tab -->
+    <div id="edit-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="ri-scissors-line"></i>
+            Video Editing Tools
+          </h2>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Upload Video to Edit</label>
+          <div class="upload-area" id="editUploadArea">
+            <i class="ri-video-add-line upload-icon"></i>
+            <p class="upload-text">Click to upload video</p>
+            <p class="upload-hint">MP4, WebM up to 100MB</p>
+            <input type="file" id="videoEditInput" accept="video/*" style="display: none;">
+          </div>
+        </div>
+
+        <video id="editPreview" class="result-video" style="display: none;" controls></video>
+
+        <div class="form-group" id="editingTools" style="display: none;">
+          <h3 style="margin-bottom: 1rem; color: var(--text-secondary);">Editing Options</h3>
+          
+          <button class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;" onclick="removeBackground()">
+            <i class="ri-eraser-line"></i>
+            Remove Background (AI-powered)
+          </button>
+
+          <button class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;" onclick="trimVideo()">
+            <i class="ri-scissors-cut-line"></i>
+            Trim / Cut Scenes
+          </button>
+
+          <button class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;" onclick="addEffects()">
+            <i class="ri-contrast-drop-line"></i>
+            Add Visual Effects
+          </button>
+
+          <button class="btn-secondary" style="width: 100%; margin-bottom: 0.75rem;" onclick="addAudio()">
+            <i class="ri-music-line"></i>
+            Add Background Music
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Projects Tab -->
+    <div id="projects-tab" class="tab-content">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">
+            <i class="ri-folder-video-line"></i>
+            My Video Projects
+          </h2>
+        </div>
+
+        <div class="project-grid" id="projectGrid">
+          <!-- Projects will be loaded here -->
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="ri-folder-open-line" style="font-size: 4rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <p>No projects yet. Generate your first video to get started!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const API_BASE = window.location.origin;
+    let currentModel = 'veo3_fast';
+    let uploadedImage = null;
+    let currentVideoUrl = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCredits();
+      setupEventListeners();
+      loadProjects();
+    });
+
+    // Load user credits
+    async function loadCredits() {
+      try {
+        const response = await fetch(`${API_BASE}/api/user/credits`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('creditBalance').textContent = `${data.credits} Credits`;
+        } else {
+          document.getElementById('creditBalance').textContent = 'Login Required';
+        }
+      } catch (error) {
+        console.error('Failed to load credits:', error);
+        document.getElementById('creditBalance').textContent = 'Error';
+      }
+    }
+
+    // Setup Event Listeners
+    function setupEventListeners() {
+      // Model selection
+      document.querySelectorAll('.model-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          currentModel = card.dataset.model;
+        });
+      });
+
+      // Duration slider
+      const durationSlider = document.getElementById('durationSlider');
+      const durationValue = document.getElementById('durationValue');
+      durationSlider.addEventListener('input', (e) => {
+        durationValue.textContent = `${e.target.value}s`;
+      });
+
+      // Image upload
+      const uploadArea = document.getElementById('uploadArea');
+      const imageInput = document.getElementById('imageInput');
+      const previewImage = document.getElementById('previewImage');
+
+      uploadArea.addEventListener('click', () => imageInput.click());
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--aetherwave-purple)';
+      });
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'var(--border-color)';
+      });
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--border-color)';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          handleImageUpload(file);
+        }
+      });
+
+      imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleImageUpload(file);
+        }
+      });
+
+      // Generate button
+      document.getElementById('generateBtn').addEventListener('click', generateVideo);
+
+      // Edit tab video upload
+      const editUploadArea = document.getElementById('editUploadArea');
+      const videoEditInput = document.getElementById('videoEditInput');
+      editUploadArea.addEventListener('click', () => videoEditInput.click());
+      videoEditInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleVideoUpload(file);
+        }
+      });
+    }
+
+    // Handle image upload
+    function handleImageUpload(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedImage = e.target.result;
+        const previewImage = document.getElementById('previewImage');
+        previewImage.src = uploadedImage;
+        previewImage.style.display = 'block';
+        document.getElementById('uploadArea').classList.add('has-image');
+        document.querySelector('.upload-icon').style.display = 'none';
+        document.querySelector('.upload-text').textContent = 'Image uploaded successfully!';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Handle video upload for editing
+    function handleVideoUpload(file) {
+      const editPreview = document.getElementById('editPreview');
+      const url = URL.createObjectURL(file);
+      editPreview.src = url;
+      editPreview.style.display = 'block';
+      document.getElementById('editingTools').style.display = 'block';
+    }
+
+    // Generate Video
+    async function generateVideo() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        showToast('Please enter a prompt', 'error');
+        return;
+      }
+
+      const generateBtn = document.getElementById('generateBtn');
+      const progressCard = document.getElementById('progressCard');
+      const resultCard = document.getElementById('resultCard');
+
+      // Disable button and show progress
+      generateBtn.disabled = true;
+      progressCard.classList.add('active');
+      resultCard.classList.remove('active');
+
+      const aspectRatio = document.getElementById('aspectRatio').value;
+      const duration = parseInt(document.getElementById('durationSlider').value);
+      const resolution = document.getElementById('resolution').value;
+
+      try {
+        // Determine which endpoint to use based on model
+        const endpoint = currentModel.startsWith('veo3') || currentModel.startsWith('sora2')
+          ? '/api/generate-video-premium'
+          : '/api/generate-video-fal';
+
+        const requestBody = {
+          prompt,
+          model: currentModel,
+          aspectRatio,
+          duration,
+          resolution: currentModel.startsWith('seedance') ? resolution : undefined,
+          imageData: uploadedImage,
+          quality: 'standard'
+        };
+
+        updateProgress('Submitting request...');
+        
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || error.message || 'Generation failed');
+        }
+
+        const result = await response.json();
+
+        // Handle successful generation
+        if (result.videoUrl || result.status === 'complete') {
+          currentVideoUrl = result.videoUrl;
+          showResult(currentVideoUrl);
+          showToast('Video generated successfully!', 'success');
+          loadCredits(); // Refresh credit balance
+        } else {
+          throw new Error('No video URL in response');
+        }
+
+      } catch (error) {
+        console.error('Generation error:', error);
+        showToast(error.message || 'Failed to generate video', 'error');
+        progressCard.classList.remove('active');
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    // Update progress message
+    function updateProgress(message) {
+      document.getElementById('progressText').textContent = message;
+    }
+
+    // Show result
+    function showResult(videoUrl) {
+      const progressCard = document.getElementById('progressCard');
+      const resultCard = document.getElementById('resultCard');
+      const resultVideo = document.getElementById('resultVideo');
+
+      progressCard.classList.remove('active');
+      resultCard.classList.add('active');
+      resultVideo.src = videoUrl;
+      resultVideo.play();
+    }
+
+    // Reset generation
+    function resetGeneration() {
+      document.getElementById('promptInput').value = '';
+      document.getElementById('imageInput').value = '';
+      document.getElementById('previewImage').style.display = 'none';
+      document.querySelector('.upload-icon').style.display = 'block';
+      document.querySelector('.upload-text').textContent = 'Click to upload or drag and drop';
+      document.getElementById('uploadArea').classList.remove('has-image');
+      document.getElementById('resultCard').classList.remove('active');
+      uploadedImage = null;
+      currentVideoUrl = null;
+    }
+
+    // Download video
+    function downloadVideo() {
+      if (!currentVideoUrl) return;
+      
+      const a = document.createElement('a');
+      a.href = currentVideoUrl;
+      a.download = `ghostmusician-video-${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      showToast('Download started!', 'success');
+    }
+
+    // Save project
+    function saveProject() {
+      if (!currentVideoUrl) return;
+      
+      const projects = JSON.parse(localStorage.getItem('videoProjects') || '[]');
+      projects.push({
+        id: Date.now(),
+        url: currentVideoUrl,
+        prompt: document.getElementById('promptInput').value,
+        model: currentModel,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('videoProjects', JSON.stringify(projects));
+      
+      showToast('Project saved successfully!', 'success');
+      loadProjects();
+    }
+
+    // Load projects
+    function loadProjects() {
+      const projectGrid = document.getElementById('projectGrid');
+      const projects = JSON.parse(localStorage.getItem('videoProjects') || '[]');
+      
+      if (projects.length === 0) {
+        projectGrid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="ri-folder-open-line" style="font-size: 4rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <p>No projects yet. Generate your first video to get started!</p>
+          </div>
+        `;
+        return;
+      }
+
+      projectGrid.innerHTML = projects.reverse().map(project => `
+        <div class="project-item" onclick='loadProject(${JSON.stringify(project)})'>
+          <div class="project-thumbnail">
+            <video src="${project.url}" muted></video>
+          </div>
+          <div class="project-info">
+            <div class="project-title">${project.prompt.substring(0, 50)}${project.prompt.length > 50 ? '...' : ''}</div>
+            <div class="project-meta">
+              <span>${project.model}</span>
+              <span>${new Date(project.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load project
+    function loadProject(project) {
+      currentVideoUrl = project.url;
+      document.getElementById('promptInput').value = project.prompt;
+      switchTab('generate');
+      showResult(project.url);
+    }
+
+    // Switch tabs
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `${tab}-tab`);
+      });
+    }
+
+    // Editing functions (placeholders)
+    function removeBackground() {
+      showToast('Background removal coming soon!', 'warning');
+    }
+
+    function trimVideo() {
+      showToast('Video trimming coming soon!', 'warning');
+    }
+
+    function addEffects() {
+      showToast('Visual effects coming soon!', 'warning');
+    }
+
+    function addAudio() {
+      showToast('Audio overlay coming soon!', 'warning');
+    }
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const icons = {
+        success: 'ri-checkbox-circle-line',
+        error: 'ri-error-warning-line',
+        warning: 'ri-alert-line'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="${icons[type]}"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
