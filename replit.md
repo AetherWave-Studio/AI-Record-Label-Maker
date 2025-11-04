@@ -1,8 +1,8 @@
-# AetherWave Studio - Unified AI Music, Media & RPG Platform
+# AetherWave Studio - AI Music & Media Generation Platform
 
 ## Overview
 
-AetherWave Studio is a comprehensive creative platform that unifies AI-powered music, image, and video generation with an immersive music industry simulation RPG called GhostMusician. The platform aims to provide professional-grade creative tools with gamified progression, leveraging AI for various media types and offering a robust RPG experience where users build virtual music empires. A key feature is a unified 5-tier monetization model (Free to Mogul) with a shared credit system powering both AI media generation and RPG gameplay actions.
+AetherWave Studio is a professional-grade creative platform for AI-powered music, image, and video generation. The platform provides cutting-edge creative tools with a unified 5-tier monetization model (Free to Mogul) and a shared credit system powering all AI media generation features. Ghost Musician has been moved to a separate repository and is no longer part of this codebase.
 
 ## User Preferences
 
@@ -12,7 +12,14 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend
 
-The frontend is a vanilla JavaScript SPA built with HTML and inline CSS, served by Vite. It features a dark-optimized, mobile-responsive design with a pink/purple color palette, custom AetherWave branding, and animated gradient backgrounds. Key components include real-time credit display, music model selection, an interactive album art style modal, "Album Art to Video" conversion, a premium audio player, multiple image engine selections (Nano Banana, DALL-E 3, Midjourney) with aspect ratio and speed controls, and a user profile modal.
+The frontend is a React SPA built with TypeScript, Wouter for routing, and Shadcn UI components, served by Vite. It features a dark-optimized, mobile-responsive design with a pink/purple color palette and custom AetherWave branding. The platform includes 4 core pages:
+
+1. **Buy Credits** (`/buy-credits`) - One-time credit packages and monthly subscription tiers
+2. **Card Shop** (`/card-shop`) - Marketplace for premium items and collectibles  
+3. **Video Generation** (`/video-generation`) - Seamless Loop Creator with 3 modes (image-to-loop, upload-video, text-to-loop)
+4. **Channels** (`/channels`) - Discovery feed for creative content
+
+Key UI components include UserNavigation with real-time credit display, useAuth hook for authentication state, and Shadcn UI primitives (Button, Card, Avatar, Badge, Tabs, etc.).
 
 ### Backend
 
@@ -20,33 +27,38 @@ The backend is an Express.js application written in TypeScript (Node.js, ESM) wi
 
 ### Data Storage
 
-PostgreSQL (Neon) with Drizzle ORM stores user data, RPG-specific information, and marketplace details.
+PostgreSQL (Neon) with Drizzle ORM stores user data and marketplace information.
 
-**Core Tables:** `users` (UUID, plan, credits, freeBandGenerations, daily login), `uploadedAudio`, `quests`, `feedEvents`.
+**Core Tables:**
+- `users` - User profiles with subscription plan, credits, welcome bonus, and Stripe integration
+- `products` - Marketplace items (Card Themes, Premium Features, Collectibles)
+- `userInventory` - User-purchased items
 
-**GhostMusician RPG Tables:** `bands` (FAME, streams, sales), `bandAchievements`, `dailyGrowthLog`, `ownedCardDesigns`.
-
-**Unified Marketplace System:** `products` and `userInventory` tables support an e-commerce system for 19 initial products across Card Themes, Premium Features (Managers, Producers), and Collectibles. Purchases deduct credits and update user inventory.
+The marketplace system supports an e-commerce platform where purchases deduct credits and update user inventory.
 
 ### Authentication & Authorization
 
 Replit Auth provides OIDC-based authentication. `express-session` and `connect-pg-simple` manage sessions in PostgreSQL. An `isAuthenticated` middleware protects API routes. Development authentication normalizes `req.user.id` for consistent behavior.
 
-### GhostMusician RPG System
+### Credit System & Monetization
 
-Users create virtual artists/bands, manage a music industry empire, and progress through gamified mechanics. All users receive 3 free band generations.
+The platform uses a unified credit system across all AI generation features:
 
-**Core Features:**
-- **Band Creation**: Free for the first 3, then 15 credits each. AI generates profiles and backstories.
-- **Daily Growth Mechanics**: Apply daily growth (24-hour cooldown) to increase FAME, streams, and sales.
-- **FAME System**: A 1-100 scale affecting growth and chart position.
-- **Metrics Tracking**: Physical/digital sales, streams, chart position.
-- **Achievement System**: Gold, Platinum, Diamond records with FAME bonuses.
-- **Tier-Based Multipliers**: Growth rates scale with subscription plan (1.0x Free to 3.0x Mogul).
-- **Band Limits**: Tier-based limits on the number of active bands.
-- **Shared Credit System**: Credits are unified for both AI media generation and RPG features.
-- **Daily Login Rewards**: Free tier users receive 10 credits daily (capped at 50 total), with streak tracking.
-- **Activity Feed**: Real-time global feed of user activities (band creation, growth, achievements, releases).
+**5-Tier Subscription Model:**
+- **Free** - $0/month, 50 credits/month
+- **Studio** - $9.99/month, 500 credits/month  
+- **Studio+** - $19.99/month, 1,250 credits/month
+- **Pro** - $34.99/month, 2,500 credits/month
+- **Mogul** - $49.99/month, Unlimited credits
+
+**One-Time Credit Packages:**
+- 100 credits - $4.99
+- 250 credits (+25 bonus) - $9.99
+- 500 credits (+75 bonus) - $19.99
+- 1000 credits (+200 bonus) - $34.99
+- 2500 credits (+600 bonus) - $79.99
+
+Credits power all AI generation features including music, images, videos, and seamless loops.
 
 ### Seamless Loop Creator
 
@@ -62,22 +74,44 @@ A dedicated video tool at `/seamless-loop-creator/` for generating perfect loopi
 
 ### Third-Party Services
 
--   **Neon Database**: Serverless PostgreSQL.
--   **KIE.ai SUNO API**: AI music generation via Webshare proxy.
--   **ttapi.io Midjourney API**: High-quality AI image generation (Studio+ users), with Fast/Turbo/Relax speed modes and auto-refunds.
--   **OpenAI API**: DALL-E 3 for album art and general image generation (Studio+).
--   **Fal.ai Nano Banana**: Fast image generation (all users).
--   **Luma Ray 2 Flash**: Native seamless loop video generation for text-to-loop and image-to-loop modes (5s/9s durations, no concatenation seam).
--   **Fal.ai Seedance Lite**: AI seamless loop video generation (upload mode only, supports arbitrary durations).
--   **Fal.ai Seedance**: AI music video generation.
--   **Replit AI Integrations**: OpenAI chat.
--   **Google Fonts**: Inter font family.
--   **ImgBB API**: Temporary image hosting.
+-   **Neon Database**: Serverless PostgreSQL for data persistence
+-   **Replit Auth (OIDC)**: User authentication and session management
+-   **Stripe**: Payment processing for credit packages and subscriptions (ready for setup)
+-   **KIE.ai SUNO API**: AI music generation via Webshare proxy
+-   **ttapi.io Midjourney API**: High-quality AI image generation (Studio+ users)
+-   **OpenAI API**: DALL-E 3 for album art and image generation (Studio+)
+-   **Fal.ai Nano Banana**: Fast image generation (all users)
+-   **Luma Ray 2 Flash**: Seamless loop video generation (text-to-loop and image-to-loop modes, 5s/9s)
+-   **Fal.ai Seedance Lite**: AI seamless loop video generation (upload mode, arbitrary durations)
+-   **Fal.ai Seedance**: AI music video generation
+-   **ImgBB API**: Temporary image hosting
 
 ### Key Libraries & Tools
 
--   **UI Components**: Radix UI primitives, Tailwind CSS (Shadcn UI-like approach).
--   **Form Handling**: React Hook Form with Zod validation.
--   **Date Utilities**: `date-fns`.
--   **Icons**: Lucide React.
--   **Development**: Vite, esbuild, TypeScript, Drizzle Kit.
+-   **Frontend Framework**: React with TypeScript
+-   **Routing**: Wouter (lightweight React router)
+-   **UI Components**: Shadcn UI (Radix UI primitives + Tailwind CSS)
+-   **Styling**: Tailwind CSS with custom color system
+-   **State Management**: TanStack Query (React Query v5)
+-   **Form Handling**: React Hook Form with Zod validation  
+-   **Icons**: Lucide React
+-   **Database**: Drizzle ORM with PostgreSQL
+-   **Development**: Vite, esbuild, TypeScript, Drizzle Kit
+
+## Recent Changes (November 2024)
+
+### Ghost Musician Removal
+Ghost Musician has been completely removed from this repository and moved to a separate codebase:
+- Removed 1,426+ lines of Ghost Musician code (routes, schema, storage methods)
+- Deleted database tables: bands, quests, feedEvents, achievements, cardDesigns, uploadedAudio
+- Removed Ghost Musician fields from users table: freeBandGenerations, lastLoginAt, dailyLoginStreak
+- Cleaned up server/storage.ts and server/routes.ts
+- Database now contains only core platform tables: users, products, userInventory
+
+### New Frontend Structure
+- Created 4 core pages: buy-credits, card-shop, video-generation, channels
+- Implemented UserNavigation component with authentication and credit display
+- Added useAuth hook for authentication state management
+- Created complete Shadcn UI component library (button, card, avatar, badge, skeleton, tabs, label, textarea, input, select, toast)
+- Set up React Router with Wouter
+- Configured dark mode theming with purple/pink gradient branding
