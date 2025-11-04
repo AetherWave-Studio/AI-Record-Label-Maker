@@ -14,24 +14,36 @@ import { UserProfile } from "@/pages/user-profile";
 import PlaylistPage from "@/pages/playlist";
 import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
+import BuyCredits from "../../../client/src/pages/buy-credits";
+import CardShop from "../../../client/src/pages/card-shop";
+import Channels from "../../../client/src/pages/channels";
+import VideoGeneration from "../../../client/src/pages/video-generation";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
     <Switch>
-      {/* Artist pages, gallery, and user profiles are accessible to everyone for discovery */}
+      {/* Root AetherWave Platform Pages */}
+      <Route path="/buy-credits" component={BuyCredits} />
+      <Route path="/card-shop" component={CardShop} />
+      <Route path="/channels" component={Channels} />
+      <Route path="/video-generation" component={VideoGeneration} />
+      
+      {/* Ghost Musician - Artist pages, gallery, and user profiles are accessible to everyone for discovery */}
       <Route path="/ghost-musician/artist/:cardId" component={ArtistPage} />
       <Route path="/ghost-musician/user/:userId" component={UserProfile} />
       <Route path="/ghost-musician/gallery" component={Gallery} />
       
-      {/* Temporarily showing Home page to everyone for development preview */}
+      {/* Ghost Musician - Main pages */}
       <Route path="/ghost-musician" component={Home} />
       <Route path="/ghost-musician/landing" component={Landing} />
       <Route path="/ghost-musician/music" component={MusicMarketplace} />
       <Route path="/ghost-musician/store" component={Store} />
       <Route path="/ghost-musician/playlist/:playlistId" component={PlaylistPage} />
       <Route path="/ghost-musician/upgrade" component={Upgrade} />
+      
+      {/* Fallback */}
       <Route component={NotFound} />
     </Switch>
   );
