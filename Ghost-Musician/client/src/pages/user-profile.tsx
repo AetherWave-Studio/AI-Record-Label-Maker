@@ -57,26 +57,26 @@ export function UserProfile() {
   // Extract bands array from response
   const userBands = bandsResponse?.bands || [];
 
-  // Transform bands to artist cards format (database uses snake_case)
+  // Transform bands to artist cards format (Drizzle returns camelCase)
   const userCards: ArtistCard[] = userBands.map((band: any) => ({
     id: band.id,
-    userId: band.user_id,
-    imageUrl: band.trading_card_url, // Trading card image from DALL-E
+    userId: band.userId,
+    imageUrl: band.tradingCardUrl, // Trading card image from DALL-E
     artistData: {
-      bandName: band.band_name,
+      bandName: band.bandName,
       genre: band.genre,
       philosophy: band.philosophy,
       bandConcept: band.concept,
       members: band.members?.bandMembers || [],
       influences: band.influences || [],
-      imageUrl: band.trading_card_url,
-      cardImageUrl: band.trading_card_url,
-      totalStreams: band.total_streams || 0,
+      imageUrl: band.tradingCardUrl,
+      cardImageUrl: band.tradingCardUrl,
+      totalStreams: band.totalStreams || 0,
       fame: band.fame || 0,
     },
     currentFame: band.fame || 0,
     rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
-    createdAt: band.created_at,
+    createdAt: band.createdAt,
   } as ArtistCard));
 
   // For other users, we'll need to implement a public endpoint for their cards

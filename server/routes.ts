@@ -2800,13 +2800,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const cardDesign = band.equippedCardDesign || 'ghosts_online';
           
           // Build band data for card prompt
+          const membersData = typeof band.members === 'string' 
+            ? JSON.parse(band.members) 
+            : band.members;
+          
           const bandData = {
             bandName: band.bandName,
             genre: band.genre,
             tagline: band.philosophy?.substring(0, 80),
-            members: typeof band.members === 'string' 
-              ? JSON.parse(band.members) 
-              : (band.members || [])
+            members: membersData?.bandMembers || [] // Access bandMembers array
           };
 
           const cardPrompt = generateCardPrompt(cardDesign as any, bandData);

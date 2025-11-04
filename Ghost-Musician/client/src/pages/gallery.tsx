@@ -22,34 +22,34 @@ export default function Gallery() {
     queryKey: ["/api/rpg/all-bands"],
   });
 
-  // Transform bands to artist cards format (database uses snake_case)
+  // Transform bands to artist cards format (Drizzle returns camelCase)
   const allCards: ArtistCard[] = (allBands || []).map((band: any) => ({
     id: band.id,
-    userId: band.user_id,
-    imageUrl: band.trading_card_url, // Trading card image from DALL-E
+    userId: band.userId,
+    imageUrl: band.tradingCardUrl, // Trading card image from DALL-E
     artistData: {
-      bandName: band.band_name,
+      bandName: band.bandName,
       genre: band.genre,
       philosophy: band.philosophy,
       bandConcept: band.concept,
       members: band.members?.bandMembers || [],
       influences: band.influences || [],
       signatureSound: band.genre,
-      imageUrl: band.trading_card_url,
-      cardImageUrl: band.trading_card_url,
-      fileName: band.song_title || 'Unknown',
+      imageUrl: band.tradingCardUrl,
+      cardImageUrl: band.tradingCardUrl,
+      fileName: band.songTitle || 'Unknown',
       duration: 180,
       tempo: 120,
       key: 'C',
       energy: 'High',
-      createdAt: band.created_at,
+      createdAt: band.createdAt,
       rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
-      streamCount: band.total_streams || 0,
-      monthlyListeners: Math.floor((band.total_streams || 0) / 30),
+      streamCount: band.totalStreams || 0,
+      monthlyListeners: Math.floor((band.totalStreams || 0) / 30),
     },
     currentFame: band.fame || 0,
     rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
-    createdAt: band.created_at,
+    createdAt: band.createdAt,
   } as ArtistCard));
 
   // Filter and sort cards based on current criteria
