@@ -8,11 +8,9 @@ import { CreateBandModal } from "@/components/CreateBandModal";
 import { BandFromAudioModal } from "@/components/BandFromAudioModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
-import AuthForm from "@/components/auth-form";
 
 export default function Home() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showCreateBand, setShowCreateBand] = useState(false);
   const [showAIBandModal, setShowAIBandModal] = useState(false);
   const [notificationCount] = useState(3);
@@ -20,12 +18,6 @@ export default function Home() {
   const [readyBandsCount] = useState(5); // TODO: Get from API
 
   const { user, isAuthenticated } = useAuth();
-
-  // Handle successful login/register
-  const handleAuthSuccess = () => {
-    setShowLoginModal(false);
-    window.location.reload(); // Refresh to update user state
-  };
 
   // Mock data for stats widget - will be replaced with API calls
   const mockUserStats = {
@@ -382,40 +374,17 @@ export default function Home() {
               </Link>
             </>
           ) : (
-            <button
-              onClick={() => setShowLoginModal(true)}
+            <a
+              href="/api/login"
               className="flex flex-col items-center gap-1 text-sky-glint"
+              data-testid="link-mobile-login"
             >
               <LogIn size={24} />
               <span className="text-xs">Sign In</span>
-            </button>
+            </a>
           )}
         </div>
       </div>
-
-      {/* Login/Register Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="w-full max-w-md p-4">
-            <div className="bg-gray-800 border border-gray-700 rounded-xl shadow-2xl">
-              <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                <h2 className="text-xl font-semibold text-white">
-                  Welcome to AetherWave
-                </h2>
-                <button
-                  onClick={() => setShowLoginModal(false)}
-                  className="p-2 text-gray-400 hover:text-white transition-colors"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="p-6">
-                <AuthForm onSuccess={handleAuthSuccess} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Create Band Modal */}
       <CreateBandModal

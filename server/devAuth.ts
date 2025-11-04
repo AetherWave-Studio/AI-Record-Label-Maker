@@ -19,6 +19,9 @@ const DEV_USER: User = {
   welcomeBonusClaimed: 1,
   stripeCustomerId: null,
   stripeSubscriptionId: null,
+  freeBandGenerations: 3, // Add missing field
+  lastLoginAt: new Date(), // Add missing field
+  dailyLoginStreak: 0, // Add missing field
   createdAt: new Date(),
   updatedAt: new Date(),
 };
