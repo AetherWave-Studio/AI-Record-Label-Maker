@@ -20,9 +20,8 @@ export default function Home() {
   // Daily login reward mutation
   const dailyLoginMutation = useMutation({
     mutationFn: async () => {
-      return await apiRequest('/api/daily-login', {
-        method: 'POST'
-      });
+      const response = await apiRequest('POST', '/api/daily-login');
+      return await response.json();
     },
     onSuccess: (data: any) => {
       // Invalidate auth and credits queries to refresh user data
