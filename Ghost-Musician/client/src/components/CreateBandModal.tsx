@@ -131,7 +131,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto"
       onClick={(e) => {
         console.log("🔵 Backdrop clicked", e.target);
         if (e.target === e.currentTarget) {
@@ -190,7 +190,11 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               {GENRES.map((g) => (
                 <button
                   key={g}
-                  onClick={() => setGenre(g)}
+                  type="button"
+                  onClick={() => {
+                    console.log(`🎵 Genre selected: ${g}`);
+                    setGenre(g);
+                  }}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     genre === g
                       ? "bg-sky-glint text-deep-slate"
@@ -307,7 +311,10 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
         <div className="flex gap-3 p-6 border-t border-sky-glint/20 flex-shrink-0">
           <Button
             type="button"
-            onClick={handleCreate}
+            onClick={() => {
+              console.log("🚀 Button clicked! State:", { bandName, genre, isCreating });
+              handleCreate();
+            }}
             disabled={isCreating || !bandName.trim() || !genre}
             className="flex-1 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate font-bold"
             data-testid="button-create-band"
