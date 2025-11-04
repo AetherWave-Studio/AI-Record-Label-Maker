@@ -59,7 +59,7 @@ export default function Gallery() {
       artistData.bandName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artistData.genre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       artistData.philosophy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      artistData.members?.some(member => 
+      artistData.members?.some((member: any) => 
         member.name?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     
