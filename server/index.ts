@@ -6,9 +6,10 @@ import path from "path";
 
 const app = express();
 
-app.get('/', (req, res) => {
-  res.redirect('/static/index.html');
-});
+// Removed redirect to static HTML - let React app handle routing
+// app.get('/', (req, res) => {
+//   res.redirect('/static/index.html');
+// });
 
 declare module 'http' {
   interface IncomingMessage {
