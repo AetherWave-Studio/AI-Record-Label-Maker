@@ -185,7 +185,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               value={bandName}
               onChange={(e) => setBandName(e.target.value)}
               placeholder="Enter band name..."
-              className="bg-deep-slate border-soft-gray/30 text-white-smoke"
+              className="bg-white border-soft-gray/30 text-black placeholder:text-gray-400"
               data-testid="input-band-name"
             />
           </div>
@@ -226,7 +226,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               value={concept}
               onChange={(e) => setConcept(e.target.value)}
               placeholder="What makes this band unique?"
-              className="bg-deep-slate border-soft-gray/30 text-white-smoke resize-none"
+              className="bg-white border-soft-gray/30 text-black placeholder:text-gray-400 resize-none"
               rows={3}
               data-testid="textarea-concept"
             />
@@ -241,7 +241,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               value={philosophy}
               onChange={(e) => setPhilosophy(e.target.value)}
               placeholder="Band's core belief or message..."
-              className="bg-deep-slate border-soft-gray/30 text-white-smoke"
+              className="bg-white border-soft-gray/30 text-black placeholder:text-gray-400"
               data-testid="input-philosophy"
             />
           </div>
@@ -255,7 +255,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               value={influences}
               onChange={(e) => setInfluences(e.target.value)}
               placeholder="Comma-separated: Beatles, Nirvana, ..."
-              className="bg-deep-slate border-soft-gray/30 text-white-smoke"
+              className="bg-white border-soft-gray/30 text-black placeholder:text-gray-400"
               data-testid="input-influences"
             />
           </div>
