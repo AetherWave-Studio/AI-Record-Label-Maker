@@ -25,7 +25,7 @@ export default function VideoGenerationPage() {
           </p>
         </div>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as any)} className="w-full">
+        <Tabs value={mode} onValueChange={(v: string) => setMode(v as any)} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="image-to-loop" data-testid="tab-image-to-loop">
               <Sparkles className="w-4 h-4 mr-2" />
@@ -71,7 +71,7 @@ export default function VideoGenerationPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="duration">Duration</Label>
-                  <Select value={duration} onValueChange={(v) => setDuration(v as any)}>
+                  <Select value={duration} onValueChange={(v: string) => setDuration(v as any)}>
                     <SelectTrigger data-testid="select-duration">
                       <SelectValue />
                     </SelectTrigger>
@@ -139,7 +139,7 @@ export default function VideoGenerationPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="duration-text">Duration</Label>
-                  <Select value={duration} onValueChange={(v) => setDuration(v as any)}>
+                  <Select value={duration} onValueChange={(v: string) => setDuration(v as any)}>
                     <SelectTrigger data-testid="select-duration-text">
                       <SelectValue />
                     </SelectTrigger>
