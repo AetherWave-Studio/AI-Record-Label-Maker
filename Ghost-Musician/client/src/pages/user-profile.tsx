@@ -49,27 +49,34 @@ export function UserProfile() {
   const isOwnProfile = currentUser?.id === userId;
 
   // Fetch user's bands
-  const { data: userBands, isLoading: bandsLoading } = useQuery<any[]>({
-    queryKey: ["/api/bands"],
+  const { data: bandsResponse, isLoading: bandsLoading } = useQuery<any>({
+    queryKey: ["/api/rpg/bands"],
     enabled: !!userId && isOwnProfile, // Only fetch for own profile since /api/bands uses auth
   });
 
-  // Transform bands to artist cards format
-  const userCards: ArtistCard[] = (userBands || []).map((band: any) => ({
+  // Extract bands array from response
+  const userBands = bandsResponse?.bands || [];
+
+  // Transform bands to artist cards format (database uses snake_case)
+  const userCards: ArtistCard[] = userBands.map((band: any) => ({
     id: band.id,
-    userId: band.userId || band.user_id,
+    userId: band.user_id,
+    imageUrl: band.trading_card_url, // Trading card image from DALL-E
     artistData: {
-      bandName: band.bandName || band.band_name,
+      bandName: band.band_name,
       genre: band.genre,
       philosophy: band.philosophy,
       bandConcept: band.concept,
       members: band.members?.bandMembers || [],
       influences: band.influences || [],
-      totalStreams: band.totalStreams || band.total_streams || 0,
+      imageUrl: band.trading_card_url,
+      cardImageUrl: band.trading_card_url,
+      totalStreams: band.total_streams || 0,
       fame: band.fame || 0,
     },
+    currentFame: band.fame || 0,
     rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
-    createdAt: band.createdAt || band.created_at,
+    createdAt: band.created_at,
   } as ArtistCard));
 
   // For other users, we'll need to implement a public endpoint for their cards
