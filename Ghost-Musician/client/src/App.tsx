@@ -14,11 +14,10 @@ import { UserProfile } from "@/pages/user-profile";
 import PlaylistPage from "@/pages/playlist";
 import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
-// TODO: These pages need to be recreated or moved to Ghost-Musician/client/src/pages/
-// import BuyCredits from "../../../client/src/pages/buy-credits";
-// import CardShop from "../../../client/src/pages/card-shop";
-// import Channels from "../../../client/src/pages/channels";
-// import VideoGeneration from "../../../client/src/pages/video-generation";
+import BuyCredits from "@/pages/buy-credits";
+import CardShop from "@/pages/card-shop";
+import Channels from "@/pages/channels";
+import VideoGeneration from "@/pages/video-generation";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -26,12 +25,10 @@ function Router() {
   return (
     <Switch>
       {/* Root AetherWave Platform Pages */}
-      {/* TODO: Recreate these pages
       <Route path="/buy-credits" component={BuyCredits} />
       <Route path="/card-shop" component={CardShop} />
       <Route path="/channels" component={Channels} />
       <Route path="/video-generation" component={VideoGeneration} />
-      */}
       
       {/* Ghost Musician - Artist pages, gallery, and user profiles are accessible to everyone for discovery */}
       <Route path="/ghost-musician/artist/:cardId" component={ArtistPage} />
