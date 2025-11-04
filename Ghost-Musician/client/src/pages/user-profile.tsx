@@ -48,11 +48,29 @@ export function UserProfile() {
 
   const isOwnProfile = currentUser?.id === userId;
 
-  // Fetch user's artist cards (bands)
-  const { data: userCards, isLoading: cardsLoading } = useQuery<ArtistCard[]>({
+  // Fetch user's bands
+  const { data: userBands, isLoading: bandsLoading } = useQuery<any[]>({
     queryKey: ["/api/bands"],
     enabled: !!userId && isOwnProfile, // Only fetch for own profile since /api/bands uses auth
   });
+
+  // Transform bands to artist cards format
+  const userCards: ArtistCard[] = (userBands || []).map((band: any) => ({
+    id: band.id,
+    userId: band.userId || band.user_id,
+    artistData: {
+      bandName: band.bandName || band.band_name,
+      genre: band.genre,
+      philosophy: band.philosophy,
+      bandConcept: band.concept,
+      members: band.members?.bandMembers || [],
+      influences: band.influences || [],
+      totalStreams: band.totalStreams || band.total_streams || 0,
+      fame: band.fame || 0,
+    },
+    rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+    createdAt: band.createdAt || band.created_at,
+  } as ArtistCard));
 
   // For other users, we'll need to implement a public endpoint for their cards
   // TODO: Implement /api/users/${userId}/cards endpoint for public profiles
@@ -61,7 +79,7 @@ export function UserProfile() {
 
   // Combine cards for display
   const displayCards = isOwnProfile ? userCards : publicUserCards;
-  const displayCardsLoading = isOwnProfile ? cardsLoading : publicCardsLoading;
+  const displayCardsLoading = isOwnProfile ? bandsLoading : publicCardsLoading;
 
   // TODO: Implement releases endpoint when available
   const userReleases: Release[] = [];
