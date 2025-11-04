@@ -39,6 +39,8 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
 
   if (!isOpen) return null;
 
+  console.log("🎨 CreateBandModal is OPEN and rendering");
+
   const handleCreate = async () => {
     console.log("🎸 Create Band clicked!", { bandName, genre });
     
@@ -128,8 +130,23 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-charcoal border border-sky-glint/30 rounded-2xl max-w-2xl w-full my-8 flex flex-col max-h-[calc(100vh-4rem)]">
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto"
+      onClick={(e) => {
+        console.log("🔵 Backdrop clicked", e.target);
+        if (e.target === e.currentTarget) {
+          console.log("🔵 Click was on backdrop itself, closing modal");
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-charcoal border border-sky-glint/30 rounded-2xl max-w-2xl w-full my-8 flex flex-col max-h-[calc(100vh-4rem)]"
+        onClick={(e) => {
+          console.log("🟢 Modal content clicked", e.target);
+          e.stopPropagation();
+        }}
+      >
         {/* Header - Fixed */}
         <div className="flex items-center justify-between p-6 border-b border-sky-glint/20 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -241,7 +258,10 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => setSelectedPalette(idx)}
+                  onClick={() => {
+                    console.log(`🎨 Palette ${idx} clicked!`);
+                    setSelectedPalette(idx);
+                  }}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     selectedPalette === idx
                       ? "border-sky-glint"
