@@ -370,6 +370,7 @@ export const bands = pgTable("bands", {
   audioFileId: varchar("audio_file_id").references(() => uploadedAudio.id),
   songTitle: varchar("song_title"),
   sunoPrompt: text("suno_prompt"), // AI prompt for generating matching music
+  analysisSummary: text("analysis_summary"), // Raw AI analysis of the audio
   
   // Metrics (current values)
   fame: integer("fame").default(5).notNull(), // 1-100 scale
