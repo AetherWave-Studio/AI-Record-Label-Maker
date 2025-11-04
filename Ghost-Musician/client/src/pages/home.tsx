@@ -181,7 +181,7 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <Link href={`/user/${user?.id}`}>
+                      <Link href={`/ghost-musician/user/${user?.id}`}>
                         <button className="w-full px-4 py-3 text-left hover:bg-deep-slate transition-colors flex items-center gap-3">
                           <span>📊</span>
                           <span>My Profile</span>
@@ -359,7 +359,7 @@ export default function Home() {
                   </div>
                 )}
               </button>
-              <Link href={`/user/${user?.id}`}>
+              <Link href={`/ghost-musician/user/${user?.id}`}>
                 <button className="flex flex-col items-center gap-1 text-soft-gray hover:text-white-smoke">
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sky-glint to-electric-blue" />
                   <span className="text-xs">Profile</span>

@@ -472,7 +472,7 @@ export function UserProfile() {
                   {displayCards.map((card) => {
                     const artistData = card.artistData as any;
                     return (
-                      <Link key={card.id} href={`/artist/${card.id}`}>
+                      <Link key={card.id} href={`/ghost-musician/artist/${card.id}`}>
                         <Card className="group hover:scale-105 transition-all duration-200 cursor-pointer bg-gradient-to-br from-charcoal/40 to-deep-slate/60 border-soft-gray/20 hover:border-sky-glint/50">
                           <CardContent className="p-0">
                             <div className="aspect-[5/7] relative overflow-hidden rounded-t-lg">

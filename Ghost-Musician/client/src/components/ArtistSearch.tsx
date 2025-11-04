@@ -63,7 +63,7 @@ export function ArtistSearch() {
             ) : searchResults && searchResults.length > 0 ? (
               <div className="space-y-3">
                 {searchResults.map((result) => (
-                  <Link key={result.id} href={`/artist/${result.id}`}>
+                  <Link key={result.id} href={`/ghost-musician/artist/${result.id}`}>
                     <div className="flex items-center gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
                       {/* Artist Image */}
                       <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted flex items-center justify-center">

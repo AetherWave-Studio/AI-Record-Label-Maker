@@ -264,7 +264,7 @@ export default function Gallery() {
               {filteredCards.map((card) => {
                 const artistData = card.artistData as ArtistData;
                 return (
-                  <Link key={card.id} href={`/artist/${card.id}`}>
+                  <Link key={card.id} href={`/ghost-musician/artist/${card.id}`}>
                     <Card className="group hover:bg-accent/50 transition-colors cursor-pointer">
                       <CardContent className="p-4">
                         <div className="flex items-center space-x-4">

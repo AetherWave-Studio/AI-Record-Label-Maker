@@ -354,7 +354,7 @@ export function UserProfileNew() {
                 {userBands.slice(0, 6).map((band) => {
                   const bandData = band.artistData as any;
                   return (
-                    <Link key={band.id} href={`/artist/${band.id}`}>
+                    <Link key={band.id} href={`/ghost-musician/artist/${band.id}`}>
                       <Card className="bg-gray-700/50 border-gray-600 hover:bg-gray-700 transition-colors cursor-pointer group">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">

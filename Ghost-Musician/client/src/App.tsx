@@ -10,7 +10,7 @@ import Gallery from "@/pages/gallery";
 import MusicMarketplace from "@/pages/music-marketplace";
 import Store from "@/pages/store";
 import { ArtistPage } from "@/pages/ArtistPage";
-import { UserProfileNew } from "@/pages/user-profile-new";
+import { UserProfile } from "@/pages/user-profile";
 import PlaylistPage from "@/pages/playlist";
 import Upgrade from "@/pages/upgrade";
 import NotFound from "@/pages/not-found";
@@ -22,7 +22,7 @@ function Router() {
     <Switch>
       {/* Artist pages, gallery, and user profiles are accessible to everyone for discovery */}
       <Route path="/ghost-musician/artist/:cardId" component={ArtistPage} />
-      <Route path="/ghost-musician/user/:userId" component={UserProfileNew} />
+      <Route path="/ghost-musician/user/:userId" component={UserProfile} />
       <Route path="/ghost-musician/gallery" component={Gallery} />
       
       {/* Temporarily showing Home page to everyone for development preview */}

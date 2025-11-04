@@ -71,7 +71,7 @@ export function PortalNavSimple({ variant = 'profile-entry', className = '' }: P
         {/* Portal glow */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-xl opacity-60 animate-pulse" />
 
-        <Link href={`/user/${user?.id}`}>
+        <Link href={`/ghost-musician/user/${user?.id}`}>
           <div className="relative w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center cursor-pointer shadow-2xl">
             <Home className="w-6 h-6 text-white" />
           </div>

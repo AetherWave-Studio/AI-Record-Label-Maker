@@ -388,7 +388,7 @@ export default function TradingCard({ artistData, imageUrl, theme, isProcessing,
       {viewMode !== 'browse' && (
         <div className="flex justify-center flex-wrap gap-2 mt-4">
           {cardId && (
-            <Link href={`/artist/${cardId}`}>
+            <Link href={`/ghost-musician/artist/${cardId}`}>
               <Button
                 variant="default" 
                 size="sm"
@@ -403,7 +403,7 @@ export default function TradingCard({ artistData, imageUrl, theme, isProcessing,
           
           {/* Release New Music Button - only show for card owners in full mode */}
           {cardId && user && viewMode === 'full' && (
-            <Link href={`/artist/${cardId}?tab=release`}>
+            <Link href={`/ghost-musician/artist/${cardId}?tab=release`}>
               <Button
                 variant="default"
                 size="sm" 
@@ -457,7 +457,7 @@ export default function TradingCard({ artistData, imageUrl, theme, isProcessing,
   // In browse mode, wrap the entire card in a Link
   if (viewMode === 'browse' && cardId) {
     return (
-      <Link href={`/artist/${cardId}`}>
+      <Link href={`/ghost-musician/artist/${cardId}`}>
         {cardContent}
       </Link>
     );

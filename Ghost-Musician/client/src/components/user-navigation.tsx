@@ -74,7 +74,7 @@ export default function UserNavigation({ onShowMyCards, onShowAuth }: UserNaviga
           My Cards
         </DropdownMenuItem>
         <DropdownMenuItem asChild data-testid="button-my-profile">
-          <Link href={`/user/${user?.id}`}>
+          <Link href={`/ghost-musician/user/${user?.id}`}>
             <User className="w-4 h-4 mr-2" />
             My Profile
           </Link>

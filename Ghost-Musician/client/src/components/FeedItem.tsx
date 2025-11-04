@@ -82,7 +82,7 @@ export function FeedItem({ item }: FeedItemProps) {
       {/* Header with user info and timestamp */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <Link href={`/user/${item.user.id}`}>
+          <Link href={`/ghost-musician/user/${item.user.id}`}>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-aetherwave-pink to-electric-neon flex items-center justify-center text-white font-bold cursor-pointer hover:scale-110 transition-transform shadow-lg">
               {item.user.profileImageUrl ? (
                 <img src={item.user.profileImageUrl} alt={item.user.username} className="w-full h-full rounded-full" />
@@ -92,7 +92,7 @@ export function FeedItem({ item }: FeedItemProps) {
             </div>
           </Link>
           <div>
-            <Link href={`/user/${item.user.id}`}>
+            <Link href={`/ghost-musician/user/${item.user.id}`}>
               <span className="font-semibold text-white-smoke hover:text-sky-glint cursor-pointer">
                 @{item.user.username}
               </span>
@@ -118,7 +118,7 @@ export function FeedItem({ item }: FeedItemProps) {
 
           <div className="flex gap-4">
             {item.artist.cardImageUrl && (
-              <Link href={`/artist/${item.artist.id}`}>
+              <Link href={`/ghost-musician/artist/${item.artist.id}`}>
                 <img
                   src={item.artist.cardImageUrl}
                   alt={item.artist.bandName}
@@ -127,7 +127,7 @@ export function FeedItem({ item }: FeedItemProps) {
               </Link>
             )}
             <div className="flex-1">
-              <Link href={`/artist/${item.artist.id}`}>
+              <Link href={`/ghost-musician/artist/${item.artist.id}`}>
                 <h3 className="text-xl font-bold text-white-smoke hover:text-sky-glint cursor-pointer">
                   {item.artist.bandName}
                 </h3>
@@ -172,7 +172,7 @@ export function FeedItem({ item }: FeedItemProps) {
             <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-400 to-orange-500 text-deep-slate rounded-lg font-semibold hover:shadow-lg transition-all">
               🎊 Congratulate
             </button>
-            <Link href={`/artist/${item.artist.id}`}>
+            <Link href={`/ghost-musician/artist/${item.artist.id}`}>
               <button className="flex items-center gap-2 px-4 py-2 border border-soft-gray/30 text-white-smoke rounded-lg hover:border-sky-glint transition-colors">
                 👀 View Card
               </button>
@@ -215,7 +215,7 @@ export function FeedItem({ item }: FeedItemProps) {
             <button className="flex items-center gap-2 px-4 py-2 bg-sky-glint text-deep-slate rounded-lg font-semibold hover:shadow-lg transition-all">
               👤 Follow
             </button>
-            <Link href={`/user/${item.user.id}`}>
+            <Link href={`/ghost-musician/user/${item.user.id}`}>
               <button className="flex items-center gap-2 px-4 py-2 border border-soft-gray/30 text-white-smoke rounded-lg hover:border-sky-glint transition-colors">
                 👀 View Profile
               </button>
@@ -233,7 +233,7 @@ export function FeedItem({ item }: FeedItemProps) {
 
           <div className="flex gap-4">
             {item.artist.cardImageUrl && (
-              <Link href={`/artist/${item.artist.id}`}>
+              <Link href={`/ghost-musician/artist/${item.artist.id}`}>
                 <img
                   src={item.artist.cardImageUrl}
                   alt={item.artist.bandName}
@@ -242,7 +242,7 @@ export function FeedItem({ item }: FeedItemProps) {
               </Link>
             )}
             <div className="flex-1">
-              <Link href={`/artist/${item.artist.id}`}>
+              <Link href={`/ghost-musician/artist/${item.artist.id}`}>
                 <h3 className="text-2xl font-bold text-white-smoke hover:text-sky-glint cursor-pointer">
                   "{item.artist.bandName}"
                 </h3>
@@ -270,7 +270,7 @@ export function FeedItem({ item }: FeedItemProps) {
           </div>
 
           <div className="flex gap-3 mt-4">
-            <Link href={`/artist/${item.artist.id}`}>
+            <Link href={`/ghost-musician/artist/${item.artist.id}`}>
               <button className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-aetherwave-pink to-electric-neon text-white rounded-lg font-semibold hover:shadow-xl hover:shadow-aetherwave-pink/50 hover:-translate-y-0.5 transition-all">
                 👀 View Full Card
               </button>
