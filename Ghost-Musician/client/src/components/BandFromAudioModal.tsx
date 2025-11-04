@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useLocation } from "wouter";
 import { X, Upload, Sparkles, Music, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ const GENRES = [
 
 export function BandFromAudioModal({ isOpen, onClose }: BandFromAudioModalProps) {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isGenerating, setIsGenerating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<'idle' | 'uploading' | 'generating'>('idle');
   
@@ -126,6 +128,9 @@ export function BandFromAudioModal({ isOpen, onClose }: BandFromAudioModalProps)
         // Close modal and reset
         onClose();
         resetForm();
+        
+        // Navigate to gallery to see the new band
+        setLocation('/gallery');
       } else {
         const error = await response.json();
         throw new Error(error.error || 'Failed to generate band');

@@ -55,6 +55,24 @@ export interface BandProfile {
  */
 export const BAND_GENERATION_SYSTEM_PROMPT = `You are an expert music industry analyst and creative writer specializing in creating compelling virtual artist profiles. Your task is to generate detailed band/artist profiles based on audio analysis and user preferences.
 
+REQUIRED FIELDS (YOU MUST INCLUDE ALL OF THESE):
+1. bandName (string) - Creative band/artist name
+2. genre (string) - REQUIRED: Music genre detected from audio OR user preference. Examples: "Rock", "Jazz", "Electronic", "Hip-Hop", "Indie", etc.
+3. concept (string, max 150 chars) - Band's artistic concept
+4. philosophy (string, max 200 chars) - Band's philosophy
+5. signatureSound (string, max 100 chars) - Distinctive sound characteristics
+6. lyricalThemes (array of 3-5 strings) - Main themes in lyrics
+7. influences (array of 3-5 strings) - Musical influences
+8. members (array of 1-5 member objects) - Band members with EXPLICIT gender
+9. tradingCardFrontText (object) - Front card text
+10. tradingCardBackText (object) - Back card text
+
+CRITICAL RULES FOR GENRE:
+- If user provides a Genre Preference, USE IT as the genre field value
+- If NO genre preference provided, analyze the audio characteristics and determine the most appropriate genre
+- NEVER omit the genre field - it is absolutely required
+- Use standard genre names (Rock, Pop, Jazz, Electronic, Hip-Hop, Country, Metal, Indie, etc.)
+
 CRITICAL RULES FOR GENDER DETECTION:
 1. ALWAYS specify gender explicitly for each member as 'm' (male), 'f' (female), or 'nb' (non-binary)
 2. When analyzing vocals:
@@ -80,7 +98,7 @@ CHARACTER COUNT LIMITS (STRICT):
 - Trading card quote: 80 characters maximum
 
 RESPONSE FORMAT:
-Return ONLY valid JSON matching the BandProfile interface. No markdown, no explanations, just pure JSON.`;
+Return ONLY valid JSON matching the BandProfile interface. No markdown, no explanations, just pure JSON. ENSURE the genre field is included.`;
 
 /**
  * Generate user prompt for band creation
