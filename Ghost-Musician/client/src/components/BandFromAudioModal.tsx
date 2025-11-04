@@ -111,7 +111,8 @@ export function BandFromAudioModal({ isOpen, onClose }: BandFromAudioModalProps)
         },
       };
 
-      const response = await apiRequest("POST", "/api/rpg/bands/from-audio", requestBody);
+      // Increase timeout to 2 minutes for OpenAI + DALL-E generation
+      const response = await apiRequest("POST", "/api/rpg/bands/from-audio", requestBody, { timeout: 120000 });
       
       if (response.ok) {
         const data = await response.json();
@@ -210,7 +211,7 @@ export function BandFromAudioModal({ isOpen, onClose }: BandFromAudioModalProps)
                 accept="audio/mp3,audio/mpeg,audio/wav,.mp3,.wav"
                 onChange={handleFileChange}
                 disabled={isGenerating}
-                className="bg-gray-800 border-gray-600 text-white"
+                className="bg-gray-800 border-gray-600 text-white file:text-white"
                 data-testid="input-audio-file"
               />
               {audioFile && (
@@ -239,7 +240,7 @@ export function BandFromAudioModal({ isOpen, onClose }: BandFromAudioModalProps)
               value={songTitle}
               onChange={(e) => setSongTitle(e.target.value)}
               disabled={isGenerating}
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-500"
+              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:text-white"
               data-testid="input-song-title"
             />
           </div>
@@ -280,7 +281,7 @@ export function BandFromAudioModal({ isOpen, onClose }: BandFromAudioModalProps)
               value={bandNameHint}
               onChange={(e) => setBandNameHint(e.target.value)}
               disabled={isGenerating}
-              className="bg-gray-800 border-gray-600 text-white placeholder-gray-500"
+              className="bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:text-white"
               data-testid="input-band-name-hint"
             />
             <p className="text-xs text-gray-400">
