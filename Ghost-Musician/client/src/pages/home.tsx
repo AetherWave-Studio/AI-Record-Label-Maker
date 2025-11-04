@@ -1,4 +1,4 @@
-import { Music, Search, Bell, CreditCard, ChevronDown, LogIn, Sparkles, ArrowRight, Users } from "lucide-react";
+import { Music, Search, Bell, CreditCard, ChevronDown, LogIn, Sparkles, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
@@ -7,7 +7,6 @@ import { DailyQuestsWidget } from "@/components/DailyQuestsWidget";
 import { CreateBandModal } from "@/components/CreateBandModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import AuthForm from "@/components/auth-form";
 
 export default function Home() {
@@ -262,10 +261,7 @@ export default function Home() {
       <main className="container mx-auto px-4 py-6">
         <div className="flex gap-6 max-w-7xl mx-auto">
           {/* Feed - Left Side (Main Content) */}
-          <div className="flex-1 min-w-0 space-y-6">
-            {/* My Bands Section */}
-            {isAuthenticated && <MyBandsSection />}
-            
+          <div className="flex-1 min-w-0">
             <ActivityFeed />
           </div>
 
@@ -423,72 +419,6 @@ export default function Home() {
         isOpen={showCreateBand}
         onClose={() => setShowCreateBand(false)}
       />
-    </div>
-  );
-}
-
-// My Bands Section Component
-function MyBandsSection() {
-  const { data: bands, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/bands"],
-  });
-
-  if (isLoading) {
-    return (
-      <div className="bg-charcoal border border-sky-glint/30 rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="text-sky-glint" size={24} />
-          <h2 className="text-xl font-bold text-white-smoke">My Bands</h2>
-        </div>
-        <p className="text-soft-gray">Loading your bands...</p>
-      </div>
-    );
-  }
-
-  if (!bands || bands.length === 0) {
-    return (
-      <div className="bg-charcoal border border-sky-glint/30 rounded-xl p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="text-sky-glint" size={24} />
-          <h2 className="text-xl font-bold text-white-smoke">My Bands</h2>
-        </div>
-        <p className="text-soft-gray">No bands yet. Create your first band to get started!</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-charcoal border border-sky-glint/30 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Users className="text-sky-glint" size={24} />
-          <h2 className="text-xl font-bold text-white-smoke">My Bands</h2>
-          <span className="px-2 py-1 bg-sky-glint/20 text-sky-glint text-xs rounded-full">{bands.length}</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {bands.map((band: any) => (
-          <Link key={band.id} href={`/ghost-musician/artist/${band.id}`}>
-            <div className="bg-deep-slate border border-soft-gray/30 rounded-lg p-4 hover:border-sky-glint/50 transition-all cursor-pointer group">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-bold text-white-smoke group-hover:text-sky-glint transition-colors">{band.band_name}</h3>
-                <span className="text-xs px-2 py-1 bg-soft-gray/20 text-soft-gray rounded">{band.genre}</span>
-              </div>
-              
-              <div className="space-y-1 text-sm">
-                <p className="text-soft-gray">FAME: <span className="text-sky-glint font-semibold">{band.fame || 0}</span></p>
-                <p className="text-soft-gray">Streams: <span className="text-white-smoke">{band.total_streams?.toLocaleString() || 0}</span></p>
-                <p className="text-soft-gray">Members: <span className="text-white-smoke">{band.members?.bandMembers?.length || 0}</span></p>
-              </div>
-
-              <div className="mt-3 flex items-center gap-2 text-xs text-sky-glint">
-                <span>View Artist →</span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
     </div>
   );
 }

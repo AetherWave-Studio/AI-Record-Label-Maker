@@ -17,10 +17,38 @@ export default function Gallery() {
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Fetch all artist cards
-  const { data: allCards, isLoading } = useQuery<ArtistCard[]>({
-    queryKey: ["/api/cards"],
+  // Fetch all bands from all users
+  const { data: allBands, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/rpg/all-bands"],
   });
+
+  // Transform bands to artist cards format
+  const allCards: ArtistCard[] = (allBands || []).map((band: any) => ({
+    id: band.id,
+    userId: band.userId,
+    artistData: {
+      bandName: band.bandName,
+      genre: band.genre,
+      philosophy: band.philosophy,
+      bandConcept: band.concept,
+      members: band.members?.bandMembers || [],
+      influences: band.influences || [],
+      signatureSound: band.genre,
+      imageUrl: band.tradingCardUrl,
+      cardImageUrl: band.tradingCardUrl,
+      fileName: band.songTitle || 'Unknown',
+      duration: 180,
+      tempo: 120,
+      key: 'C',
+      energy: 'High',
+      createdAt: band.createdAt,
+      rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+      streamCount: band.totalStreams,
+      monthlyListeners: Math.floor(band.totalStreams / 30),
+    },
+    rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+    createdAt: band.createdAt,
+  } as ArtistCard));
 
   // Filter and sort cards based on current criteria
   const filteredCards = allCards?.filter(card => {

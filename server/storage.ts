@@ -50,6 +50,7 @@ export interface IStorage {
   // Band operations
   createBand(band: InsertBand): Promise<Band>;
   getUserBands(userId: string): Promise<Band[]>;
+  getAllBands(limit?: number): Promise<Band[]>; // Get ALL bands from ALL users
   getBand(bandId: string): Promise<Band | undefined>;
   updateBand(bandId: string, updates: Partial<Band>): Promise<Band | undefined>;
   deleteBand(bandId: string): Promise<boolean>;
@@ -1011,6 +1012,16 @@ export class DbStorage implements IStorage {
       .select()
       .from(bands)
       .where(eq(bands.userId, userId));
+    
+    return result;
+  }
+
+  async getAllBands(limit: number = 100): Promise<Band[]> {
+    const result = await this.db
+      .select()
+      .from(bands)
+      .orderBy(desc(bands.createdAt))
+      .limit(limit);
     
     return result;
   }

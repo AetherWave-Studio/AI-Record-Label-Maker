@@ -2907,6 +2907,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get ALL bands from ALL users (for gallery)
+  app.get('/api/rpg/all-bands', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const bands = await storage.getAllBands(limit);
+      
+      res.status(200).json(bands);
+    } catch (error: any) {
+      console.error('Error fetching all bands:', error);
+      res.status(500).json({ error: 'Failed to fetch all bands' });
+    }
+  });
+
   // Get a specific band by ID
   app.get('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
     try {
