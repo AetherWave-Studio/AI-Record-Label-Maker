@@ -2342,6 +2342,1114 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===== QUEST SYSTEM ENDPOINTS =====
+
+  // Get user's quests (completed and available)
+  app.get('/api/quests', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+
+      // Get user's completed quests
+      const userQuests = await storage.getUserQuests(userId);
+
+      // Define all available quests
+      const allQuests: Array<{ type: QuestType; name: string; description: string; reward: number; completed: boolean }> = [
+        {
+          type: 'twitter_follow',
+          name: 'Follow us on X',
+          description: 'Follow @AetherWaveStudio on X.com',
+          reward: QUEST_REWARDS.twitter_follow,
+          completed: userQuests.some(q => q.questType === 'twitter_follow' && q.completed === 1)
+        },
+        {
+          type: 'discord_join',
+          name: 'Join our Discord',
+          description: 'Join the AetherWave Studio Discord community',
+          reward: QUEST_REWARDS.discord_join,
+          completed: userQuests.some(q => q.questType === 'discord_join' && q.completed === 1)
+        },
+        {
+          type: 'facebook_follow',
+          name: 'Follow us on Facebook',
+          description: 'Follow AetherWave Studio on Facebook',
+          reward: QUEST_REWARDS.facebook_follow,
+          completed: userQuests.some(q => q.questType === 'facebook_follow' && q.completed === 1)
+        },
+        {
+          type: 'tiktok_follow',
+          name: 'Follow us on TikTok',
+          description: 'Follow @AetherWaveStudio on TikTok',
+          reward: QUEST_REWARDS.tiktok_follow,
+          completed: userQuests.some(q => q.questType === 'tiktok_follow' && q.completed === 1)
+        }
+      ];
+
+      res.status(200).json({
+        quests: allQuests,
+        totalCompleted: userQuests.filter(q => q.completed === 1).length,
+        totalAvailable: Object.keys(QUEST_REWARDS).length
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching quests:', error);
+      res.status(500).json({ error: 'Failed to fetch quests' });
+    }
+  });
+
+  // Complete a quest and award credits
+  app.post('/api/quests/complete', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { questType } = req.body;
+
+      if (!questType) {
+        return res.status(400).json({ error: 'Quest type is required' });
+      }
+
+      // Validate quest type
+      const validQuestTypes: QuestType[] = ['twitter_follow', 'discord_join', 'facebook_follow', 'tiktok_follow'];
+      if (!validQuestTypes.includes(questType)) {
+        return res.status(400).json({ error: 'Invalid quest type' });
+      }
+
+      // Complete the quest and award credits
+      const result = await storage.completeQuest(userId, questType);
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Get updated user info
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(200).json({
+        success: true,
+        creditsAwarded: result.creditsAwarded,
+        newBalance: updatedUser?.credits || 0,
+        message: `Quest completed! You earned ${result.creditsAwarded} credits.`
+      });
+
+    } catch (error: any) {
+      console.error('Error completing quest:', error);
+      res.status(500).json({ error: 'Failed to complete quest' });
+    }
+  });
+
+  // ===== DAILY LOGIN REWARDS SYSTEM =====
+
+  // Record daily login and award credits
+  app.post('/api/daily-login', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+
+      // Record login and check if credits should be awarded
+      const result = await storage.recordDailyLogin(userId);
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Get updated user info
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(200).json({
+        success: true,
+        creditsAwarded: result.creditsAwarded,
+        streak: result.streak,
+        firstLoginToday: result.firstLoginToday,
+        newBalance: updatedUser?.credits || 0,
+        message: result.firstLoginToday && result.creditsAwarded > 0
+          ? `Welcome back! You earned ${result.creditsAwarded} credits. Day ${result.streak} streak!`
+          : result.firstLoginToday
+          ? `Welcome back! Day ${result.streak} streak!`
+          : 'Login already recorded today'
+      });
+
+    } catch (error: any) {
+      console.error('Error recording daily login:', error);
+      res.status(500).json({ error: 'Failed to record login' });
+    }
+  });
+
+  // ===== ACTIVITY FEED SYSTEM =====
+
+  // Get global activity feed
+  app.get('/api/feed', authMiddleware, async (req: any, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const feedEvents = await storage.getFeedEvents(limit, offset);
+
+      res.status(200).json({
+        events: feedEvents,
+        count: feedEvents.length
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching feed:', error);
+      res.status(500).json({ error: 'Failed to fetch feed' });
+    }
+  });
+
+  // Get user-specific activity feed
+  app.get('/api/feed/user/:userId', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = req.params.userId;
+      const limit = parseInt(req.query.limit as string) || 20;
+
+      const feedEvents = await storage.getUserFeedEvents(userId, limit);
+
+      res.status(200).json({
+        events: feedEvents,
+        count: feedEvents.length
+      });
+
+    } catch (error: any) {
+      console.error('Error fetching user feed:', error);
+      res.status(500).json({ error: 'Failed to fetch user feed' });
+    }
+  });
+
+  // ============================================================================
+  // GHOSTMUSICIAN RPG ROUTES
+  // ============================================================================
+
+  // Get user's RPG stats (total bands, limits, credits, plan)
+  app.get('/api/rpg/stats', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const bands = await storage.getUserBands(userId);
+      const bandLimitCheck = await storage.checkBandLimit(userId);
+      
+      res.status(200).json({
+        plan: user.subscriptionPlan,
+        credits: user.credits,
+        totalBands: bands.length,
+        bandLimit: bandLimitCheck.limit,
+        canCreateBand: bandLimitCheck.allowed,
+        bands: bands.map(b => ({
+          id: b.id,
+          bandName: b.bandName,
+          genre: b.genre,
+          fame: b.fame,
+          totalStreams: b.totalStreams,
+          chartPosition: b.chartPosition,
+          lastGrowthApplied: b.lastGrowthApplied,
+        })),
+      });
+    } catch (error: any) {
+      console.error('Error fetching RPG stats:', error);
+      res.status(500).json({ error: 'Failed to fetch RPG stats' });
+    }
+  });
+
+  // Create a new virtual band
+  app.post('/api/rpg/bands', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      
+      // Validate request body FIRST (before any credit operations)
+      const bandSchema = z.object({
+        bandName: z.string().min(1, 'Band name is required'),
+        genre: z.string().min(1, 'Genre is required'),
+        concept: z.string().optional(),
+        philosophy: z.string().optional(),
+        influences: z.array(z.string()).optional(),
+        colorPalette: z.array(z.string()).optional(),
+        members: z.any(), // JSONB field
+        audioFileId: z.string().optional(),
+        songTitle: z.string().optional(),
+      });
+
+      const validationResult = bandSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid band data', 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { bandName, genre, concept, philosophy, influences, colorPalette, members, audioFileId, songTitle } = validationResult.data;
+      
+      // Check band limit
+      const limitCheck = await storage.checkBandLimit(userId);
+      if (!limitCheck.allowed) {
+        return res.status(400).json({ error: limitCheck.error || 'Band limit reached' });
+      }
+
+      // Check for free band generations first
+      const user = await storage.getUser(userId);
+      let usedFreeBand = false;
+      
+      if (user && user.freeBandGenerations > 0) {
+        // Use free band generation
+        const decrementResult = await storage.decrementFreeBandGenerations(userId);
+        if (!decrementResult.success) {
+          return res.status(400).json({ error: decrementResult.error || 'Failed to use free band generation' });
+        }
+        usedFreeBand = true;
+      } else {
+        // No free bands available, use credits
+        const creditCheck = await storage.checkRpgCredits(userId, 'band_creation');
+        if (!creditCheck.allowed) {
+          return res.status(400).json({ 
+            error: `Insufficient credits. Need ${creditCheck.requiredCredits}, have ${creditCheck.currentCredits}` 
+          });
+        }
+
+        const deduction = await storage.deductRpgCredits(userId, 'band_creation');
+        if (!deduction.success) {
+          return res.status(400).json({ error: deduction.error || 'Failed to deduct credits' });
+        }
+      }
+
+      // Create the band (with auto-refund on failure, matching AetherWave refund pattern)
+      let band;
+      try {
+        // First create the band without the trading card
+        band = await storage.createBand({
+          userId,
+          bandName,
+          genre,
+          concept,
+          philosophy,
+          influences: influences || [],
+          colorPalette: colorPalette || [],
+          members,
+          audioFileId,
+          songTitle,
+          equippedCardDesign: 'ghosts_online', // Default design
+        });
+
+        // Generate trading card image with DALL-E using equipped card design
+        try {
+          const { generateCardPrompt } = await import('./cardDesignPrompts');
+          const cardDesign = band.equippedCardDesign || 'ghosts_online';
+          
+          // Build band data for card prompt
+          const membersData = typeof band.members === 'string' 
+            ? JSON.parse(band.members) 
+            : band.members;
+          
+          const bandData = {
+            bandName: band.bandName,
+            genre: band.genre,
+            tagline: band.philosophy?.substring(0, 80),
+            members: membersData?.bandMembers || [] // Access bandMembers array
+          };
+
+          const cardPrompt = generateCardPrompt(cardDesign as any, bandData);
+          
+          // Call DALL-E 3 to generate the trading card
+          const openaiApiKey = process.env.OPENAI_API_KEY;
+          if (openaiApiKey) {
+            const openai = new OpenAI({
+              apiKey: openaiApiKey,
+              // Don't set baseURL to use default OpenAI endpoint
+            });
+
+            const imageResponse = await openai.images.generate({
+              model: "dall-e-3",
+              prompt: cardPrompt,
+              n: 1,
+              size: "1024x1792", // Portrait format for trading card
+              quality: "standard",
+              style: "vivid"
+            });
+
+            const tradingCardUrl = imageResponse.data?.[0]?.url;
+            
+            if (tradingCardUrl) {
+              // Update band with trading card URL
+              await storage.updateBand(band.id, { tradingCardUrl });
+              band = await storage.getBand(band.id) as any;
+              console.log(`✅ Generated trading card for band ${band.bandName} with ${cardDesign} design`);
+            }
+          }
+        } catch (cardError) {
+          console.error('Failed to generate trading card, but band was created:', cardError);
+          // Don't fail band creation if card generation fails
+        }
+      } catch (createError: any) {
+        // CRITICAL: Refund on failure
+        if (usedFreeBand) {
+          // Restore the free band generation
+          await storage.incrementFreeBandGenerations(userId);
+          console.log(`Restored 1 free band generation to user ${userId} after band creation failure`);
+        } else {
+          // Refund RPG credits
+          const { RPG_CREDIT_COSTS } = await import('@shared/schema');
+          const refundAmount = RPG_CREDIT_COSTS.band_creation;
+          const currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            await storage.updateUserCredits(userId, currentUser.credits + refundAmount);
+            console.log(`Refunded ${refundAmount} credits to user ${userId} after band creation failure`);
+          }
+        }
+        console.error('Band creation failed, resources refunded:', createError);
+        return res.status(500).json({ error: 'Failed to create band. Your resources have been refunded.' });
+      }
+
+      // Create feed event for band creation
+      try {
+        await storage.createFeedEvent({
+          userId,
+          eventType: 'band_created',
+          bandId: band.id,
+          data: {
+            bandName: band.bandName,
+            genre: band.genre,
+            description: `Created ${band.bandName} (${band.genre})`
+          }
+        });
+      } catch (feedError) {
+        console.error('Failed to create feed event for band creation:', feedError);
+        // Don't fail the request if feed event creation fails
+      }
+
+      // Get updated user data for response
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(201).json({
+        success: true,
+        band,
+        usedFreeBand,
+        freeBandGenerationsRemaining: updatedUser?.freeBandGenerations || 0,
+        creditsRemaining: updatedUser?.credits || 0,
+      });
+    } catch (error: any) {
+      console.error('Error in band creation endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Create a new virtual band from audio using AI generation
+  app.post('/api/rpg/bands/from-audio', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      
+      // Validate request body
+      const requestSchema = z.object({
+        audioFileId: z.string().min(1, 'Audio file ID is required'),
+        songTitle: z.string().optional(),
+        userPreferences: z.object({
+          bandName: z.string().optional(),
+          genre: z.string().optional(),
+          concept: z.string().optional(),
+          vocalGenderPreference: z.enum(['m', 'f', 'nb', 'auto']).optional(),
+        }).optional(),
+      });
+
+      const validationResult = requestSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request data', 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { audioFileId, songTitle, userPreferences } = validationResult.data;
+      
+      // Verify audio file exists AND belongs to the user (security check)
+      const audioFile = await db.select().from(uploadedAudio).where(eq(uploadedAudio.id, audioFileId)).limit(1);
+      if (!audioFile || audioFile.length === 0) {
+        return res.status(404).json({ error: 'Audio file not found' });
+      }
+      
+      // CRITICAL: Verify ownership of the audio file
+      if (audioFile[0].userId && audioFile[0].userId !== userId) {
+        return res.status(403).json({ error: 'You do not have permission to use this audio file' });
+      }
+      
+      // Check band limit
+      const limitCheck = await storage.checkBandLimit(userId);
+      if (!limitCheck.allowed) {
+        return res.status(400).json({ error: limitCheck.error || 'Band limit reached' });
+      }
+
+      // Check for free band generations first
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      let usedFreeBand = false;
+      
+      if (user.freeBandGenerations > 0) {
+        // Use free band generation
+        const decrementResult = await storage.decrementFreeBandGenerations(userId);
+        if (!decrementResult.success) {
+          return res.status(400).json({ error: decrementResult.error || 'Failed to use free band generation' });
+        }
+        usedFreeBand = true;
+      } else {
+        // No free bands available, check credits (50 credits for AI generation)
+        const AI_BAND_GENERATION_COST = 50; // Higher cost for AI-powered generation
+        if (user.credits < AI_BAND_GENERATION_COST) {
+          return res.status(400).json({ 
+            error: `Insufficient credits. Need ${AI_BAND_GENERATION_COST}, have ${user.credits}` 
+          });
+        }
+        
+        // CRITICAL: Deduct credits BEFORE AI generation to prevent free usage
+        await storage.updateUserCredits(userId, user.credits - AI_BAND_GENERATION_COST);
+        console.log(`Deducted ${AI_BAND_GENERATION_COST} credits from user ${userId} for AI band generation`);
+      }
+
+      // Generate band profile using OpenAI
+      let bandProfile;
+      try {
+        const openaiApiKey = process.env.OPENAI_API_KEY;
+        if (!openaiApiKey) {
+          throw new Error('OpenAI API key not configured');
+        }
+
+        const openai = new OpenAI({ apiKey: openaiApiKey });
+        const { BAND_GENERATION_SYSTEM_PROMPT, generateBandCreationPrompt } = await import('./bandGenerationPrompts');
+        
+        // Build the generation input with minimal audio analysis (we can't actually analyze the audio)
+        const generationInput = {
+          audioAnalysis: {
+            vocalPresent: true, // Assume vocals for now
+          },
+          userPreferences: userPreferences || {},
+        };
+        
+        const userPrompt = generateBandCreationPrompt(generationInput);
+        
+        console.log('Calling OpenAI to generate band profile...');
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: BAND_GENERATION_SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt }
+          ],
+          response_format: { type: 'json_object' }, // Force JSON output
+          temperature: 0.9, // High creativity
+          max_tokens: 1500,
+        });
+
+        const responseText = completion.choices[0]?.message?.content;
+        if (!responseText) {
+          throw new Error('No response from OpenAI');
+        }
+
+        console.log('OpenAI response received, parsing...');
+        bandProfile = JSON.parse(responseText);
+        console.log('Parsed band profile:', JSON.stringify(bandProfile, null, 2));
+        
+        // SAFETY FALLBACK: If AI didn't return a genre but user provided one, use it
+        // (This should rarely happen with the improved prompt)
+        if (!bandProfile.genre && userPreferences?.genrePreference) {
+          console.warn(`⚠️ AI didn't return genre field - using user preference as fallback: ${userPreferences.genrePreference}`);
+          bandProfile.genre = userPreferences.genrePreference;
+        }
+        
+        // If still no genre, default to "Unknown"
+        if (!bandProfile.genre) {
+          console.warn('⚠️ No genre from AI or user - defaulting to "Unknown"');
+          bandProfile.genre = 'Unknown';
+        }
+        
+        // Validate the generated profile with detailed error messages
+        const missingFields: string[] = [];
+        if (!bandProfile.bandName) missingFields.push('bandName');
+        if (!bandProfile.members || !Array.isArray(bandProfile.members) || bandProfile.members.length === 0) {
+          missingFields.push('members (must be non-empty array)');
+        }
+        
+        if (missingFields.length > 0) {
+          console.error('AI response missing required fields:', missingFields);
+          console.error('Received profile structure:', Object.keys(bandProfile));
+          console.error('User preferences were:', userPreferences);
+          throw new Error(`Invalid band profile generated by AI. Missing fields: ${missingFields.join(', ')}`);
+        }
+        
+        console.log('✅ Band profile validation passed with genre:', bandProfile.genre);
+        
+      } catch (aiError: any) {
+        console.error('AI band generation failed:', aiError);
+        // CRITICAL: Refund resources on AI failure
+        if (usedFreeBand) {
+          await storage.incrementFreeBandGenerations(userId);
+          console.log(`Restored 1 free band generation to user ${userId} after AI failure`);
+        } else {
+          // Refund the 50 credits that were already deducted
+          const AI_BAND_GENERATION_COST = 50;
+          const currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            await storage.updateUserCredits(userId, currentUser.credits + AI_BAND_GENERATION_COST);
+            console.log(`Refunded ${AI_BAND_GENERATION_COST} credits to user ${userId} after AI failure`);
+          }
+        }
+        return res.status(500).json({ 
+          error: 'Failed to generate band with AI', 
+          details: aiError.message 
+        });
+      }
+
+      // Create the band with AI-generated data
+      let band;
+      try {
+        band = await storage.createBand({
+          userId,
+          bandName: bandProfile.bandName,
+          genre: bandProfile.genre,
+          concept: bandProfile.concept || '',
+          philosophy: bandProfile.philosophy || '',
+          influences: bandProfile.influences || [],
+          colorPalette: bandProfile.colorPalette || [],
+          members: bandProfile.members, // Already in correct format from AI
+          audioFileId,
+          songTitle: songTitle || audioFile[0].fileName,
+          analysisSummary: JSON.stringify(bandProfile), // Store full AI response
+          equippedCardDesign: 'ghosts_online',
+        });
+
+        // Generate trading card image with DALL-E
+        try {
+          const { generateCardPrompt } = await import('./cardDesignPrompts');
+          const cardDesign = band.equippedCardDesign || 'ghosts_online';
+          
+          const membersData = typeof band.members === 'string' 
+            ? JSON.parse(band.members) 
+            : band.members;
+          
+          const bandData = {
+            bandName: band.bandName,
+            genre: band.genre,
+            tagline: band.philosophy?.substring(0, 80),
+            members: membersData?.bandMembers || []
+          };
+
+          const cardPrompt = generateCardPrompt(cardDesign as any, bandData);
+          
+          console.log('Generating trading card with DALL-E...');
+          const openaiApiKey = process.env.OPENAI_API_KEY;
+          const openaiClient = new OpenAI({ apiKey: openaiApiKey });
+          const imageResponse = await openaiClient.images.generate({
+            model: "dall-e-3",
+            prompt: cardPrompt,
+            n: 1,
+            size: "1024x1792",
+            quality: "standard",
+            style: "vivid"
+          });
+
+          const tradingCardUrl = imageResponse.data?.[0]?.url;
+          
+          if (tradingCardUrl) {
+            await storage.updateBand(band.id, { tradingCardUrl });
+            band = await storage.getBand(band.id) as any;
+            console.log(`✅ Generated AI band ${band.bandName} with trading card`);
+          }
+        } catch (cardError) {
+          console.error('Failed to generate trading card, but band was created:', cardError);
+        }
+      } catch (createError: any) {
+        // CRITICAL: Refund on failure
+        const AI_BAND_GENERATION_COST = 50;
+        if (usedFreeBand) {
+          await storage.incrementFreeBandGenerations(userId);
+        } else {
+          const currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            await storage.updateUserCredits(userId, currentUser.credits + AI_BAND_GENERATION_COST);
+          }
+        }
+        console.error('AI band creation failed, resources refunded:', createError);
+        return res.status(500).json({ error: 'Failed to create band. Your resources have been refunded.' });
+      }
+
+      // Create feed event
+      try {
+        await storage.createFeedEvent({
+          userId,
+          eventType: 'band_created',
+          bandId: band.id,
+          data: {
+            bandName: band.bandName,
+            genre: band.genre,
+            description: `Created ${band.bandName} (${band.genre}) using AI`
+          }
+        });
+      } catch (feedError) {
+        console.error('Failed to create feed event:', feedError);
+      }
+
+      // Get updated user data
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(201).json({
+        success: true,
+        band,
+        bandProfile, // Include the AI-generated profile for preview
+        usedFreeBand,
+        freeBandGenerationsRemaining: updatedUser?.freeBandGenerations || 0,
+        creditsRemaining: updatedUser?.credits || 0,
+      });
+    } catch (error: any) {
+      console.error('Error in AI band creation endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get all bands for the authenticated user
+  app.get('/api/rpg/bands', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bands = await storage.getUserBands(userId);
+      
+      res.status(200).json({ bands });
+    } catch (error: any) {
+      console.error('Error fetching bands:', error);
+      res.status(500).json({ error: 'Failed to fetch bands' });
+    }
+  });
+
+  // Get ALL bands from ALL users (for gallery)
+  app.get('/api/rpg/all-bands', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const bands = await storage.getAllBands(limit);
+      
+      res.status(200).json(bands);
+    } catch (error: any) {
+      console.error('Error fetching all bands:', error);
+      res.status(500).json({ error: 'Failed to fetch all bands' });
+    }
+  });
+
+  // Get a specific band by ID
+  app.get('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Get achievements for this band
+      const achievements = await storage.getBandAchievements(bandId);
+
+      res.status(200).json({ band, achievements });
+    } catch (error: any) {
+      console.error('Error fetching band:', error);
+      res.status(500).json({ error: 'Failed to fetch band' });
+    }
+  });
+
+  // Update a band
+  app.put('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const updates = req.body;
+      const updatedBand = await storage.updateBand(bandId, updates);
+
+      res.status(200).json({ band: updatedBand });
+    } catch (error: any) {
+      console.error('Error updating band:', error);
+      res.status(500).json({ error: 'Failed to update band' });
+    }
+  });
+
+  // Delete a band
+  app.delete('/api/rpg/bands/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const success = await storage.deleteBand(bandId);
+
+      if (success) {
+        res.status(200).json({ success: true, message: 'Band deleted successfully' });
+      } else {
+        res.status(500).json({ error: 'Failed to delete band' });
+      }
+    } catch (error: any) {
+      console.error('Error deleting band:', error);
+      res.status(500).json({ error: 'Failed to delete band' });
+    }
+  });
+
+  // Apply daily growth to a band
+  app.post('/api/rpg/bands/:id/daily-growth', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bandId = req.params.id;
+
+      const result = await storage.applyDailyGrowth(userId, bandId);
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error });
+      }
+
+      // Create feed event for daily growth
+      if (result.band) {
+        try {
+          await storage.createFeedEvent({
+            userId,
+            eventType: 'daily_growth',
+            bandId: result.band.id,
+            data: {
+              bandName: result.band.bandName,
+              fame: result.band.fame,
+              totalStreams: result.band.totalStreams,
+              description: `${result.band.bandName} grew! FAME: ${result.band.fame}, Streams: ${result.band.totalStreams.toLocaleString()}`
+            }
+          });
+        } catch (feedError) {
+          console.error('Failed to create feed event for daily growth:', feedError);
+          // Don't fail the request if feed event creation fails
+        }
+      }
+
+      res.status(200).json({
+        success: true,
+        band: result.band,
+        growthApplied: result.growthApplied,
+        message: 'Daily growth applied successfully!'
+      });
+    } catch (error: any) {
+      console.error('Error applying daily growth:', error);
+      res.status(500).json({ error: 'Failed to apply daily growth' });
+    }
+  });
+
+  // Get band achievements
+  app.get('/api/rpg/bands/:id/achievements', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bandId = req.params.id;
+      
+      const band = await storage.getBand(bandId);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      const achievements = await storage.getBandAchievements(bandId);
+
+      res.status(200).json({ achievements });
+    } catch (error: any) {
+      console.error('Error fetching achievements:', error);
+      res.status(500).json({ error: 'Failed to fetch achievements' });
+    }
+  });
+
+  // =====================================================
+  // CARD DESIGN SYSTEM ROUTES
+  // Trading card design marketplace and ownership
+  // =====================================================
+
+  // Get all available card designs in the catalog
+  app.get('/api/card-designs', authMiddleware, async (req: any, res) => {
+    try {
+      // Return the complete catalog of designs from schema
+      const catalog = Object.values(CARD_DESIGNS).map(design => ({
+        id: design.id,
+        name: design.name,
+        description: design.description,
+        rarity: design.rarity,
+        price: design.price,
+        previewUrl: design.previewUrl,
+        unlockedByDefault: design.unlockedByDefault
+      }));
+
+      res.json({ designs: catalog });
+    } catch (error: any) {
+      console.error('Error fetching card designs:', error);
+      res.status(500).json({ error: 'Failed to fetch card designs' });
+    }
+  });
+
+  // Get card designs owned by the authenticated user
+  app.get('/api/card-designs/owned', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const ownedDesigns = await storage.getOwnedCardDesigns(userId);
+      
+      res.json({ ownedDesigns });
+    } catch (error: any) {
+      console.error('Error fetching owned card designs:', error);
+      res.status(500).json({ error: 'Failed to fetch owned designs' });
+    }
+  });
+
+  // Purchase a card design with credits
+  app.post('/api/card-designs/purchase', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { designId } = req.body;
+
+      if (!designId || typeof designId !== 'string') {
+        return res.status(400).json({ error: 'Invalid design ID' });
+      }
+
+      // Validate design exists
+      const design = CARD_DESIGNS[designId as CardDesignType];
+      if (!design) {
+        return res.status(404).json({ error: 'Card design not found' });
+      }
+
+      // Cannot purchase designs that are unlocked by default
+      if (design.unlockedByDefault) {
+        return res.status(400).json({ error: 'This design is already available to everyone' });
+      }
+
+      // Attempt purchase
+      const result = await storage.purchaseCardDesign(userId, designId, design.price);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          design: {
+            id: design.id,
+            name: design.name,
+            description: design.description
+          },
+          newBalance: result.newBalance
+        });
+      } else {
+        res.status(400).json({ error: result.error || 'Purchase failed' });
+      }
+    } catch (error: any) {
+      console.error('Error purchasing card design:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Equip a card design to a band
+  app.post('/api/rpg/bands/:id/equip-design', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bandId = req.params.id;
+      const { designId } = req.body;
+
+      if (!designId || typeof designId !== 'string') {
+        return res.status(400).json({ error: 'Invalid design ID' });
+      }
+
+      // Validate design exists
+      const design = CARD_DESIGNS[designId as CardDesignType];
+      if (!design) {
+        return res.status(404).json({ error: 'Card design not found' });
+      }
+
+      // Verify band belongs to user
+      const band = await storage.getBand(bandId);
+      if (!band) {
+        return res.status(404).json({ error: 'Band not found' });
+      }
+      if (band.userId !== userId) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Equip the design
+      const result = await storage.equipCardDesign(bandId, designId);
+
+      if (result.success) {
+        const updatedBand = await storage.getBand(bandId);
+        res.json({
+          success: true,
+          band: updatedBand
+        });
+      } else {
+        res.status(400).json({ error: result.error || 'Failed to equip design' });
+      }
+    } catch (error: any) {
+      console.error('Error equipping card design:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // =====================================================
+  // MARKETPLACE ROUTES
+  // =====================================================
+
+  // Get all products from the store (optionally filter by category)
+  app.get('/api/store/products', authMiddleware, async (req: any, res) => {
+    try {
+      const category = req.query.category;
+      const products = await storage.getProducts(category);
+      
+      res.json(products);
+    } catch (error: any) {
+      console.error('Error fetching products:', error);
+      res.status(500).json({ error: 'Failed to fetch products' });
+    }
+  });
+
+  // Purchase a product from the store
+  app.post('/api/store/purchase', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { productId, quantity = 1 } = req.body;
+
+      if (!productId || typeof productId !== 'string') {
+        return res.status(400).json({ error: 'Invalid product ID' });
+      }
+
+      if (quantity < 1) {
+        return res.status(400).json({ error: 'Quantity must be at least 1' });
+      }
+
+      // Attempt purchase
+      const result = await storage.purchaseProduct(userId, productId, quantity);
+
+      if (result.success) {
+        res.json({
+          success: true,
+          product: result.product,
+          totalCost: result.totalCost,
+          newBalance: result.newBalance
+        });
+      } else {
+        res.status(400).json({ error: result.error || 'Purchase failed' });
+      }
+    } catch (error: any) {
+      console.error('Error purchasing product:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Get user's inventory
+  app.get('/api/inventory', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const inventory = await storage.getUserInventory(userId);
+      
+      res.json(inventory);
+    } catch (error: any) {
+      console.error('Error fetching inventory:', error);
+      res.status(500).json({ error: 'Failed to fetch inventory' });
+    }
+  });
+
+  // =====================================================
+  // Ghost-Musician Compatibility Routes (Alias routes)
+  // Map /api/artist-cards to /api/rpg/bands
+  // =====================================================
+  
+  app.get('/api/artist-cards', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const bands = await storage.getUserBands(userId);
+      
+      // Transform band data to match Ghost-Musician's expected format
+      const artistCards = bands.map((band: any) => ({
+        id: band.id,
+        artistData: {
+          bandName: band.bandName,
+          genre: band.genre,
+          philosophy: band.philosophy,
+          bandConcept: band.concept,
+          members: band.members,
+          influences: band.influences || [],
+          signatureSound: band.genre,
+          imageUrl: band.tradingCardUrl,
+          cardImageUrl: band.tradingCardUrl,
+          fileName: band.songTitle || 'Unknown',
+          duration: 180,
+          tempo: 120,
+          key: 'C',
+          energy: 'High',
+          createdAt: band.createdAt,
+          rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+          streamCount: band.totalStreams,
+          monthlyListeners: Math.floor(band.totalStreams / 30),
+        },
+        rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+      }));
+      
+      res.json(artistCards);
+    } catch (error: any) {
+      console.error('Error fetching artist cards:', error);
+      res.status(500).json({ error: 'Failed to fetch artist cards' });
+    }
+  });
+
+  app.get('/api/artist-cards/:id', authMiddleware, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const band = await storage.getBand(id);
+      
+      if (!band) {
+        return res.status(404).json({ error: 'Artist card not found' });
+      }
+
+      // Transform band data to match Ghost-Musician's expected format
+      const artistCard = {
+        id: band.id,
+        artistData: {
+          bandName: band.bandName,
+          genre: band.genre,
+          philosophy: band.philosophy,
+          bandConcept: band.concept,
+          members: band.members,
+          influences: band.influences || [],
+          signatureSound: band.genre,
+          imageUrl: band.tradingCardUrl,
+          cardImageUrl: band.tradingCardUrl,
+          fileName: band.songTitle || 'Unknown',
+          duration: 180,
+          tempo: 120,
+          key: 'C',
+          energy: 'High',
+          createdAt: band.createdAt,
+          rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+          streamCount: band.totalStreams,
+          monthlyListeners: Math.floor(band.totalStreams / 30),
+        },
+        rarity: band.fame > 70 ? 'Legendary' : band.fame > 50 ? 'Epic' : band.fame > 30 ? 'Rare' : 'Common',
+      };
+      
+      res.json(artistCard);
+    } catch (error: any) {
+      console.error('Error fetching artist card:', error);
+      res.status(500).json({ error: 'Failed to fetch artist card' });
+    }
+  });
 
   // Setup video generation and editing routes
   setupVideoRoutes(app);
