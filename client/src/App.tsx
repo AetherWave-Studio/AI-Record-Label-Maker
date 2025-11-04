@@ -62,7 +62,7 @@ function Router() {
       <Route path="/" component={HomePage} />
       <Route path="/buy-credits" component={BuyCreditsPage} />
       <Route path="/card-shop" component={CardShopPage} />
-      <Route path="/video-generation" component={VideoGenerationPage} />
+      <Route path="/seamless-loop-creator" component={VideoGenerationPage} />
       <Route path="/channels" component={ChannelsPage} />
       <Route>
         <div className="container mx-auto px-4 py-16 text-center">
