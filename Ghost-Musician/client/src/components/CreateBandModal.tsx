@@ -40,6 +40,8 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
   if (!isOpen) return null;
 
   const handleCreate = async () => {
+    console.log("🎸 Create Band clicked!", { bandName, genre });
+    
     if (!bandName.trim() || !genre) {
       toast({
         title: "Missing Information",
@@ -50,6 +52,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
     }
 
     setIsCreating(true);
+    console.log("Creating band...");
 
     try {
       // Generate basic member data
@@ -63,18 +66,24 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
         .map(i => i.trim())
         .filter(i => i.length > 0);
 
+      const requestBody = {
+        bandName: bandName.trim(),
+        genre,
+        concept: concept.trim() || undefined,
+        philosophy: philosophy.trim() || undefined,
+        influences: influencesList.length > 0 ? influencesList : undefined,
+        colorPalette: COLOR_PALETTES[selectedPalette].colors,
+        members: { bandMembers: members },
+      };
+      
+      console.log("Sending request to /api/rpg/bands:", requestBody);
+
       const response = await apiRequest("/api/rpg/bands", {
         method: "POST",
-        body: JSON.stringify({
-          bandName: bandName.trim(),
-          genre,
-          concept: concept.trim() || undefined,
-          philosophy: philosophy.trim() || undefined,
-          influences: influencesList.length > 0 ? influencesList : undefined,
-          colorPalette: COLOR_PALETTES[selectedPalette].colors,
-          members: { bandMembers: members },
-        }),
+        body: JSON.stringify(requestBody),
       });
+      
+      console.log("Response received:", response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -131,6 +140,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
             <h2 className="text-2xl font-bold text-white-smoke">Create New Band</h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="text-soft-gray hover:text-white-smoke transition-colors"
             data-testid="button-close-modal"
@@ -233,6 +243,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               {COLOR_PALETTES.map((palette, idx) => (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => setSelectedPalette(idx)}
                   className={`p-3 rounded-lg border-2 transition-all ${
                     selectedPalette === idx
@@ -278,6 +289,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
         {/* Actions - Fixed Footer */}
         <div className="flex gap-3 p-6 border-t border-sky-glint/20 flex-shrink-0">
           <Button
+            type="button"
             onClick={handleCreate}
             disabled={isCreating || !bandName.trim() || !genre}
             className="flex-1 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate font-bold"
@@ -293,6 +305,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
             )}
           </Button>
           <Button
+            type="button"
             onClick={onClose}
             variant="outline"
             className="border-soft-gray/30 text-soft-gray hover:text-white-smoke"
