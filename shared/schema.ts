@@ -420,6 +420,27 @@ export const dailyGrowthLog = pgTable("daily_growth_log", {
 
 export type DailyGrowthLog = typeof dailyGrowthLog.$inferSelect;
 
+// Band generation jobs (tracks async trading card generation)
+export const bandGenerationJobs = pgTable("band_generation_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bandId: varchar("band_id").notNull().references(() => bands.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  status: varchar("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
+  cardDesignType: varchar("card_design_type").default('ghosts_online'), // Which card design to generate
+  errorMessage: text("error_message"), // Error details if failed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBandGenerationJobSchema = createInsertSchema(bandGenerationJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertBandGenerationJob = z.infer<typeof insertBandGenerationJobSchema>;
+export type BandGenerationJob = typeof bandGenerationJobs.$inferSelect;
+
 // RPG-specific service types for credit deduction
 export const RpgServiceType = z.enum([
   'band_creation',        // Create a new virtual band

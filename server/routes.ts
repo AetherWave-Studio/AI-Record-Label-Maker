@@ -2896,6 +2896,252 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create a new virtual band from audio using AI generation
+  app.post('/api/rpg/bands/from-audio', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      
+      // Validate request body
+      const requestSchema = z.object({
+        audioFileId: z.string().min(1, 'Audio file ID is required'),
+        songTitle: z.string().optional(),
+        userPreferences: z.object({
+          bandName: z.string().optional(),
+          genre: z.string().optional(),
+          concept: z.string().optional(),
+          vocalGenderPreference: z.enum(['m', 'f', 'nb', 'auto']).optional(),
+        }).optional(),
+      });
+
+      const validationResult = requestSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: 'Invalid request data', 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { audioFileId, songTitle, userPreferences } = validationResult.data;
+      
+      // Verify audio file exists AND belongs to the user (security check)
+      const audioFile = await db.select().from(uploadedAudio).where(eq(uploadedAudio.id, audioFileId)).limit(1);
+      if (!audioFile || audioFile.length === 0) {
+        return res.status(404).json({ error: 'Audio file not found' });
+      }
+      
+      // CRITICAL: Verify ownership of the audio file
+      if (audioFile[0].userId && audioFile[0].userId !== userId) {
+        return res.status(403).json({ error: 'You do not have permission to use this audio file' });
+      }
+      
+      // Check band limit
+      const limitCheck = await storage.checkBandLimit(userId);
+      if (!limitCheck.allowed) {
+        return res.status(400).json({ error: limitCheck.error || 'Band limit reached' });
+      }
+
+      // Check for free band generations first
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      let usedFreeBand = false;
+      
+      if (user.freeBandGenerations > 0) {
+        // Use free band generation
+        const decrementResult = await storage.decrementFreeBandGenerations(userId);
+        if (!decrementResult.success) {
+          return res.status(400).json({ error: decrementResult.error || 'Failed to use free band generation' });
+        }
+        usedFreeBand = true;
+      } else {
+        // No free bands available, check credits (50 credits for AI generation)
+        const AI_BAND_GENERATION_COST = 50; // Higher cost for AI-powered generation
+        if (user.credits < AI_BAND_GENERATION_COST) {
+          return res.status(400).json({ 
+            error: `Insufficient credits. Need ${AI_BAND_GENERATION_COST}, have ${user.credits}` 
+          });
+        }
+        
+        // CRITICAL: Deduct credits BEFORE AI generation to prevent free usage
+        await storage.updateUserCredits(userId, user.credits - AI_BAND_GENERATION_COST);
+        console.log(`Deducted ${AI_BAND_GENERATION_COST} credits from user ${userId} for AI band generation`);
+      }
+
+      // Generate band profile using OpenAI
+      let bandProfile;
+      try {
+        const openaiApiKey = process.env.OPENAI_API_KEY;
+        if (!openaiApiKey) {
+          throw new Error('OpenAI API key not configured');
+        }
+
+        const openai = new OpenAI({ apiKey: openaiApiKey });
+        const { BAND_GENERATION_SYSTEM_PROMPT, generateBandCreationPrompt } = await import('./bandGenerationPrompts');
+        
+        // Build the generation input with minimal audio analysis (we can't actually analyze the audio)
+        const generationInput = {
+          audioAnalysis: {
+            vocalPresent: true, // Assume vocals for now
+          },
+          userPreferences: userPreferences || {},
+        };
+        
+        const userPrompt = generateBandCreationPrompt(generationInput);
+        
+        console.log('Calling OpenAI to generate band profile...');
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [
+            { role: 'system', content: BAND_GENERATION_SYSTEM_PROMPT },
+            { role: 'user', content: userPrompt }
+          ],
+          response_format: { type: 'json_object' }, // Force JSON output
+          temperature: 0.9, // High creativity
+          max_tokens: 1500,
+        });
+
+        const responseText = completion.choices[0]?.message?.content;
+        if (!responseText) {
+          throw new Error('No response from OpenAI');
+        }
+
+        console.log('OpenAI response received, parsing...');
+        bandProfile = JSON.parse(responseText);
+        
+        // Validate the generated profile
+        if (!bandProfile.bandName || !bandProfile.genre || !bandProfile.members) {
+          throw new Error('Invalid band profile generated by AI');
+        }
+        
+      } catch (aiError: any) {
+        console.error('AI band generation failed:', aiError);
+        // CRITICAL: Refund resources on AI failure
+        if (usedFreeBand) {
+          await storage.incrementFreeBandGenerations(userId);
+          console.log(`Restored 1 free band generation to user ${userId} after AI failure`);
+        } else {
+          // Refund the 50 credits that were already deducted
+          const AI_BAND_GENERATION_COST = 50;
+          const currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            await storage.updateUserCredits(userId, currentUser.credits + AI_BAND_GENERATION_COST);
+            console.log(`Refunded ${AI_BAND_GENERATION_COST} credits to user ${userId} after AI failure`);
+          }
+        }
+        return res.status(500).json({ 
+          error: 'Failed to generate band with AI', 
+          details: aiError.message 
+        });
+      }
+
+      // Create the band with AI-generated data
+      let band;
+      try {
+        band = await storage.createBand({
+          userId,
+          bandName: bandProfile.bandName,
+          genre: bandProfile.genre,
+          concept: bandProfile.concept || '',
+          philosophy: bandProfile.philosophy || '',
+          influences: bandProfile.influences || [],
+          colorPalette: bandProfile.colorPalette || [],
+          members: bandProfile.members, // Already in correct format from AI
+          audioFileId,
+          songTitle: songTitle || audioFile[0].fileName,
+          analysisSummary: JSON.stringify(bandProfile), // Store full AI response
+          equippedCardDesign: 'ghosts_online',
+        });
+
+        // Generate trading card image with DALL-E
+        try {
+          const { generateCardPrompt } = await import('./cardDesignPrompts');
+          const cardDesign = band.equippedCardDesign || 'ghosts_online';
+          
+          const membersData = typeof band.members === 'string' 
+            ? JSON.parse(band.members) 
+            : band.members;
+          
+          const bandData = {
+            bandName: band.bandName,
+            genre: band.genre,
+            tagline: band.philosophy?.substring(0, 80),
+            members: membersData?.bandMembers || []
+          };
+
+          const cardPrompt = generateCardPrompt(cardDesign as any, bandData);
+          
+          console.log('Generating trading card with DALL-E...');
+          const openaiApiKey = process.env.OPENAI_API_KEY;
+          const openaiClient = new OpenAI({ apiKey: openaiApiKey });
+          const imageResponse = await openaiClient.images.generate({
+            model: "dall-e-3",
+            prompt: cardPrompt,
+            n: 1,
+            size: "1024x1792",
+            quality: "standard",
+            style: "vivid"
+          });
+
+          const tradingCardUrl = imageResponse.data?.[0]?.url;
+          
+          if (tradingCardUrl) {
+            await storage.updateBand(band.id, { tradingCardUrl });
+            band = await storage.getBand(band.id) as any;
+            console.log(`✅ Generated AI band ${band.bandName} with trading card`);
+          }
+        } catch (cardError) {
+          console.error('Failed to generate trading card, but band was created:', cardError);
+        }
+      } catch (createError: any) {
+        // CRITICAL: Refund on failure
+        const AI_BAND_GENERATION_COST = 50;
+        if (usedFreeBand) {
+          await storage.incrementFreeBandGenerations(userId);
+        } else {
+          const currentUser = await storage.getUser(userId);
+          if (currentUser) {
+            await storage.updateUserCredits(userId, currentUser.credits + AI_BAND_GENERATION_COST);
+          }
+        }
+        console.error('AI band creation failed, resources refunded:', createError);
+        return res.status(500).json({ error: 'Failed to create band. Your resources have been refunded.' });
+      }
+
+      // Create feed event
+      try {
+        await storage.createFeedEvent({
+          userId,
+          eventType: 'band_created',
+          bandId: band.id,
+          data: {
+            bandName: band.bandName,
+            genre: band.genre,
+            description: `Created ${band.bandName} (${band.genre}) using AI`
+          }
+        });
+      } catch (feedError) {
+        console.error('Failed to create feed event:', feedError);
+      }
+
+      // Get updated user data
+      const updatedUser = await storage.getUser(userId);
+
+      res.status(201).json({
+        success: true,
+        band,
+        bandProfile, // Include the AI-generated profile for preview
+        usedFreeBand,
+        freeBandGenerationsRemaining: updatedUser?.freeBandGenerations || 0,
+        creditsRemaining: updatedUser?.credits || 0,
+      });
+    } catch (error: any) {
+      console.error('Error in AI band creation endpoint:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Get all bands for the authenticated user
   app.get('/api/rpg/bands', authMiddleware, async (req: any, res) => {
     try {

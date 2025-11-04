@@ -5,18 +5,21 @@ import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { UserStatsWidget } from "@/components/UserStatsWidget";
 import { DailyQuestsWidget } from "@/components/DailyQuestsWidget";
 import { CreateBandModal } from "@/components/CreateBandModal";
+import { BandFromAudioModal } from "@/components/BandFromAudioModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import AuthForm from "@/components/auth-form";
 
 export default function Home() {
-  const { user, isAuthenticated } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showCreateBand, setShowCreateBand] = useState(false);
+  const [showAIBandModal, setShowAIBandModal] = useState(false);
   const [notificationCount] = useState(3);
   const [credits] = useState(500);
   const [readyBandsCount] = useState(5); // TODO: Get from API
+
+  const { user, isAuthenticated } = useAuth();
 
   // Handle successful login/register
   const handleAuthSuccess = () => {
@@ -117,11 +120,11 @@ export default function Home() {
             <div className="flex items-center gap-4">
               {isAuthenticated ? (
                 <>
-                  {/* Create Band Button */}
+                  {/* Create Band with AI Button */}
                   <button
-                    onClick={() => setShowCreateBand(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-bold hover:shadow-lg transition-all"
-                    data-testid="button-create-band"
+                    onClick={() => setShowAIBandModal(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-bold hover:shadow-lg transition-all"
+                    data-testid="button-create-ai-band"
                   >
                     <Sparkles size={18} />
                     <span className="hidden md:inline">Create Band</span>
@@ -297,8 +300,8 @@ export default function Home() {
                     {/* Portal particles */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-1 h-1 bg-purple-400 rounded-full animate-ping absolute" style={{ left: '20%', top: '20%' }} />
-                      <div className="w-1 h-1 bg-pink-400 rounded-full animate-ping absolute" style={{ right: '20%', top: '30%' }} style={{ animationDelay: '0.5s' }} />
-                      <div className="w-1 h-1 bg-indigo-400 rounded-full animate-ping absolute" style={{ left: '30%', bottom: '20%' }} style={{ animationDelay: '1s' }} />
+                      <div className="w-1 h-1 bg-pink-400 rounded-full animate-ping absolute" style={{ right: '20%', top: '30%', animationDelay: '0.5s' }} />
+                      <div className="w-1 h-1 bg-indigo-400 rounded-full animate-ping absolute" style={{ left: '30%', bottom: '20%', animationDelay: '1s' }} />
                     </div>
                   </div>
 
@@ -418,6 +421,12 @@ export default function Home() {
       <CreateBandModal
         isOpen={showCreateBand}
         onClose={() => setShowCreateBand(false)}
+      />
+
+      {/* AI Band Generation Modal */}
+      <BandFromAudioModal
+        isOpen={showAIBandModal}
+        onClose={() => setShowAIBandModal(false)}
       />
     </div>
   );
