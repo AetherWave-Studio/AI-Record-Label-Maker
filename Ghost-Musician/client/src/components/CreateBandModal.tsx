@@ -78,10 +78,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
       
       console.log("Sending request to /api/rpg/bands:", requestBody);
 
-      const response = await apiRequest("/api/rpg/bands", {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-      });
+      const response = await apiRequest("POST", "/api/rpg/bands", requestBody);
       
       console.log("Response received:", response.status);
 
