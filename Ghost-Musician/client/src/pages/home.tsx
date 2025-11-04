@@ -164,13 +164,13 @@ export default function Home() {
                   </div>
                 </>
               ) : (
-                /* Login Button for Unauthenticated Users - Link to Replit Auth */
+                /* No login button - users must login at AetherWave landing page */
                 <a
-                  href="/api/login"
+                  href="/"
                   className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-semibold hover:shadow-lg transition-all"
                 >
-                  <LogIn size={18} />
-                  <span className="hidden md:inline">Sign In</span>
+                  <ArrowRight size={18} />
+                  <span className="hidden md:inline">Go to AetherWave</span>
                 </a>
               )}
 

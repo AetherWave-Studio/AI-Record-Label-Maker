@@ -105,8 +105,8 @@ export async function setupDevAuth(app: Express) {
     };
 
     console.log('✅ Dev user logged in:', DEV_USER.email);
-    // Redirect to Ghost Musician home page
-    res.redirect('/ghost-musician');
+    // Stay on AetherWave landing page - don't redirect
+    res.redirect('/');
   });
 
   // Logout route

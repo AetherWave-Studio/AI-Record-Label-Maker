@@ -19,11 +19,11 @@ export default function Landing() {
             
             <div className="flex items-center space-x-4">
               <a 
-                href="/api/login"
+                href="/"
                 className="bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate px-6 py-2 rounded-lg font-semibold hover:shadow-lg transition-all"
-                data-testid="button-login"
+                data-testid="button-aetherwave"
               >
-                Sign In with Replit
+                Go to AetherWave
               </a>
             </div>
           </div>
@@ -51,14 +51,14 @@ export default function Landing() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a 
-              href="/api/login"
+              href="/"
               className="bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate px-8 py-4 rounded-lg font-bold text-lg hover:shadow-xl transition-all"
               data-testid="button-get-started"
             >
-              Get Started Free
+              Sign In at AetherWave
             </a>
             <p className="text-soft-gray text-sm">
-              No signup required • Create unlimited Virtual Artists
+              Login required • Create at AetherWave landing page
             </p>
           </div>
         </div>
@@ -112,14 +112,14 @@ export default function Landing() {
             Ready to Transform Your Music?
           </h3>
           <p className="text-lg text-soft-gray mb-8 max-w-2xl mx-auto">
-            Join thousands of musicians creating unique artist identities. Sign in with your Replit account to get started.
+            Join thousands of musicians creating unique artist identities. Sign in at the AetherWave landing page to get started.
           </p>
           <a 
-            href="/api/login"
+            href="/"
             className="bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate px-10 py-4 rounded-lg font-bold text-xl hover:shadow-xl transition-all inline-block"
-            data-testid="button-cta-login"
+            data-testid="button-cta-aetherwave"
           >
-            Sign In with Replit
+            Go to AetherWave
           </a>
         </div>
       </section>

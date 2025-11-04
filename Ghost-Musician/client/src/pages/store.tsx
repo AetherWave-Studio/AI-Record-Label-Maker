@@ -127,8 +127,10 @@ export default function Store() {
           <CardContent className="p-8 text-center">
             <ShoppingCart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h2 className="text-2xl font-bold mb-2">Access Required</h2>
-            <p className="text-gray-600 mb-6">Sign in to browse and purchase items from the AetherWave Store.</p>
-            <Button className="w-full">Sign In</Button>
+            <p className="text-gray-600 mb-6">Please sign in at the AetherWave landing page to access the store.</p>
+            <a href="/">
+              <Button className="w-full">Go to AetherWave</Button>
+            </a>
           </CardContent>
         </Card>
       </div>
