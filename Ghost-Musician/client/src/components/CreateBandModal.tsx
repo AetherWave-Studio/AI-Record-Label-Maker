@@ -140,7 +140,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-start justify-center p-4 overflow-y-auto"
       onClick={(e) => {
         console.log("🔵 Backdrop clicked", e.target);
         if (e.target === e.currentTarget) {
