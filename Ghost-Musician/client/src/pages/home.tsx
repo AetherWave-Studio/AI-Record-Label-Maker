@@ -4,6 +4,7 @@ import { ActivityFeed } from "@/components/ActivityFeed";
 import { FloatingActionButton } from "@/components/FloatingActionButton";
 import { UserStatsWidget } from "@/components/UserStatsWidget";
 import { DailyQuestsWidget } from "@/components/DailyQuestsWidget";
+import { CreateBandModal } from "@/components/CreateBandModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useState } from "react";
 import AuthForm from "@/components/auth-form";
@@ -12,6 +13,7 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showCreateBand, setShowCreateBand] = useState(false);
   const [notificationCount] = useState(3);
   const [credits] = useState(500);
   const [readyBandsCount] = useState(5); // TODO: Get from API
@@ -115,8 +117,18 @@ export default function Home() {
             <div className="flex items-center gap-4">
               {isAuthenticated ? (
                 <>
+                  {/* Create Band Button */}
+                  <button
+                    onClick={() => setShowCreateBand(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-glint to-electric-blue text-deep-slate rounded-lg font-bold hover:shadow-lg transition-all"
+                    data-testid="button-create-band"
+                  >
+                    <Sparkles size={18} />
+                    <span className="hidden md:inline">Create Band</span>
+                  </button>
+
                   {/* Credits */}
-                  <Link href="/store">
+                  <Link href="/ghost-musician/store">
                     <button className="flex items-center gap-2 px-3 py-2 bg-deep-slate border border-sky-glint/30 rounded-lg hover:border-sky-glint transition-colors">
                       <CreditCard size={18} className="text-sky-glint" />
                       <span className="font-semibold text-white-smoke">{credits}</span>
@@ -401,6 +413,12 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Create Band Modal */}
+      <CreateBandModal
+        isOpen={showCreateBand}
+        onClose={() => setShowCreateBand(false)}
+      />
     </div>
   );
 }
