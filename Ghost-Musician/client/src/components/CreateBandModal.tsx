@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Sparkles, Users, Music2, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,16 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
   if (!isOpen) return null;
 
   console.log("🎨 CreateBandModal is OPEN and rendering");
+
+  // Reset scroll position when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const scrollContainer = document.querySelector('[data-modal-scroll]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = 0;
+      }
+    }
+  }, [isOpen]);
 
   const handleCreate = async () => {
     console.log("🎸 Create Band clicked!", { bandName, genre });
@@ -164,7 +174,7 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
         </div>
 
         {/* Form - Scrollable */}
-        <div className="overflow-y-auto flex-1 p-6">
+        <div className="overflow-y-auto flex-1 p-6" data-modal-scroll>
           <div className="space-y-6">
           {/* Band Name */}
           <div>
