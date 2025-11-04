@@ -5,7 +5,7 @@ class NavigationManager {
             { text: 'Welcome', url: '/static/', active: false },
             /*{ text: 'Ghost Musician', url: '/', active: false },*/
             { text: 'Creator Studio', url: '/static/aimusic-media.html', active: false },
-            { text: 'Playlists', url: 'static/playlists.html', active: false }
+            { text: 'Playlists', url: '/static/playlists.html', active: false }
         ];
     }
 
