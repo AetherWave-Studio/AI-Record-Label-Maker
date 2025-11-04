@@ -37,10 +37,6 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
   const [selectedPalette, setSelectedPalette] = useState(0);
   const [memberCount, setMemberCount] = useState(4);
 
-  if (!isOpen) return null;
-
-  console.log("🎨 CreateBandModal is OPEN and rendering");
-
   // Reset scroll position when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +46,10 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
       }
     }
   }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  console.log("🎨 CreateBandModal is OPEN and rendering");
 
   const handleCreate = async () => {
     console.log("🎸 Create Band clicked!", { bandName, genre });
