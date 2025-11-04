@@ -6,11 +6,6 @@ import path from "path";
 
 const app = express();
 
-// Removed redirect to static HTML - let React app handle routing
-// app.get('/', (req, res) => {
-//   res.redirect('/static/index.html');
-// });
-
 declare module 'http' {
   interface IncomingMessage {
     rawBody: unknown
@@ -67,6 +62,11 @@ app.use((req, res, next) => {
 
   // Serve static HTML directories before the SPA catch-all
   const rootDir = path.resolve(import.meta.dirname, '..');
+  
+  // Serve the landing page at root
+  app.get('/', (_req, res) => {
+    res.sendFile(path.join(rootDir, 'static', 'index.html'));
+  });
   app.use('/virtual-artists', express.static(path.join(rootDir, 'virtual-artists')));
   app.use('/creators-lounge', express.static(path.join(rootDir, 'creators-lounge')));
   app.use('/playlists', express.static(path.join(rootDir, 'Playlists')));
