@@ -24,8 +24,11 @@ export const users = pgTable("users", {
   username: varchar("username").unique(),
   vocalGenderPreference: varchar("vocal_gender_preference").default('m'),
   credits: integer("credits").default(50).notNull(),
+  freeBandGenerations: integer("free_band_generations").default(3).notNull(), // 3 free band creations for all users
   subscriptionPlan: varchar("subscription_plan").default('free').notNull(), // 'free', 'studio', 'creator', 'producer', 'mogul'
   lastCreditReset: timestamp("last_credit_reset").defaultNow().notNull(),
+  lastLoginAt: timestamp("last_login_at"), // Track daily login for rewards
+  dailyLoginStreak: integer("daily_login_streak").default(0).notNull(), // Consecutive days logged in
   welcomeBonusClaimed: integer("welcome_bonus_claimed").default(0), // 1 if claimed, 0 if not (100 credits one-time bonus) - optional for backward compat
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
@@ -43,10 +46,87 @@ export type UpsertUser = typeof users.$inferInsert;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
+// Uploaded audio files table
+export const uploadedAudio = pgTable("uploaded_audio", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fileName: varchar("file_name").notNull(),
+  mimeType: varchar("mime_type").notNull(),
+  fileSize: varchar("file_size").notNull(),
+  audioData: text("audio_data").notNull(), // Base64 encoded audio data
+  userId: varchar("user_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUploadedAudioSchema = createInsertSchema(uploadedAudio).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUploadedAudio = z.infer<typeof insertUploadedAudioSchema>;
+export type UploadedAudio = typeof uploadedAudio.$inferSelect;
+
+// Quest system for earning credits
+export const QuestType = z.enum(['twitter_follow', 'discord_join', 'facebook_follow', 'tiktok_follow']);
+export type QuestType = z.infer<typeof QuestType>;
+
+export const quests = pgTable("quests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  questType: varchar("quest_type").notNull(), // 'twitter_follow', 'discord_join', etc.
+  completed: integer("completed").default(0).notNull(), // 1 if completed, 0 if not
+  creditsAwarded: integer("credits_awarded").default(0).notNull(), // How many credits were awarded
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertQuestSchema = createInsertSchema(quests).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertQuest = z.infer<typeof insertQuestSchema>;
+export type Quest = typeof quests.$inferSelect;
+
+// Quest reward configuration (credits per quest)
+export const QUEST_REWARDS: Record<QuestType, number> = {
+  twitter_follow: 20,    // 20 credits for following on X.com
+  discord_join: 20,      // 20 credits for joining Discord
+  facebook_follow: 20,   // 20 credits for following on Facebook
+  tiktok_follow: 20,     // 20 credits for following on TikTok
+};
+
+// News Feed Events - Track all platform activities for social feed
+export const FeedEventType = z.enum([
+  'band_created',
+  'daily_growth',
+  'achievement',
+  'rank_change',
+  'press_release',
+  'band_milestone'
+]);
+export type FeedEventType = z.infer<typeof FeedEventType>;
+
+export const feedEvents = pgTable("feed_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  eventType: varchar("event_type").notNull(),
+  bandId: varchar("band_id"), // Band involved in the event
+  data: jsonb("data").notNull(), // Event-specific data (achievement type, growth stats, etc.)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertFeedEventSchema = createInsertSchema(feedEvents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertFeedEvent = z.infer<typeof insertFeedEventSchema>;
+export type FeedEvent = typeof feedEvents.$inferSelect;
+
 // Free tier credit system constants
 export const FREE_TIER_WELCOME_BONUS = 100; // One-time 100 credits on signup
 export const FREE_TIER_DAILY_CREDITS = 20; // 20 credits per day
-export const FREE_TIER_CREDIT_CAP = 100;    // Max 100 credits for free tier
+export const FREE_TIER_CREDIT_CAP = 100;    // Max 100 credits (quest rewards can exceed cap, but daily credits won't be added if >= 100)
 
 // Plan-based feature restrictions
 export const PlanType = z.enum(['free', 'studio', 'creator', 'producer', 'mogul']);
@@ -119,7 +199,7 @@ export const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     allowedVideoModels: ['seedance-lite'], // Only Seedance Lite model
     allowedImageEngines: ['dall-e-2'], // Only basic engine (Nano Banana for Panel 3)
     allowedMusicModels: ['V3_5', 'V4'], // Only beginner models
-    maxCreditsPerDay: 20,  // 20 credits/day + 100 welcome bonus (capped at 100)
+    maxCreditsPerDay: 20,  // 20 credits/day + 100 welcome bonus (cap at 100, quest rewards can exceed cap but daily credits won't be added if >= 100)
     maxAudioUploadSizeMB: 10, // Free users: 10MB limit (MP3 only, ~10 minutes)
     commercialLicense: false,
     apiAccess: false,
@@ -268,15 +348,264 @@ export interface CreditDeductionResult {
 // ============================================================================
 
 // Virtual bands/artists created by users
+export const bands = pgTable("bands", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  bandName: varchar("band_name").notNull(),
+  genre: varchar("genre").notNull(),
+  concept: text("concept"), // Band origin story/narrative
+  philosophy: text("philosophy"), // Artistic vision
+  influences: text("influences").array(), // Cultural references
+  colorPalette: varchar("color_palette").array(), // Visual identity colors
+  
+  // Band members (JSON array of member objects)
+  members: jsonb("members").notNull(), // [{name, role, backstory, age, gender}]
+  
+  // Visual assets
+  portraitUrl: varchar("portrait_url"), // AI-generated band portrait
+  tradingCardUrl: varchar("trading_card_url"), // Full trading card image
+  equippedCardDesign: varchar("equipped_card_design").default('ghosts_online').notNull(), // Which card design to use
+  
+  // Audio
+  audioFileId: varchar("audio_file_id").references(() => uploadedAudio.id),
+  songTitle: varchar("song_title"),
+  sunoPrompt: text("suno_prompt"), // AI prompt for generating matching music
+  analysisSummary: text("analysis_summary"), // Raw AI analysis of the audio
+  
+  // Metrics (current values)
+  fame: integer("fame").default(5).notNull(), // 1-100 scale
+  physicalCopies: integer("physical_copies").default(10).notNull(),
+  digitalDownloads: integer("digital_downloads").default(50).notNull(),
+  totalStreams: integer("total_streams").default(100).notNull(),
+  chartPosition: integer("chart_position").default(0).notNull(), // 0 = unranked, 1-100 = ranked
+  
+  // Daily growth tracking
+  lastGrowthApplied: timestamp("last_growth_applied"),
+  
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
+export const insertBandSchema = createInsertSchema(bands).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
+export type InsertBand = z.infer<typeof insertBandSchema>;
+export type Band = typeof bands.$inferSelect;
 
+// Achievement tracking for bands (Gold, Platinum, Diamond records)
+export const bandAchievements = pgTable("band_achievements", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bandId: varchar("band_id").notNull().references(() => bands.id),
+  achievementType: varchar("achievement_type").notNull(), // 'gold', 'platinum', 'diamond'
+  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+});
 
+export type BandAchievement = typeof bandAchievements.$inferSelect;
 
+// Daily growth log (tracks when users apply daily growth to their bands)
+export const dailyGrowthLog = pgTable("daily_growth_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bandId: varchar("band_id").notNull().references(() => bands.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  fameGrowth: integer("fame_growth").notNull(),
+  streamsAdded: integer("streams_added").notNull(),
+  digitalAdded: integer("digital_added").notNull(),
+  physicalAdded: integer("physical_added").notNull(),
+  appliedAt: timestamp("applied_at").defaultNow().notNull(),
+});
 
+export type DailyGrowthLog = typeof dailyGrowthLog.$inferSelect;
 
+// Band generation jobs (tracks async trading card generation)
+export const bandGenerationJobs = pgTable("band_generation_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bandId: varchar("band_id").notNull().references(() => bands.id),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  status: varchar("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed'
+  cardDesignType: varchar("card_design_type").default('ghosts_online'), // Which card design to generate
+  errorMessage: text("error_message"), // Error details if failed
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
 
+export const insertBandGenerationJobSchema = createInsertSchema(bandGenerationJobs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
 
+export type InsertBandGenerationJob = z.infer<typeof insertBandGenerationJobSchema>;
+export type BandGenerationJob = typeof bandGenerationJobs.$inferSelect;
+
+// RPG-specific service types for credit deduction
+export const RpgServiceType = z.enum([
+  'band_creation',        // Create a new virtual band
+  'marketing_campaign',   // Boost band visibility
+  'fame_boost',          // Instant FAME increase
+  'collaboration',       // Band collaboration feature
+]);
+export type RpgServiceType = z.infer<typeof RpgServiceType>;
+
+// Credit costs for RPG game actions
+export const RPG_CREDIT_COSTS: Record<RpgServiceType, number> = {
+  band_creation: 30,      // Creating a new virtual band with AI
+  marketing_campaign: 20, // Running a marketing campaign
+  fame_boost: 10,         // Instant FAME boost
+  collaboration: 16,      // Band collaboration
+};
+
+// Band limits by subscription tier
+export const BAND_LIMITS: Record<PlanType, number | 'unlimited'> = {
+  free: 2,
+  studio: 7,
+  creator: 17,
+  producer: 'unlimited',
+  mogul: 'unlimited',
+};
+
+// FAME growth multipliers by subscription tier
+export const FAME_GROWTH_MULTIPLIERS: Record<PlanType, number> = {
+  free: 1.0,
+  studio: 1.5,
+  creator: 2.0,
+  producer: 2.5,
+  mogul: 3.0,
+};
+
+// Achievement milestone thresholds and FAME bonuses
+export const ACHIEVEMENT_MILESTONES = {
+  gold: {
+    salesRequired: 500000,
+    fameBonus: 0.05, // +5% FAME growth
+  },
+  platinum: {
+    salesRequired: 2000000,
+    fameBonus: 0.25, // +25% FAME growth
+  },
+  diamond: {
+    salesRequired: 10000000,
+    fameBonus: 0.45, // +45% FAME growth
+  },
+};
+
+// ============================================================================
+// CARD DESIGN SYSTEM
+// ============================================================================
+
+// Available card design styles
+export const CardDesignType = z.enum([
+  'ghosts_online',        // Default free design - clean cyan borders
+  'cyberpunk_holo',       // Premium: Rainbow gradients, circuit patterns, glow effects
+  'vintage_weathered',    // Premium: Aged textures, decorative borders, lightning
+  'modern_sleek',         // Premium: Professional, stage lighting, premium typography
+  'neon_arcade',          // Premium: 80s retro, pixel effects, vibrant colors
+  'dark_carnival',        // Special: Halloween themed
+  'winter_frost',         // Special: Winter/holiday themed
+  'gold_anniversary',     // Special: Platform anniversary
+]);
+export type CardDesignType = z.infer<typeof CardDesignType>;
+
+// Card design metadata
+export interface CardDesignInfo {
+  id: CardDesignType;
+  name: string;
+  description: string;
+  price: number; // Credits cost (0 = free default)
+  rarity: 'common' | 'premium' | 'special' | 'legendary';
+  available: boolean; // False for limited-time designs not currently available
+  previewUrl?: string; // URL to preview image (optional for now, can be generated later)
+  unlockedByDefault: boolean; // True for free designs like ghosts_online
+}
+
+// Card design catalog with pricing
+export const CARD_DESIGNS: Record<CardDesignType, CardDesignInfo> = {
+  ghosts_online: {
+    id: 'ghosts_online',
+    name: 'Ghosts Online',
+    description: 'The original design - clean, professional, timeless',
+    price: 0, // Free default
+    rarity: 'common',
+    available: true,
+    unlockedByDefault: true, // Everyone gets this
+  },
+  cyberpunk_holo: {
+    id: 'cyberpunk_holo',
+    name: 'Cyberpunk Holographic',
+    description: 'Rainbow gradient borders, circuit patterns, neon glow effects',
+    price: 2000,
+    rarity: 'legendary',
+    available: true,
+    unlockedByDefault: false,
+  },
+  vintage_weathered: {
+    id: 'vintage_weathered',
+    name: 'Vintage Weathered',
+    description: 'Aged textures, decorative corner flourishes, lightning effects',
+    price: 800,
+    rarity: 'premium',
+    available: true,
+    unlockedByDefault: false,
+  },
+  modern_sleek: {
+    id: 'modern_sleek',
+    name: 'Modern Sleek',
+    description: 'Professional look with stage lighting and premium typography',
+    price: 1200,
+    rarity: 'premium',
+    available: true,
+    unlockedByDefault: false,
+  },
+  neon_arcade: {
+    id: 'neon_arcade',
+    name: 'Neon Arcade',
+    description: '80s retro vibes with pixel effects and vibrant colors',
+    price: 1000,
+    rarity: 'premium',
+    available: true,
+    unlockedByDefault: false,
+  },
+  dark_carnival: {
+    id: 'dark_carnival',
+    name: 'Dark Carnival',
+    description: 'Spooky Halloween theme with dark mystique',
+    price: 500,
+    rarity: 'special',
+    available: false, // Only available in October
+    unlockedByDefault: false,
+  },
+  winter_frost: {
+    id: 'winter_frost',
+    name: 'Winter Frost',
+    description: 'Icy winter wonderland with frost effects',
+    price: 500,
+    rarity: 'special',
+    available: false, // Only available in December
+    unlockedByDefault: false,
+  },
+  gold_anniversary: {
+    id: 'gold_anniversary',
+    name: 'Gold Anniversary',
+    description: 'Exclusive anniversary edition with gold accents',
+    price: 0, // Free during anniversary week
+    rarity: 'special',
+    available: false, // Only available during platform anniversary
+    unlockedByDefault: false,
+  },
+};
+
+// User's owned card designs table
+export const ownedCardDesigns = pgTable("owned_card_designs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  designId: varchar("design_id").notNull(), // CardDesignType
+  unlockedAt: timestamp("unlocked_at").defaultNow().notNull(),
+});
+
+export type OwnedCardDesign = typeof ownedCardDesigns.$inferSelect;
 
 // ============================================================================
 // MARKETPLACE SYSTEM

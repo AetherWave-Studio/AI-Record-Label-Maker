@@ -1,4 +1,4 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, quests, type Quest, type QuestType, QUEST_REWARDS, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Band, type InsertBand, bands, type BandAchievement, bandAchievements, type DailyGrowthLog, dailyGrowthLog, type RpgServiceType, RPG_CREDIT_COSTS, BAND_LIMITS, type FeedEvent, type InsertFeedEvent, feedEvents, ownedCardDesigns, type OwnedCardDesign, type Product, type InsertProduct, products, type UserInventory, type InsertUserInventory, userInventory } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Product, type InsertProduct, products, type UserInventory, type InsertUserInventory, userInventory } from "@shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { eq, and, desc } from "drizzle-orm";
@@ -16,88 +16,14 @@ export interface IStorage {
   // Credit operations
   updateUserCredits(userId: string, credits: number, lastCreditReset?: Date): Promise<User | undefined>;
   addCredits(userId: string, amount: number): Promise<User>; // Add credits to user (for purchases)
-  decrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }>;
-  incrementFreeBandGenerations(userId: string): Promise<{ success: boolean; remaining: number; error?: string }>;
   deductCredits(userId: string, serviceType: ServiceType): Promise<CreditDeductionResult>;
   checkCredits(userId: string, serviceType: ServiceType): Promise<CreditCheckResult>;
   refundCredits(userId: string, serviceType: ServiceType): Promise<{ success: boolean; newBalance: number; amountRefunded: number; error?: string }>;
   resetDailyCredits(userId: string): Promise<void>; // Reset credits for free tier users (with 50 cap)
-  // Quest operations
-  getUserQuests(userId: string): Promise<Quest[]>;
-  completeQuest(userId: string, questType: QuestType): Promise<{ success: boolean; creditsAwarded: number; error?: string }>;
+  
   // User preference operations
   updateUserVocalPreference(userId: string, vocalGenderPreference: string): Promise<User | undefined>;
   updateUserProfileImage(userId: string, profileImageUrl: string): Promise<User | undefined>;
-  
-  // Daily login operations
-  recordDailyLogin(userId: string): Promise<{ 
-    success: boolean; 
-    creditsAwarded: number; 
-    streak: number; 
-    firstLoginToday: boolean; 
-    error?: string;
-  }>;
-  
-  // Feed event operations
-  createFeedEvent(event: InsertFeedEvent): Promise<FeedEvent>;
-  getFeedEvents(limit?: number, offset?: number): Promise<FeedEvent[]>;
-  getUserFeedEvents(userId: string, limit?: number): Promise<FeedEvent[]>;
-  
-  // ============================================================================
-  // GHOSTMUSICIAN RPG OPERATIONS
-  // ============================================================================
-  
-  // Band operations
-  createBand(band: InsertBand): Promise<Band>;
-  getUserBands(userId: string): Promise<Band[]>;
-  getAllBands(limit?: number): Promise<Band[]>; // Get ALL bands from ALL users
-  getBand(bandId: string): Promise<Band | undefined>;
-  updateBand(bandId: string, updates: Partial<Band>): Promise<Band | undefined>;
-  deleteBand(bandId: string): Promise<boolean>;
-  
-  // Daily growth operations
-  applyDailyGrowth(userId: string, bandId: string): Promise<{
-    success: boolean;
-    band?: Band;
-    growthApplied?: {
-      fameGrowth: number;
-      streamsAdded: number;
-      digitalAdded: number;
-      physicalAdded: number;
-    };
-    error?: string;
-  }>;
-  
-  // Achievement operations
-  checkAndAwardAchievements(bandId: string): Promise<BandAchievement[]>;
-  getBandAchievements(bandId: string): Promise<BandAchievement[]>;
-  
-  // RPG credit operations
-  deductRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditDeductionResult>;
-  checkRpgCredits(userId: string, serviceType: RpgServiceType): Promise<CreditCheckResult>;
-  
-  // Band limit check
-  checkBandLimit(userId: string): Promise<{ allowed: boolean; current: number; limit: number | 'unlimited'; error?: string }>;
-  
-  // ============================================================================
-  // CARD DESIGN OPERATIONS
-  // ============================================================================
-  
-  // Get all card designs owned by a user
-  getOwnedCardDesigns(userId: string): Promise<string[]>; // Returns array of CardDesignType IDs
-  
-  // Purchase a card design with credits
-  purchaseCardDesign(userId: string, designId: string, price: number): Promise<{
-    success: boolean;
-    newBalance?: number;
-    error?: string;
-  }>;
-  
-  // Equip a card design to a specific band
-  equipCardDesign(bandId: string, designId: string): Promise<{
-    success: boolean;
-    error?: string;
-  }>;
   
   // ============================================================================
   // MARKETPLACE OPERATIONS
