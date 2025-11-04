@@ -21,17 +21,17 @@ function Router() {
   return (
     <Switch>
       {/* Artist pages, gallery, and user profiles are accessible to everyone for discovery */}
-      <Route path="/artist/:cardId" component={ArtistPage} />
-      <Route path="/user/:userId" component={UserProfileNew} />
-      <Route path="/gallery" component={Gallery} />
+      <Route path="/ghost-musician/artist/:cardId" component={ArtistPage} />
+      <Route path="/ghost-musician/user/:userId" component={UserProfileNew} />
+      <Route path="/ghost-musician/gallery" component={Gallery} />
       
       {/* Temporarily showing Home page to everyone for development preview */}
-      <Route path="/" component={Home} />
-      <Route path="/landing" component={Landing} />
-      <Route path="/music" component={MusicMarketplace} />
-      <Route path="/store" component={Store} />
-      <Route path="/playlist/:playlistId" component={PlaylistPage} />
-      <Route path="/upgrade" component={Upgrade} />
+      <Route path="/ghost-musician" component={Home} />
+      <Route path="/ghost-musician/landing" component={Landing} />
+      <Route path="/ghost-musician/music" component={MusicMarketplace} />
+      <Route path="/ghost-musician/store" component={Store} />
+      <Route path="/ghost-musician/playlist/:playlistId" component={PlaylistPage} />
+      <Route path="/ghost-musician/upgrade" component={Upgrade} />
       <Route component={NotFound} />
     </Switch>
   );
