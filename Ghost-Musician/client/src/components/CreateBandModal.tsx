@@ -122,10 +122,10 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-charcoal border border-sky-glint/30 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-charcoal border border-sky-glint/30 rounded-2xl max-w-2xl w-full my-8 flex flex-col max-h-[calc(100vh-4rem)]">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between p-6 border-b border-sky-glint/20 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Sparkles size={32} className="text-sky-glint" />
             <h2 className="text-2xl font-bold text-white-smoke">Create New Band</h2>
@@ -139,8 +139,9 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
           </button>
         </div>
 
-        {/* Form */}
-        <div className="space-y-6">
+        {/* Form - Scrollable */}
+        <div className="overflow-y-auto flex-1 p-6">
+          <div className="space-y-6">
           {/* Band Name */}
           <div>
             <label className="block text-sm font-medium text-white-smoke mb-2">
@@ -271,10 +272,11 @@ export function CreateBandModal({ isOpen, onClose }: CreateBandModalProps) {
               data-testid="slider-member-count"
             />
           </div>
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-3 mt-8">
+        {/* Actions - Fixed Footer */}
+        <div className="flex gap-3 p-6 border-t border-sky-glint/20 flex-shrink-0">
           <Button
             onClick={handleCreate}
             disabled={isCreating || !bandName.trim() || !genre}
