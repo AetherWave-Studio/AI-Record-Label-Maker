@@ -8,7 +8,7 @@ packages = ["ffmpeg", "freetype", "lcms2", "libGL", "libGLU", "libimagequant", "
 
 [deployment]
 deploymentTarget = "autoscale"
-build = ["npm", "run", "build"]
+build = ["sh", "build.sh"]
 run = ["npm", "run", "start"]
 
 [[ports]]
