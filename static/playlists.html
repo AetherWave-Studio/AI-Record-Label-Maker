@@ -1,15 +1,29 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AetherWave Studio - Playlists Home</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Ffooter.css?alt=media&token=4f8bebd7-80e6-4bd6-8910-08b844e467f9" rel="stylesheet">
-  <!-- Shared Navigation CSS -->
-  <link rel="stylesheet" href="/static/assets/css/navigation.css">
+<!-- Standard Favicons -->
+<link href="assets/favicon-16x16.png" rel="icon" sizes="16x16" type="image/png"/>
+<link href="assets/favicon-32x32.png" rel="icon" sizes="32x32" type="image/png"/>
+<link href="assets/favicon-48x48.png" rel="icon" sizes="48x48" type="image/png"/>
+<link href="assets/favicon.ico" rel="icon" type="image/x-icon"/>
+<!-- Web App Manifest -->
+<link href="assets/site.webmanifest" rel="manifest"/>
+<meta content="#FF1493" name="theme-color"/>
+<!-- Apple Touch Icon -->
+<link href="assets/apple-touch-icon.png" rel="apple-touch-icon" sizes="180x180"/>
+<link href="assets/favicon-180.png" rel="apple-touch-icon"/>
+<link href="site.webmanifest" rel="manifest"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=Orbitron:wght@600;800&amp;display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9ce7aa2-0609-46cc-92a8-169d8d8ca076">
+<link href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Ffooter.css?alt=media&token=4f8bebd7-80e6-4bd6-8910-08b844e467f9" rel="stylesheet">
+		
+<link href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9339627-e4b5-4aa3-aa16-71a16fdfe72a" rel="stylesheet">
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#FF1493" name="theme-color"/>
+<title>AetherWave — Global Playlist Player</title>
   <style>
    
 :root{
@@ -351,11 +365,11 @@
     <div class="bg-grid"></div>
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
-  </div>
+  
 
   <header>
-    <div style="display: flex; align-items: center; gap: 1rem;">
-      <a href="/" class="logo">
+   <div style="display: flex; align-items: center; gap: 1rem;">
+      <a href="https://aetherwavestudio/static" class="logo">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
         </div>
@@ -364,9 +378,31 @@
         </span>
       </a>
     </div>
-	<nav>
+	<nav class="aether-nav">
+				<ul>
+					<li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
+					<li class="dropdown">
+						<a href="#" class="active">Playlists</a>
+						<div class="dropdown-content">
+							<a href="#" class="active">AI MUSIC ALLIANCE</a>
+							<a href="https://aetherwavestudio.com/playlists/synthwave-epic-loops">SynthWave Epic Loops</a>
+							<a href="https://aetherwavestudio.com/playlists/darkwave/">DarkWave Essentials</a>
+							<a href="https://aetherwavestudio.com/playlists/coastal-pulse">Coastal Pulse</a>
+							<a href="https://aetherwavestudio.com/playlists/meditation">Meditation Soundscapes</a>
+							
+						</div>
+					</li>
+					<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>
+					<!--<li class="dropdown">
+						<a href="https://shop.aetherwavestudio.com">Shop</a>
+						<div class="dropdown-content">
+							<a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+							<a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+						</div>
+					</li>-->
+					<li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
     <!-- Navigation will be injected here -->
-	<div id="navigation-container"></div>
+	<!--<div id="navigation-container"></div>-->
       <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
         <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
         <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
@@ -392,8 +428,8 @@
   <main>
     <div class="row">
 	<!--<span class="badge" id="count">0 tracks</span>-->
-	<button class="ghost" id="btnAdmin" title="Open Admin (Ctrl+.)">Admin</button>
-</div>
+		<button class="ghost" id="btnAdmin" title="Open Admin (Ctrl+.)">Admin</button>
+	</div>
 
 <div class="wrap">
 	<div class="player">
@@ -441,7 +477,7 @@
 <label><input id="showPrivate" type="checkbox"/> Show private (adds &amp;admin=1)</label>
 <div class="fine" style="font-size:12px;color:var(--muted);margin-top:8px">Tip: If CORS blocks fetch, append <code>&amp;callback=awp</code> for JSONP, or host <code>playlist.json</code> next to this file.</div>
 </div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div> 
   </main>
 
   <!-- Add any shared scripts or modals here if needed (e.g., from index.html) -->
@@ -646,6 +682,6 @@ btnUpdate.addEventListener('click', async () => {
             <br>Created by Andrew Froehlich, CEO & Founder Aetherwave Studio | <a href="https://www.facebook.com/groups/2142548066240224">AI MUSIC ALLIANCE</a>
         </div>
     </footer>-->
-	<script src="/static/assets/js/navigation.js"></script>
+	</div>
 </body>
 </html>

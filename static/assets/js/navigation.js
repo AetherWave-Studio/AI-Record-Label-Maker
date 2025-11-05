@@ -3,9 +3,9 @@ class NavigationManager {
     constructor() {
         this.navItems = [
             { text: 'Welcome', url: '/static/', active: false },
-            /*{ text: 'Ghost Musician', url: '/', active: false },*/
             { text: 'Creator Studio', url: '/static/aimusic-media.html', active: false },
-            { text: 'Playlists', url: '/static/playlists.html', active: false }
+            { text: 'Playlists', url: '/static/playlists.html', active: false },
+			{ text: 'Virtual-Artists', url: '/static/Virtual-Artists.html', active: false }
         ];
     }
 
@@ -27,9 +27,6 @@ class NavigationManager {
         return `
             <header class="site-header">
                 <nav class="main-nav">
-                    <div class="nav-brand">
-                        <a href="/" class="brand-link">AetherWave Studio</a>
-                    </div>
                     <ul class="nav-list">
                         ${this.navItems.map(item => this.generateNavItem(item)).join('')}
                     </ul>

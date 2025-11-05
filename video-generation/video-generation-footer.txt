@@ -1,0 +1,347 @@
+
+  <script>
+    // Configuration
+    const API_BASE = window.location.origin;
+    let currentModel = 'veo3_fast';
+    let uploadedImage = null;
+    let currentVideoUrl = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCredits();
+      setupEventListeners();
+      loadProjects();
+    });
+
+    // Load user credits
+    async function loadCredits() {
+      try {
+        const response = await fetch(`${API_BASE}/api/user/credits`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('creditBalance').textContent = `${data.credits} Credits`;
+        } else {
+          document.getElementById('creditBalance').textContent = 'Login Required';
+        }
+      } catch (error) {
+        console.error('Failed to load credits:', error);
+        document.getElementById('creditBalance').textContent = 'Error';
+      }
+    }
+
+    // Setup Event Listeners
+    function setupEventListeners() {
+      // Model selection
+      document.querySelectorAll('.model-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          currentModel = card.dataset.model;
+        });
+      });
+
+      // Duration slider
+      const durationSlider = document.getElementById('durationSlider');
+      const durationValue = document.getElementById('durationValue');
+      durationSlider.addEventListener('input', (e) => {
+        durationValue.textContent = `${e.target.value}s`;
+      });
+
+      // Image upload
+      const uploadArea = document.getElementById('uploadArea');
+      const imageInput = document.getElementById('imageInput');
+      const previewImage = document.getElementById('previewImage');
+
+      uploadArea.addEventListener('click', () => imageInput.click());
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--aetherwave-purple)';
+      });
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.borderColor = 'var(--border-color)';
+      });
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.borderColor = 'var(--border-color)';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          handleImageUpload(file);
+        }
+      });
+
+      imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleImageUpload(file);
+        }
+      });
+
+      // Generate button
+      document.getElementById('generateBtn').addEventListener('click', generateVideo);
+
+      // Edit tab video upload
+      const editUploadArea = document.getElementById('editUploadArea');
+      const videoEditInput = document.getElementById('videoEditInput');
+      editUploadArea.addEventListener('click', () => videoEditInput.click());
+      videoEditInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleVideoUpload(file);
+        }
+      });
+    }
+
+    // Handle image upload
+    function handleImageUpload(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedImage = e.target.result;
+        const previewImage = document.getElementById('previewImage');
+        previewImage.src = uploadedImage;
+        previewImage.style.display = 'block';
+        document.getElementById('uploadArea').classList.add('has-image');
+        document.querySelector('.upload-icon').style.display = 'none';
+        document.querySelector('.upload-text').textContent = 'Image uploaded successfully!';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Handle video upload for editing
+    function handleVideoUpload(file) {
+      const editPreview = document.getElementById('editPreview');
+      const url = URL.createObjectURL(file);
+      editPreview.src = url;
+      editPreview.style.display = 'block';
+      document.getElementById('editingTools').style.display = 'block';
+    }
+
+    // Generate Video
+    async function generateVideo() {
+      const prompt = document.getElementById('promptInput').value.trim();
+      if (!prompt) {
+        showToast('Please enter a prompt', 'error');
+        return;
+      }
+
+      const generateBtn = document.getElementById('generateBtn');
+      const progressCard = document.getElementById('progressCard');
+      const resultCard = document.getElementById('resultCard');
+
+      // Disable button and show progress
+      generateBtn.disabled = true;
+      progressCard.classList.add('active');
+      resultCard.classList.remove('active');
+
+      const aspectRatio = document.getElementById('aspectRatio').value;
+      const duration = parseInt(document.getElementById('durationSlider').value);
+      const resolution = document.getElementById('resolution').value;
+
+      try {
+        // Determine which endpoint to use based on model
+        const endpoint = currentModel.startsWith('veo3') || currentModel.startsWith('sora2')
+          ? '/api/generate-video-premium'
+          : '/api/generate-video-fal';
+
+        const requestBody = {
+          prompt,
+          model: currentModel,
+          aspectRatio,
+          duration,
+          resolution: currentModel.startsWith('seedance') ? resolution : undefined,
+          imageData: uploadedImage,
+          quality: 'standard'
+        };
+
+        updateProgress('Submitting request...');
+        
+        const response = await fetch(`${API_BASE}${endpoint}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(requestBody)
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || error.message || 'Generation failed');
+        }
+
+        const result = await response.json();
+
+        // Handle successful generation
+        if (result.videoUrl || result.status === 'complete') {
+          currentVideoUrl = result.videoUrl;
+          showResult(currentVideoUrl);
+          showToast('Video generated successfully!', 'success');
+          loadCredits(); // Refresh credit balance
+        } else {
+          throw new Error('No video URL in response');
+        }
+
+      } catch (error) {
+        console.error('Generation error:', error);
+        showToast(error.message || 'Failed to generate video', 'error');
+        progressCard.classList.remove('active');
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }
+
+    // Update progress message
+    function updateProgress(message) {
+      document.getElementById('progressText').textContent = message;
+    }
+
+    // Show result
+    function showResult(videoUrl) {
+      const progressCard = document.getElementById('progressCard');
+      const resultCard = document.getElementById('resultCard');
+      const resultVideo = document.getElementById('resultVideo');
+
+      progressCard.classList.remove('active');
+      resultCard.classList.add('active');
+      resultVideo.src = videoUrl;
+      resultVideo.play();
+    }
+
+    // Reset generation
+    function resetGeneration() {
+      document.getElementById('promptInput').value = '';
+      document.getElementById('imageInput').value = '';
+      document.getElementById('previewImage').style.display = 'none';
+      document.querySelector('.upload-icon').style.display = 'block';
+      document.querySelector('.upload-text').textContent = 'Click to upload or drag and drop';
+      document.getElementById('uploadArea').classList.remove('has-image');
+      document.getElementById('resultCard').classList.remove('active');
+      uploadedImage = null;
+      currentVideoUrl = null;
+    }
+
+    // Download video
+    function downloadVideo() {
+      if (!currentVideoUrl) return;
+      
+      const a = document.createElement('a');
+      a.href = currentVideoUrl;
+      a.download = `ghostmusician-video-${Date.now()}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      showToast('Download started!', 'success');
+    }
+
+    // Save project
+    function saveProject() {
+      if (!currentVideoUrl) return;
+      
+      const projects = JSON.parse(localStorage.getItem('videoProjects') || '[]');
+      projects.push({
+        id: Date.now(),
+        url: currentVideoUrl,
+        prompt: document.getElementById('promptInput').value,
+        model: currentModel,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('videoProjects', JSON.stringify(projects));
+      
+      showToast('Project saved successfully!', 'success');
+      loadProjects();
+    }
+
+    // Load projects
+    function loadProjects() {
+      const projectGrid = document.getElementById('projectGrid');
+      const projects = JSON.parse(localStorage.getItem('videoProjects') || '[]');
+      
+      if (projects.length === 0) {
+        projectGrid.innerHTML = `
+          <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <i class="ri-folder-open-line" style="font-size: 4rem; display: block; margin-bottom: 1rem; opacity: 0.3;"></i>
+            <p>No projects yet. Generate your first video to get started!</p>
+          </div>
+        `;
+        return;
+      }
+
+      projectGrid.innerHTML = projects.reverse().map(project => `
+        <div class="project-item" onclick='loadProject(${JSON.stringify(project)})'>
+          <div class="project-thumbnail">
+            <video src="${project.url}" muted></video>
+          </div>
+          <div class="project-info">
+            <div class="project-title">${project.prompt.substring(0, 50)}${project.prompt.length > 50 ? '...' : ''}</div>
+            <div class="project-meta">
+              <span>${project.model}</span>
+              <span>${new Date(project.createdAt).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Load project
+    function loadProject(project) {
+      currentVideoUrl = project.url;
+      document.getElementById('promptInput').value = project.prompt;
+      switchTab('generate');
+      showResult(project.url);
+    }
+
+    // Switch tabs
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.toggle('active', content.id === `${tab}-tab`);
+      });
+    }
+
+    // Editing functions (placeholders)
+    function removeBackground() {
+      showToast('Background removal coming soon!', 'warning');
+    }
+
+    function trimVideo() {
+      showToast('Video trimming coming soon!', 'warning');
+    }
+
+    function addEffects() {
+      showToast('Visual effects coming soon!', 'warning');
+    }
+
+    function addAudio() {
+      showToast('Audio overlay coming soon!', 'warning');
+    }
+
+    // Toast notification
+    function showToast(message, type = 'success') {
+      const icons = {
+        success: 'ri-checkbox-circle-line',
+        error: 'ri-error-warning-line',
+        warning: 'ri-alert-line'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerHTML = `
+        <i class="${icons[type]}"></i>
+        <span>${message}</span>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

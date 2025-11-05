@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <!-- Shared Navigation CSS -->
-  <link rel="stylesheet" href="/static/assets/css/navigation.css">
+  <!--<link rel="stylesheet" href="/static/assets/css/navigation.css">-->
+  <link rel="stylesheet" href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9ce7aa2-0609-46cc-92a8-169d8d8ca076">
   <!-- Tiled Background CSS -->
   <link rel="stylesheet" href="/static/assets/css/tiled-background.css">
   <style>
@@ -2047,7 +2048,7 @@
 
   <header>
     <div style="display: flex; align-items: center; gap: 1rem;">
-      <a href="/" class="logo">
+      <a href="#" class="logo">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
         </div>
@@ -2056,11 +2057,31 @@
         </span>
       </a>
     </div>
-    <nav>
-	<!-- Navigation will be injected here -->
-    <div id="navigation-container"></div>
    
-    <a href="/ghost-musician" style="background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-decoration: none; color: white; transition: all 0.3s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" data-testid="link-ghost-musician">🎸 Record Label</a>
+	<!-- Navigation will be injected here -->
+    <!--<div id="navigation-container"></div>-->
+	<nav class="aether-nav">
+				<ul>
+					<li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
+					<li class="dropdown">
+						<a href="https://aetherwavestudio.com/static/playlists.html">Playlists</a>
+						<div class="dropdown-content">
+							<a href="https://playlists.aetherwavestudio.com/darkwave/">DarkWave Essentials</a>
+							<a href="https://playlists.aetherwavestudio.com/meditation/">Meditation Soundscapes</a>
+							<a href="https://playlists.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+							<a href="https://playlists.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+						</div>
+					</li>
+					<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>
+					<li class="dropdown">
+						<a href="https://shop.aetherwavestudio.com">Shop</a>
+						<div class="dropdown-content">
+							<a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+							<a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+						</div>
+					</li>
+					<li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
+   
     <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
@@ -2104,8 +2125,8 @@
 
         <div class="portal-text">
           <h1 class="portal-title">Welcome to AetherWave Studio</h1>
-          <p class="portal-subtitle">You've successfully passed through the portal from Ghost Musician</p>
-          <p class="portal-description">
+          <!--<p class="portal-subtitle">You've successfully passed through the portal from Ghost Musician</p>
+          <p class="portal-description">-->
             Explore our AI-powered media generation tools and create stunning content with cutting-edge technology
           </p>
         </div>
@@ -2177,7 +2198,7 @@
     </div>
     </div>
     </div>
-
+</div>
 
   <script>
     // Error handling wrapper
