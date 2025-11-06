@@ -22,8 +22,13 @@ import {
 import path from "path";
 import os from "os";
 import fs from "fs";
-import { writeFile } from "fs/promises";
+import fsPromises from "fs/promises";
+import { spawn } from "child_process";
+import { fileURLToPath } from "url";
 import multer from "multer";
+
+// Create __dirname equivalent for ES modules
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Configure multer for video uploads
 const upload = multer({
@@ -76,21 +81,84 @@ const mockVideoGeneration = async (prompt: string, model: string, imageFile?: Fi
   };
 };
 
-// Mock background removal (integrate with existing Python scripts)
-const mockBackgroundRemoval = async (videoFile: File, format: 'webm' | 'mov' = 'webm') => {
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 5000 + Math.random() * 5000));
+// Actual background removal using Python scripts
+const removeBackgroundFromVideo = async (videoFile: Express.Multer.File, format: 'webm' | 'mov' | 'gif' = 'webm') => {
+  // Ensure __dirname is available in this scope
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
-  return {
-    id: `bg_removed_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    originalUrl: URL.createObjectURL(videoFile),
-    processedUrl: `/api/video/bg-removed/${Date.now()}.${format}`,
-    thumbnail: `/api/video/bg-removed/${Date.now()}_thumb.jpg`,
-    format: format,
-    size: videoFile.size,
-    createdAt: new Date().toISOString(),
-    status: "completed"
-  };
+  // Create unique filename
+  const timestamp = Date.now();
+  const outputFilename = `bg_removed_${timestamp}.${format}`;
+  const outputPath = path.join(currentDir, '..', 'uploads', 'processed', outputFilename);
+
+  // Ensure output directory exists
+  const outputDir = path.dirname(outputPath);
+  await fsPromises.mkdir(outputDir, { recursive: true });
+
+  // Path to Python script
+  const pythonScript = path.join(currentDir, '..', 'Remove_Video_Background', 'create_transparent_video_v2.py');
+  const inputPath = videoFile.path;
+
+  console.log(`Processing video: ${inputPath}`);
+  console.log(`Output will be: ${outputPath}`);
+  console.log(`Using Python script: ${pythonScript}`);
+
+  return new Promise((resolve, reject) => {
+    // Spawn Python process
+    const pythonProcess = spawn('python', [
+      pythonScript,
+      inputPath,
+      outputPath,
+      format
+    ]);
+
+    let stdoutData = '';
+    let stderrData = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      stdoutData += data.toString();
+      console.log(`Python: ${data}`);
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      stderrData += data.toString();
+      console.error(`Python Error: ${data}`);
+    });
+
+    pythonProcess.on('close', async (code) => {
+      // Clean up input file
+      try {
+        await fsPromises.unlink(inputPath);
+      } catch (err) {
+        console.error('Failed to delete input file:', err);
+      }
+
+      if (code !== 0) {
+        reject(new Error(`Python process exited with code ${code}: ${stderrData}`));
+        return;
+      }
+
+      // Check if output file exists
+      try {
+        const stats = await fsPromises.stat(outputPath);
+
+        resolve({
+          id: `bg_removed_${timestamp}`,
+          processedUrl: `/api/video/download-processed/${outputFilename}`,
+          format: format,
+          size: stats.size,
+          createdAt: new Date().toISOString(),
+          status: "completed"
+        });
+      } catch (err) {
+        reject(new Error(`Output file not created: ${err}`));
+      }
+    });
+
+    pythonProcess.on('error', (error) => {
+      reject(new Error(`Failed to start Python process: ${error.message}`));
+    });
+  });
 };
 
 export function setupVideoRoutes(app: Express) {
@@ -131,6 +199,60 @@ export function setupVideoRoutes(app: Express) {
       });
     } catch (error) {
       console.error("Error serving download:", error);
+      res.status(500).json({ error: "Failed to serve file" });
+    }
+  });
+
+  // Serve processed background-removed videos
+  app.get("/api/video/download-processed/:filename", async (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const filePath = path.join(__dirname, '..', 'uploads', 'processed', filename);
+
+      // Debug logging
+      console.log(`Download request for: ${filename}`);
+      console.log(`Constructed path: ${filePath}`);
+      console.log(`Regex test: ${filename.match(/^bg_removed_\d+\.(webm|mov|gif)$/)} `);
+      console.log(`File exists: ${fs.existsSync(filePath)}`);
+
+      // Security: only allow expected patterns for background-removed videos
+      if (!filename.match(/^bg_removed_\d+\.(webm|mov|gif)$/)) {
+        console.log(`Invalid filename rejected: ${filename}`);
+        return res.status(400).json({ error: "Invalid filename" });
+      }
+
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        console.log(`File not found: ${filePath}`);
+        return res.status(404).json({ error: "File not found" });
+      }
+
+      // Determine content type based on extension
+      const extension = filename.split('.').pop();
+      let contentType;
+      if (extension === 'webm') {
+        contentType = 'video/webm';
+      } else if (extension === 'mov') {
+        contentType = 'video/quicktime';
+      } else if (extension === 'gif') {
+        contentType = 'image/gif';
+      } else {
+        contentType = 'application/octet-stream';
+      }
+
+      // Serve file with proper headers for streaming and download
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+      res.sendFile(filePath, (err) => {
+        if (err) {
+          console.error("Error sending processed video:", err);
+          if (!res.headersSent) {
+            res.status(404).json({ error: "File not found" });
+          }
+        }
+      });
+    } catch (error) {
+      console.error("Error serving processed video:", error);
       res.status(500).json({ error: "Failed to serve file" });
     }
   });
@@ -233,7 +355,7 @@ export function setupVideoRoutes(app: Express) {
   });
 
   // Remove video background
-  app.post("/api/video/remove-background", async (req: Request, res: Response) => {
+  app.post("/api/video/remove-background", authMiddleware, upload.single('video'), async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user?.id;
       const { format = 'webm' } = req.body;
@@ -285,12 +407,14 @@ export function setupVideoRoutes(app: Express) {
       // Deduct credits
       await storage.deductCredits(userId, 'background_removal' as any);
 
-      // Process background removal (mock implementation - integrate with Python scripts)
-      const result = await mockBackgroundRemoval(videoFile, format as 'webm' | 'mov');
+      // Process background removal with Python scripts
+      const result = await removeBackgroundFromVideo(videoFile, format as 'webm' | 'mov' | 'gif');
 
       res.json({
         success: true,
-        video: result,
+        processedUrl: result.processedUrl,
+        format: result.format,
+        size: result.size,
         creditsUsed: BACKGROUND_REMOVAL_COST,
         newBalance: user.credits - BACKGROUND_REMOVAL_COST
       });

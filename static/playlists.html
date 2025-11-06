@@ -53,6 +53,8 @@
     .card{background:var(--panel);border:1px solid rgba(255,255,255,.08);border-radius:var(--br);padding:14px}
     .track{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:8px;border-radius:12px;cursor:pointer}
     .track:hover{background:#0f0f1c}
+	.track {
+    background-image: url(https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2F01.card_template.png?alt=media&token=e3cd4711-f0f1-4c8d-a7ad-88dfedd116cd);}
     .track.active{outline:1px solid rgba(255,255,255,.18);background:#0f0f1c}
     .cover{width:56px;height:56px;border-radius:10px;background:#1a1a2a;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
     .cover img{width:100%;height:100%;object-fit:cover}
@@ -112,7 +114,16 @@
     50%{box-shadow:0 0 16px rgba(0,245,160,.85),0 0 28px rgba(0,245,160,.55)}
     }
 
+   .inactive {
+    background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2F01.card_template.png?alt=media&token=e3cd4711-f0f1-4c8d-a7ad-88dfedd116cd');
+    /* You likely want to add these properties too for proper display */
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+	}
+
     /* Active card glow + cover aura */
+	
     .track.active{outline:1px solid rgba(255,47,166,.6);background:rgba(20,10,18,.92);animation:pinkPulse 2.2s ease-in-out infinite;transition:box-shadow .3s,outline .3s,background .3s}
     .track .cover img{transition:filter .3s}
     .track.active .cover img{animation:coverPulse 2.2s ease-in-out infinite}
@@ -358,6 +369,40 @@
     @media (max-width: 375px) {
       /* Adjust as in index */
     }
+	.item-to-move {
+    margin-right: auto; /* This item absorbs all space to its right */
+}
+
+    /* Credits indicator styling */
+    .credits-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0;
+      background: url('/assets/Coins_badge_1761542949252.png') no-repeat center center;
+      background-size: 100% 100%;
+      border: none;
+      border-radius: 0;
+      font-weight: 700;
+      color: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      min-width: 60px;
+      min-height: 60px;
+      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+    }
+
+    .credits-indicator span {
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 2px rgba(0, 0, 0, 1));
+    }
+
+    .credits-indicator:hover {
+      filter: brightness(1.2) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8));
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 46, 166, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -392,28 +437,27 @@
 							
 						</div>
 					</li>
-					<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>
-					<!--<li class="dropdown">
+					<!--<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>-->
+					<li class="dropdown">
 						<a href="https://shop.aetherwavestudio.com">Shop</a>
 						<div class="dropdown-content">
 							<a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
 							<a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
 						</div>
-					</li>-->
+					</li>
 					<li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
-    <!-- Navigation will be injected here -->
-	<!--<div id="navigation-container"></div>-->
-      <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
-        <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
-        <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
+			</nav>
+			<div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
+			<a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
+			<div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
           <!-- Credits Badge -->
           <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
             <span id="credits-count">0</span>
           </div>
           <!-- Quest Gift Box Icon -->
-          <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
+          <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
             <span style="font-size: 1.3rem;">🎁</span>
-            <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
+            <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; align-items: center; justify-content: center;"></div>
           </div>
           <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
             <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
@@ -422,7 +466,7 @@
           <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
         </div>
       </div>
-    </nav>
+   
   </header>
 
   <main>
@@ -496,6 +540,90 @@
     const toast=(m)=>{const t=$('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',1400);};
 
     let tracks=[]; let idx=-1; let shuffle=false;
+
+    // Global user state
+    let currentUser = null;
+    let userCredits = 0;
+    let userPlanType = 'free';
+
+    // Check authentication status and update UI
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/auth/user', { credentials: 'include' });
+        if (response.ok) {
+          const user = await response.json();
+
+          // Store user data globally
+          currentUser = user;
+
+          // User is logged in
+          $('login-btn').style.display = 'none';
+          $('user-profile').style.display = 'flex';
+
+          // Truncate username to 20 characters
+          const fullName = user.firstName || user.email || 'User';
+          const displayName = fullName.length > 20 ? fullName.substring(0, 20) + '...' : fullName;
+          $('user-name').textContent = displayName;
+
+          // Always use the profile icon
+          $('user-avatar').src = '/assets/icon-set/profile-icon.png';
+          $('user-avatar').alt = user.firstName || user.email || 'User';
+
+          // Fetch user credits and update display
+          await fetchUserCredits();
+        } else {
+          // User not logged in
+          $('login-btn').style.display = 'inline-block';
+          $('user-profile').style.display = 'none';
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        // Show login button on error
+        $('login-btn').style.display = 'inline-block';
+        $('user-profile').style.display = 'none';
+      }
+    }
+
+    // Fetch user credits
+    async function fetchUserCredits() {
+      try {
+        const response = await fetch('/api/user/credits', { credentials: 'include' });
+        if (response.ok) {
+          const data = await response.json();
+          userCredits = data.credits;
+          userPlanType = data.planType;
+          updateCreditsDisplay();
+        }
+      } catch (error) {
+        console.error('Failed to fetch user credits:', error);
+      }
+    }
+	
+	//Update-credits-display
+	 function updateCreditsDisplay() {
+      const creditsElement = document.getElementById('credits-count');
+      const creditsIndicator = document.querySelector('.credits-indicator');
+      const questGiftIcon = document.getElementById('quest-gift-icon');
+
+      if (creditsElement && creditsIndicator) {
+        // Show the indicator
+        creditsIndicator.style.display = 'flex';
+
+        if (userPlanType === 'studio' || userPlanType === 'creator' || userPlanType === 'all_access') {
+          creditsElement.textContent = '∞';
+          creditsIndicator.title = 'Unlimited music credits - Click to view plans';
+          // Hide quest icon for paid users
+          if (questGiftIcon) questGiftIcon.style.display = 'none';
+        } else {
+          creditsElement.textContent = userCredits;
+          creditsIndicator.title = `${userCredits} credits remaining - Click to upgrade`;
+          // Show quest icon for free users
+          if (questGiftIcon) questGiftIcon.style.display = 'flex';
+          // Load and check for uncompleted quests
+          loadQuests();
+        }
+      }
+    }
 
     // --- Admin mode detection & UI gating ---
     const params = new URLSearchParams(location.search);
@@ -671,8 +799,68 @@ btnUpdate.addEventListener('click', async () => {
   const playlistUrl = 'https://script.google.com/macros/s/AKfycbwmwrK-IECfGV0_OPkJfYPmbgseC7KBHw7ikP_Ds-ip6-34g9ilh5DkiWL0g-DR65ur/exec';
   await loadPlaylistFromUrl(playlistUrl + '?t=' + Date.now(), true);
   updateSliderFill(seek); updateSliderFill(vol);
+
+  // Check authentication and show user profile icons
+  await checkAuth();
 })();
   })();
+      
+    async function deductCredits(amount = 5) {
+      try {
+        const response = await fetch('/api/user/credits/deduct', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ amount })
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          if (response.status === 403) {
+            // Insufficient credits - show payment modal
+            showPaymentModal();
+            throw new Error('Insufficient credits');
+          }
+          throw new Error(data.message || 'Failed to deduct credits');
+        }
+        
+        const data = await response.json();
+        userCredits = data.credits;
+        updateCreditsDisplay();
+        return true;
+      } catch (error) {
+        console.error('Failed to deduct credits:', error);
+        throw error;
+      }
+    }
+    
+    function loadQuests() {
+      // Quest system not fully implemented on this page
+      // User can click the quest icon to go to the main app
+      return null;
+    }
+
+    function showQuestModal() {
+      // Redirect to main app page where quests are available
+      window.location.href = '/static/aimusic-media.html';
+    }
+
+    function showPaymentModal() {
+      const modal = document.createElement('div');
+      modal.id = 'payment-modal';
+      modal.style.cssText = `
+        position: fixed;
+        inset: 0;
+        background: rgba(13, 11, 21, 0.95);
+        backdrop-filter: blur(12px);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        animation: fadeIn 0.3s ease-out;
+      `;
+      }
   </script>
   <!-- Shared Navigation JavaScript -->
 

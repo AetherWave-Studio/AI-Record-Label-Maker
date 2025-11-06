@@ -160,8 +160,9 @@ export class MemStorage implements IStorage {
     // Check if user has unlimited plan for this service
     const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
     const userPlan = user.subscriptionPlan as PlanType;
-    
-    if (unlimitedPlans.includes(userPlan)) {
+
+    // Safety check: if service not found in unlimited plans, assume no unlimited access
+    if (unlimitedPlans && unlimitedPlans.includes(userPlan)) {
       return {
         success: true,
         newBalance: user.credits,
@@ -211,8 +212,9 @@ export class MemStorage implements IStorage {
     // If they do, they never had credits deducted, so don't refund
     const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
     const userPlan = user.subscriptionPlan as PlanType;
-    
-    if (unlimitedPlans.includes(userPlan)) {
+
+    // Safety check: if service not found in unlimited plans, assume no unlimited access
+    if (unlimitedPlans && unlimitedPlans.includes(userPlan)) {
       // User has unlimited plan - no credits were deducted, so nothing to refund
       return {
         success: true,
@@ -251,8 +253,9 @@ export class MemStorage implements IStorage {
     // Check if user has unlimited plan for this service
     const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
     const userPlan = user.subscriptionPlan as PlanType;
-    
-    if (unlimitedPlans.includes(userPlan)) {
+
+    // Safety check: if service not found in unlimited plans, assume no unlimited access
+    if (unlimitedPlans && unlimitedPlans.includes(userPlan)) {
       return {
         allowed: true,
         reason: 'unlimited',
@@ -579,8 +582,9 @@ export class DbStorage implements IStorage {
     // Check if user has unlimited plan for this service
     const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
     const userPlan = user.subscriptionPlan as PlanType;
-    
-    if (unlimitedPlans.includes(userPlan)) {
+
+    // Safety check: if service not found in unlimited plans, assume no unlimited access
+    if (unlimitedPlans && unlimitedPlans.includes(userPlan)) {
       return {
         success: true,
         newBalance: user.credits,
@@ -629,8 +633,9 @@ export class DbStorage implements IStorage {
     // If they do, they never had credits deducted, so don't refund
     const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
     const userPlan = user.subscriptionPlan as PlanType;
-    
-    if (unlimitedPlans.includes(userPlan)) {
+
+    // Safety check: if service not found in unlimited plans, assume no unlimited access
+    if (unlimitedPlans && unlimitedPlans.includes(userPlan)) {
       // User has unlimited plan - no credits were deducted, so nothing to refund
       return {
         success: true,
@@ -668,8 +673,9 @@ export class DbStorage implements IStorage {
     // Check if user has unlimited plan for this service
     const unlimitedPlans = UNLIMITED_SERVICE_PLANS[serviceType];
     const userPlan = user.subscriptionPlan as PlanType;
-    
-    if (unlimitedPlans.includes(userPlan)) {
+
+    // Safety check: if service not found in unlimited plans, assume no unlimited access
+    if (unlimitedPlans && unlimitedPlans.includes(userPlan)) {
       return {
         allowed: true,
         reason: 'unlimited',

@@ -70,7 +70,7 @@ app.use((req, res, next) => {
   
   // Serve all static HTML directories
   app.use('/virtual-artists', express.static(path.join(rootDir, 'virtual-artists')));
-  app.use('/creators-lounge', express.static(path.join(rootDir, 'creators-lounge')));
+  app.use('/creator-studio', express.static(path.join(rootDir, 'creators-lounge')));
   app.use('/playlists', express.static(path.join(rootDir, 'Playlists')));
   app.use('/featured-artist', express.static(path.join(rootDir, 'Featured Artist')));
   app.use('/video-generation', express.static(path.join(rootDir, 'video-generation')));

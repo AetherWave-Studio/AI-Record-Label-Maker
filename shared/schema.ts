@@ -212,12 +212,13 @@ export function getAllowedOptions<T>(
 // Service types for credit deduction
 export const ServiceType = z.enum([
   'music_generation',
-  'video_generation', 
+  'video_generation',
   'image_generation',
   'album_art_generation',
   'midjourney_generation',
   'midjourney_generation_turbo',
-  'wav_conversion'
+  'wav_conversion',
+  'background_removal'
 ]);
 export type ServiceType = z.infer<typeof ServiceType>;
 
@@ -233,6 +234,7 @@ export const SERVICE_CREDIT_COSTS: Record<ServiceType, number> = {
   midjourney_generation: 6,    // KIE.ai Midjourney Fast: ~$0.04 API cost for 4 images, priced competitively at 6 credits
   midjourney_generation_turbo: 12, // KIE.ai Midjourney Turbo: 2x API cost, 2x credits
   wav_conversion: 6,           // $0.02 API + 50% margin = $0.03
+  background_removal: 20,      // AI background removal: $0.10 API + 50% margin = $0.15
 };
 
 // Plans that have unlimited access to specific services
@@ -244,6 +246,7 @@ export const UNLIMITED_SERVICE_PLANS: Record<ServiceType, PlanType[]> = {
   midjourney_generation: ['mogul'], // Midjourney Fast unlimited for Mogul plan
   midjourney_generation_turbo: ['mogul'], // Midjourney Turbo unlimited for Mogul plan
   wav_conversion: ['creator', 'producer', 'mogul'], // WAV conversion free for Creator+ plans
+  background_removal: ['mogul'], // Background removal unlimited for Mogul plan
 };
 
 // Result types for credit operations

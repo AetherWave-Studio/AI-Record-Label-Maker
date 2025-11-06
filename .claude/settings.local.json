@@ -22,7 +22,21 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(start:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(python:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(dir:*)",
+      "Bash(if:*)",
+      "Bash(then echo \"Directory exists\")",
+      "Bash(else:*)",
+      "Bash(mkdir:*)",
+      "Read(//e//**)",
+      "Bash(tasklist:*)",
+      "Bash(node:*)",
+      "Bash(move:*)",
+      "Bash(find:*)",
+      "Bash(cat:*)",
+      "WebFetch(domain:www.topmediai.com)"
     ],
     "deny": [],
     "ask": []

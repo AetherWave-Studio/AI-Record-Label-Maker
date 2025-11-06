@@ -8,6 +8,13 @@ class TiledBackground {
         this.autoRotateEnabled = true; // Enable auto-rotation
         this.rotateInterval = 8000; // Rotate every 8 seconds
         this.rotationTimer = null;
+
+        // Control parameters
+        this.variance = 0.5; // 0-1, controls how wide the ranges are for other sliders
+        this.speed = 0.5;     // 0-1, controls animation speed
+        this.size = 0.5;      // 0-1, controls tile size
+        this.density = 0.5;   // 0-1, controls opacity (density)
+
         this.init();
     }
 
@@ -19,6 +26,9 @@ class TiledBackground {
                 'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2Faetherwave-backstage%20(2).png?alt=media&token=a975bc23-a23c-4174-8295-aed5e4d59ab0',
                 'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133',
 				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2FGhosts_Backstage.png?alt=media&token=77643daa-8844-4c60-9682-7bb2d28f5b7d',
+				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2Faetherwave-midjourney-4.png?alt=media&token=ad40516c-38bb-42ac-a678-8f6e15716741',
+				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2Fgirl%2Cphoto-shoot.png?alt=media&token=b324dfa0-1765-4387-a7e3-f5ef7032d384',
+				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2Faetherwave-midjourney-1%20(2).png?alt=media&token=7d55c21d-a307-441c-857b-fa1769ad383c',
 				
                 // Add more image URLs here...
             ],
@@ -29,6 +39,9 @@ class TiledBackground {
 				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2FBlonde_Ignores.mp4?alt=media&token=30e6a38d-5abe-476f-abf4-b728f2d499b1',
 				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2F1e340f9b-dcc8-42a1-8448-cdf770edc5c6.mp4?alt=media&token=58d54ddd-fc26-4ee2-b86a-25ad6dcdaeac',
 				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2Fgrok_video_2025-10-31-08-56-36.mp4?alt=media&token=bbf89f13-20e5-4553-9233-f00c78b5839a',
+				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2FPublic_Aurora_echo.mp4?alt=media&token=5dd12592-b09f-435d-90b5-5df82204ac88',
+				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2FHailuo_Video_4.mp4?alt=media&token=22027476-839f-4681-a048-051932e7d7fd',
+				'https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faetherwave-production-video.mp4?alt=media&token=7b2937e7-bc47-4d75-a1c4-1303367aaf8a',
                 '2025-11-02T11-52-07_the_ball_spins.mp4',
                 // Add more video URLs here...
             ],
@@ -82,13 +95,20 @@ class TiledBackground {
 
     generateTileConfigs() {
         return [
-            // Dynamic Image tiles - will rotate through all images
+            // Dynamic Image tiles - will rotate through all images 2xto increase frequency
             {
                 type: 'image',
                 getMedia: () => this.getRandomMedia('images'),
                 sizes: [...this.mediaLibrary.sizeConfigs.small, ...this.mediaLibrary.sizeConfigs.medium],
                 animationDuration: [...this.mediaLibrary.animationConfigs.medium, ...this.mediaLibrary.animationConfigs.slow],
-                opacityRange: this.mediaLibrary.opacityConfigs.subtle
+                opacityRange: this.mediaLibrary.opacityConfigs.medium
+            },
+			 {
+                type: 'image',
+                getMedia: () => this.getRandomMedia('images'),
+                sizes: [...this.mediaLibrary.sizeConfigs.small, ...this.mediaLibrary.sizeConfigs.medium],
+                animationDuration: [...this.mediaLibrary.animationConfigs.medium, ...this.mediaLibrary.animationConfigs.slow],
+                opacityRange: this.mediaLibrary.opacityConfigs.prominent
             },
             // Dynamic Video tiles - will rotate through all videos
             {
@@ -178,6 +198,7 @@ class TiledBackground {
 
     init() {
         this.createContainer();
+        this.createControlPanel();
         this.generateTiles();
         this.startAnimations();
         this.startAutoRotation();
@@ -191,6 +212,639 @@ class TiledBackground {
 
         // Insert at the beginning of body
         document.body.insertBefore(this.container, document.body.firstChild);
+    }
+
+    createControlPanel() {
+        // Create control panel container
+        const controlPanel = document.createElement('div');
+        controlPanel.className = 'tiled-background-controls';
+        controlPanel.innerHTML = `
+            <div class="controls-header">
+                <h3>🎨 Background Controls</h3>
+                <button class="toggle-controls" title="Toggle panel">⊟</button>
+            </div>
+            <div class="controls-content">
+                <div class="control-group">
+                    <label class="control-label">
+                        <span class="control-icon">🎲</span>
+                        Variance
+                        <span class="control-value" id="variance-value">50%</span>
+                    </label>
+                    <input type="range" class="control-slider" id="variance-slider"
+                           min="0" max="100" value="50"
+                           title="Controls the range width for all parameters">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span class="control-icon">⚡</span>
+                        Speed
+                        <span class="control-value" id="speed-value">50%</span>
+                    </label>
+                    <input type="range" class="control-slider" id="speed-slider"
+                           min="0" max="100" value="50"
+                           title="Controls animation speed">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span class="control-icon">📏</span>
+                        Size
+                        <span class="control-value" id="size-value">50%</span>
+                    </label>
+                    <input type="range" class="control-slider" id="size-slider"
+                           min="0" max="100" value="50"
+                           title="Controls tile size">
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">
+                        <span class="control-icon">💧</span>
+                        Density
+                        <span class="control-value" id="density-value">50%</span>
+                    </label>
+                    <input type="range" class="control-slider" id="density-slider"
+                           min="0" max="100" value="50"
+                           title="Controls opacity/density">
+                </div>
+
+                <div class="control-actions">
+                    <button class="btn-reset" id="reset-controls">🔄 Reset</button>
+                    <button class="btn-randomize" id="randomize-controls">🎲 Randomize</button>
+                </div>
+            </div>
+        `;
+
+        // Add styles
+        const style = document.createElement('style');
+        style.textContent = `
+            .tiled-background-controls {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+                z-index: 1000;
+                background: rgba(26, 22, 37, 0.95);
+                border: 1px solid rgba(255, 46, 166, 0.3);
+                border-radius: 16px;
+                padding: 0;
+                min-width: 280px;
+                font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                backdrop-filter: blur(20px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+                transition: all 0.3s ease;
+            }
+
+            .tiled-background-controls.collapsed .controls-content {
+                display: none;
+            }
+
+            .tiled-background-controls.collapsed {
+                min-width: auto;
+                padding: 0;
+            }
+
+            .controls-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.25rem;
+                border-bottom: 1px solid rgba(255, 46, 166, 0.2);
+                background: rgba(255, 46, 166, 0.05);
+                border-radius: 16px 16px 0 0;
+            }
+
+            .controls-header h3 {
+                margin: 0;
+                font-size: 0.9rem;
+                font-weight: 600;
+                color: #e9e8ff;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .toggle-controls {
+                background: none;
+                border: none;
+                color: #b7b3d9;
+                font-size: 1.2rem;
+                cursor: pointer;
+                padding: 0.25rem;
+                border-radius: 4px;
+                transition: all 0.2s ease;
+            }
+
+            .toggle-controls:hover {
+                color: #ff2ea6;
+                background: rgba(255, 46, 166, 0.1);
+            }
+
+            .controls-content {
+                padding: 1.25rem;
+            }
+
+            .control-group {
+                margin-bottom: 1.25rem;
+            }
+
+            .control-group:last-child {
+                margin-bottom: 0;
+            }
+
+            .control-label {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 0.75rem;
+                font-size: 0.85rem;
+                font-weight: 500;
+                color: #e9e8ff;
+            }
+
+            .control-icon {
+                margin-right: 0.5rem;
+                font-size: 1rem;
+            }
+
+            .control-value {
+                background: rgba(139, 92, 246, 0.2);
+                padding: 0.25rem 0.5rem;
+                border-radius: 12px;
+                font-size: 0.75rem;
+                font-weight: 600;
+                min-width: 40px;
+                text-align: center;
+            }
+
+            .control-slider {
+                width: 100%;
+                height: 6px;
+                background: linear-gradient(90deg,
+                    rgba(255, 46, 166, 0.3) 0%,
+                    rgba(139, 92, 246, 0.3) 50%,
+                    rgba(102, 126, 234, 0.3) 100%);
+                border-radius: 3px;
+                outline: none;
+                cursor: pointer;
+                -webkit-appearance: none;
+                appearance: none;
+                transition: all 0.2s ease;
+            }
+
+            .control-slider:hover {
+                background: linear-gradient(90deg,
+                    rgba(255, 46, 166, 0.4) 0%,
+                    rgba(139, 92, 246, 0.4) 50%,
+                    rgba(102, 126, 234, 0.4) 100%);
+            }
+
+            .control-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 18px;
+                height: 18px;
+                background: linear-gradient(135deg, #ff2ea6, #8b5cf6);
+                border-radius: 50%;
+                cursor: pointer;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 2px 8px rgba(255, 46, 166, 0.4);
+                transition: all 0.2s ease;
+            }
+
+            .control-slider::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+                background: linear-gradient(135deg, #ff2ea6, #8b5cf6);
+                border-radius: 50%;
+                cursor: pointer;
+                border: 2px solid rgba(255, 255, 255, 0.8);
+                box-shadow: 0 2px 8px rgba(255, 46, 166, 0.4);
+                transition: all 0.2s ease;
+            }
+
+            .control-slider::-webkit-slider-thumb:hover {
+                transform: scale(1.2);
+                box-shadow: 0 4px 12px rgba(255, 46, 166, 0.6);
+            }
+
+            .control-slider::-moz-range-thumb:hover {
+                transform: scale(1.2);
+                box-shadow: 0 4px 12px rgba(255, 46, 166, 0.6);
+            }
+
+            .control-actions {
+                display: flex;
+                gap: 0.75rem;
+                margin-top: 1.5rem;
+                padding-top: 1rem;
+                border-top: 1px solid rgba(255, 46, 166, 0.2);
+            }
+
+            .btn-reset, .btn-randomize {
+                flex: 1;
+                padding: 0.75rem;
+                border: none;
+                border-radius: 8px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .btn-reset {
+                background: rgba(139, 92, 246, 0.2);
+                color: #8b5cf6;
+                border: 1px solid rgba(139, 92, 246, 0.3);
+            }
+
+            .btn-reset:hover {
+                background: rgba(139, 92, 246, 0.3);
+                transform: translateY(-1px);
+            }
+
+            .btn-randomize {
+                background: rgba(255, 46, 166, 0.2);
+                color: #ff2ea6;
+                border: 1px solid rgba(255, 46, 166, 0.3);
+            }
+
+            .btn-randomize:hover {
+                background: rgba(255, 46, 166, 0.3);
+                transform: translateY(-1px);
+            }
+
+            /* Mobile responsive */
+            @media (max-width: 768px) {
+                .tiled-background-controls {
+                    bottom: 10px;
+                    left: 10px;
+                    min-width: 260px;
+                }
+
+                .controls-header {
+                    padding: 0.75rem 1rem;
+                }
+
+                .controls-header h3 {
+                    font-size: 0.8rem;
+                }
+
+                .controls-content {
+                    padding: 1rem;
+                }
+
+                .control-label {
+                    font-size: 0.8rem;
+                }
+
+                .control-value {
+                    font-size: 0.7rem;
+                    padding: 0.2rem 0.4rem;
+                }
+
+                .btn-reset, .btn-randomize {
+                    padding: 0.6rem;
+                    font-size: 0.75rem;
+                }
+            }
+
+            /* Pixel Lightbox */
+            .pixel-lightbox {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.85);
+                backdrop-filter: blur(10px);
+                z-index: 2000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .pixel-lightbox.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .lightbox-content {
+                background: linear-gradient(135deg, #1a1625 0%, #2d2640 100%);
+                border: 2px solid rgba(255, 46, 166, 0.3);
+                border-radius: 20px;
+                padding: 2rem;
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+                transform: scale(0.9);
+                transition: all 0.3s ease;
+            }
+
+            .pixel-lightbox.active .lightbox-content {
+                transform: scale(1);
+            }
+
+            .lightbox-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid rgba(255, 46, 166, 0.2);
+            }
+
+            .lightbox-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #ff2ea6;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .lightbox-close {
+                background: none;
+                border: none;
+                color: #b7b3d9;
+                font-size: 1.5rem;
+                cursor: pointer;
+                padding: 0.5rem;
+                border-radius: 8px;
+                transition: all 0.2s ease;
+            }
+
+            .lightbox-close:hover {
+                color: #ff2ea6;
+                background: rgba(255, 46, 166, 0.1);
+            }
+
+            .lightbox-body {
+                color: #e9e8ff;
+                line-height: 1.6;
+            }
+
+            .lightbox-info {
+                display: grid;
+                grid-template-columns: auto 1fr;
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .lightbox-info-label {
+                font-weight: 600;
+                color: #8b5cf6;
+            }
+
+            .lightbox-info-value {
+                color: #b7b3d9;
+            }
+
+            .lightbox-actions {
+                display: flex;
+                gap: 1rem;
+                margin-top: 1.5rem;
+            }
+
+            .lightbox-btn {
+                flex: 1;
+                padding: 0.75rem 1rem;
+                border: none;
+                border-radius: 10px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-size: 0.9rem;
+            }
+
+            .lightbox-btn-primary {
+                background: linear-gradient(135deg, #ff2ea6, #8b5cf6);
+                color: white;
+            }
+
+            .lightbox-btn-primary:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 20px rgba(255, 46, 166, 0.4);
+            }
+
+            .lightbox-btn-secondary {
+                background: rgba(139, 92, 246, 0.2);
+                color: #8b5cf6;
+                border: 1px solid rgba(139, 92, 246, 0.3);
+            }
+
+            .lightbox-btn-secondary:hover {
+                background: rgba(139, 92, 246, 0.3);
+                transform: translateY(-2px);
+            }
+
+            .clickable-particle {
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .clickable-particle:hover {
+                transform: scale(1.2);
+                filter: brightness(1.3);
+                z-index: 100;
+            }
+        `;
+
+        document.head.appendChild(style);
+        document.body.appendChild(controlPanel);
+
+        // Create lightbox
+        this.createLightbox();
+
+        // Setup control interactions
+        this.setupControlInteractions();
+
+        console.log('Tiled background controls panel created');
+    }
+
+    createLightbox() {
+        const lightbox = document.createElement('div');
+        lightbox.className = 'pixel-lightbox';
+        lightbox.innerHTML = `
+            <div class="lightbox-content">
+                <div class="lightbox-header">
+                    <div class="lightbox-title">
+                        <span>✨</span>
+                        Pixel Information
+                    </div>
+                    <button class="lightbox-close" onclick="window.tiledBackground.closeLightbox()">×</button>
+                </div>
+                <div class="lightbox-body">
+                    <div class="lightbox-info">
+                        <span class="lightbox-info-label">Type:</span>
+                        <span class="lightbox-info-value" id="lightbox-type">-</span>
+                    </div>
+                    <div class="lightbox-info">
+                        <span class="lightbox-info-label">Size:</span>
+                        <span class="lightbox-info-value" id="lightbox-size">-</span>
+                    </div>
+                    <div class="lightbox-info">
+                        <span class="lightbox-info-label">Animation:</span>
+                        <span class="lightbox-info-value" id="lightbox-animation">-</span>
+                    </div>
+                    <div class="lightbox-info">
+                        <span class="lightbox-info-label">Opacity:</span>
+                        <span class="lightbox-info-value" id="lightbox-opacity">-</span>
+                    </div>
+                    <div class="lightbox-body-text">
+                        <p>This is a dynamic tile from the AetherWave background system. Click anywhere on the background to explore more tiles!</p>
+                    </div>
+                    <div class="lightbox-actions">
+                        <button class="lightbox-btn lightbox-btn-primary" onclick="window.tiledBackground.closeLightbox()">
+                            Close
+                        </button>
+                        <button class="lightbox-btn lightbox-btn-secondary" onclick="window.tiledBackground.randomizeControls()">
+                            🎲 Randomize
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(lightbox);
+
+        // Close lightbox when clicking outside
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                this.closeLightbox();
+            }
+        });
+
+        this.lightbox = lightbox;
+        console.log('Pixel lightbox created');
+    }
+
+    showLightbox(tileInfo) {
+        if (!this.lightbox) return;
+
+        // Update lightbox content
+        document.getElementById('lightbox-type').textContent = tileInfo.type;
+        document.getElementById('lightbox-size').textContent = `${tileInfo.size}px × ${tileInfo.size}px`;
+        document.getElementById('lightbox-animation').textContent = `${tileInfo.animation}s`;
+        document.getElementById('lightbox-opacity').textContent = `${(tileInfo.opacity * 100).toFixed(1)}%`;
+
+        // Show lightbox
+        this.lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeLightbox() {
+        if (!this.lightbox) return;
+
+        this.lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    setupControlInteractions() {
+        // Variance control
+        const varianceSlider = document.getElementById('variance-slider');
+        const varianceValue = document.getElementById('variance-value');
+        varianceSlider.addEventListener('input', (e) => {
+            this.variance = e.target.value / 100;
+            varianceValue.textContent = `${e.target.value}%`;
+            this.updateTileConfigs();
+        });
+
+        // Speed control
+        const speedSlider = document.getElementById('speed-slider');
+        const speedValue = document.getElementById('speed-value');
+        speedSlider.addEventListener('input', (e) => {
+            this.speed = e.target.value / 100;
+            speedValue.textContent = `${e.target.value}%`;
+            this.updateTileConfigs();
+        });
+
+        // Size control
+        const sizeSlider = document.getElementById('size-slider');
+        const sizeValue = document.getElementById('size-value');
+        sizeSlider.addEventListener('input', (e) => {
+            this.size = e.target.value / 100;
+            sizeValue.textContent = `${e.target.value}%`;
+            this.updateTileConfigs();
+        });
+
+        // Density control
+        const densitySlider = document.getElementById('density-slider');
+        const densityValue = document.getElementById('density-value');
+        densitySlider.addEventListener('input', (e) => {
+            this.density = e.target.value / 100;
+            densityValue.textContent = `${e.target.value}%`;
+            this.updateTileConfigs();
+        });
+
+        // Reset button
+        document.getElementById('reset-controls').addEventListener('click', () => {
+            this.resetControls();
+        });
+
+        // Randomize button
+        document.getElementById('randomize-controls').addEventListener('click', () => {
+            this.randomizeControls();
+        });
+
+        // Toggle panel
+        const toggleBtn = document.querySelector('.toggle-controls');
+        const controlPanel = document.querySelector('.tiled-background-controls');
+        toggleBtn.addEventListener('click', () => {
+            controlPanel.classList.toggle('collapsed');
+            toggleBtn.textContent = controlPanel.classList.contains('collapsed') ? '⊟' : '⊟';
+        });
+    }
+
+    updateTileConfigs() {
+        this.tileConfigs = this.generateTileConfigs();
+        this.regenerateTiles();
+    }
+
+    resetControls() {
+        this.variance = 0.5;
+        this.speed = 0.5;
+        this.size = 0.5;
+        this.density = 0.5;
+
+        // Update UI
+        document.getElementById('variance-slider').value = 50;
+        document.getElementById('speed-slider').value = 50;
+        document.getElementById('size-slider').value = 50;
+        document.getElementById('density-slider').value = 50;
+
+        document.getElementById('variance-value').textContent = '50%';
+        document.getElementById('speed-value').textContent = '50%';
+        document.getElementById('size-value').textContent = '50%';
+        document.getElementById('density-value').textContent = '50%';
+
+        this.updateTileConfigs();
+    }
+
+    randomizeControls() {
+        this.variance = Math.random();
+        this.speed = Math.random();
+        this.size = Math.random();
+        this.density = Math.random();
+
+        // Update UI
+        document.getElementById('variance-slider').value = Math.round(this.variance * 100);
+        document.getElementById('speed-slider').value = Math.round(this.speed * 100);
+        document.getElementById('size-slider').value = Math.round(this.size * 100);
+        document.getElementById('density-slider').value = Math.round(this.density * 100);
+
+        document.getElementById('variance-value').textContent = `${Math.round(this.variance * 100)}%`;
+        document.getElementById('speed-value').textContent = `${Math.round(this.speed * 100)}%`;
+        document.getElementById('size-value').textContent = `${Math.round(this.size * 100)}%`;
+        document.getElementById('density-value').textContent = `${Math.round(this.density * 100)}%`;
+
+        this.updateTileConfigs();
     }
 
     generateTiles() {
@@ -241,9 +895,19 @@ class TiledBackground {
         const rotation = Math.random() * 360;
         tile.style.transform = `rotate(${rotation}deg)`;
 
+        // Store tile info for lightbox
+        tile.dataset.tileType = config.type;
+        tile.dataset.tileSize = size;
+        tile.dataset.tileAnimation = animDuration;
+        tile.dataset.tileOpacity = opacity;
+
         // Add hover effect
         tile.addEventListener('mouseenter', () => this.onTileHover(tile));
         tile.addEventListener('mouseleave', () => this.onTileLeave(tile));
+
+        // Add click effect for lightbox
+        tile.classList.add('clickable-particle');
+        tile.addEventListener('click', (e) => this.onTileClick(tile, e));
 
         this.container.appendChild(tile);
         this.tiles.push(tile);

@@ -3,7 +3,7 @@ class NavigationManager {
     constructor() {
         this.navItems = [
             { text: 'Welcome', url: '/static/', active: false },
-            { text: 'Creator Studio', url: '/static/aimusic-media.html', active: false },
+            { text: 'Creator-Studio', url: '/static/creators-lounge.html', active: false },
             { text: 'Playlists', url: '/static/playlists.html', active: false },
 			{ text: 'Virtual-Artists', url: '/static/Virtual-Artists.html', active: false }
         ];

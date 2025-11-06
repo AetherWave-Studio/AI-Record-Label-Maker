@@ -49,7 +49,7 @@ export interface LumaResult {
 
 /**
  * Generate a seamless loop video from text prompt using Luma Ray 2 Flash
- * The "loop" keyword in the prompt tells Luma to create a seamless loop
+ * Uses Luma's native loop parameter which blends the end with the beginning for perfect loops
  * @param options Text prompt, duration, aspect ratio, and loop setting
  * @returns Video URL when complete
  */
@@ -59,16 +59,13 @@ export async function lumaTextToLoop(
   try {
     console.log('🎬 Luma Text-to-Loop generation starting...');
     
-    // Append "loop" to prompt if loop mode is enabled
-    const promptWithLoop = options.loop 
-      ? `${options.prompt}, seamless loop, continuous motion`
-      : options.prompt;
-    
+    // Use user's prompt as-is - let the API's native loop parameter handle looping
     const result = await fal.subscribe(LUMA_MODELS.TEXT_TO_VIDEO, {
       input: {
-        prompt: promptWithLoop,
+        prompt: options.prompt,
         duration: options.duration || "5s",
         aspect_ratio: options.aspect_ratio || "16:9",
+        loop: options.loop || false, // ✅ Actually use the API's native loop parameter!
       },
       logs: true,
       onQueueUpdate: (update) => {
@@ -121,17 +118,14 @@ export async function lumaImageToLoop(
   try {
     console.log('🎬 Luma Image-to-Loop generation starting...');
     
-    // Append "loop" to prompt for seamless looping
-    const promptWithLoop = options.loop
-      ? `${options.prompt}, seamless loop, continuous motion, smooth return to starting position`
-      : options.prompt;
-    
+    // Use user's prompt as-is - let the API's native loop parameter handle looping
     const result = await fal.subscribe(LUMA_MODELS.IMAGE_TO_VIDEO, {
       input: {
-        prompt: promptWithLoop,
+        prompt: options.prompt,
         image_url: options.image_url,
         duration: options.duration || "5s",
         aspect_ratio: options.aspect_ratio || "16:9",
+        loop: options.loop || false, // ✅ Actually use the API's native loop parameter!
       },
       logs: true,
       onQueueUpdate: (update) => {
@@ -183,13 +177,9 @@ export async function lumaVideoToLoop(
   try {
     console.log('🎬 Luma Video-to-Loop (Modify) generation starting...');
     
-    // Append "loop" to prompt
-    const promptWithLoop = options.loop
-      ? `${options.prompt}, seamless loop, smooth continuous motion, perfect loop transition`
-      : options.prompt;
-    
+    // Use user's prompt as-is - let the API's native loop parameter handle looping
     const input: any = {
-      prompt: promptWithLoop,
+      prompt: options.prompt,
       video_url: options.video_url,
     };
     
@@ -197,7 +187,10 @@ export async function lumaVideoToLoop(
     if (options.image_url) {
       input.image_url = options.image_url;
     }
-    
+
+    // ✅ Add native loop parameter
+    input.loop = options.loop || false;
+
     const result = await fal.subscribe(LUMA_MODELS.VIDEO_TO_VIDEO_MODIFY, {
       input,
       logs: true,

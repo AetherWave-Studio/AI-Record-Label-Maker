@@ -1,0 +1,38 @@
+https://api.kie.ai/api/v1/jobs/createTask
+
+
+model
+"bytedance/v1-pro-image-to-video"
+
+input.resolution
+480 or 720
+
+input.duration
+10s
+
+Example Request
+curl -X POST "https://api.kie.ai/api/v1/jobs/createTask" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -d '{
+    "model": "bytedance/v1-pro-image-to-video",
+    "callBackUrl": "https://your-domain.com/api/callback",
+    "input": {
+      "prompt": "A golden retriever dashing through shallow surf at the beach, back angle camera low near waterline, splashes frozen in time, blur trails in waves and paws, afternoon sun glinting off wet fur, overcast day, dramatic clouds",
+      "image_url": "https://file.aiquickdraw.com/custom-page/akr/section-images/1755179021328w1nhip18.webp",
+      "resolution": "720p",
+      "duration": "5",
+      "camera_fixed": false,
+      "seed": -1,
+      "enable_safety_checker": true
+    }
+}'
+
+Success response
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "taskId": "task_12345678"
+  }
+

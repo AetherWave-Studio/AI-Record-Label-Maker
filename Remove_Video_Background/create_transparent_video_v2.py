@@ -33,7 +33,7 @@ def get_video_info(video_path):
         'duration': float(info['format']['duration'])
     }
 
-def process_video_with_transparency(input_path, output_webm, output_mov=None):
+def process_video_with_transparency(input_path, output_webm, output_mov=None, output_gif=None):
     """Process video and create outputs with transparency"""
     
     print("=" * 70)
@@ -43,14 +43,16 @@ def process_video_with_transparency(input_path, output_webm, output_mov=None):
     print(f"Output WebM: {output_webm}")
     if output_mov:
         print(f"Output MOV: {output_mov}")
+    if output_gif:
+        print(f"Output GIF: {output_gif}")
     print()
     
     # Get video info
     print("Reading video metadata...")
     info = get_video_info(input_path)
-    print(f"✓ Resolution: {info['width']}x{info['height']}")
-    print(f"✓ FPS: {info['fps']}")
-    print(f"✓ Duration: {info['duration']:.2f}s")
+    print(f"+ Resolution: {info['width']}x{info['height']}")
+    print(f"+ FPS: {info['fps']}")
+    print(f"+ Duration: {info['duration']:.2f}s")
     print()
     
     # Extract and process frames
@@ -81,30 +83,31 @@ def process_video_with_transparency(input_path, output_webm, output_mov=None):
         output.save(str(frame_path), 'PNG')
     
     cap.release()
-    print(f"\n✓ Processed all {frame_count} frames")
+    print(f"\n+ Processed all {frame_count} frames")
     print()
     
-    # Create WebM with VP9 and alpha
-    print("Encoding WebM with transparency (VP9 codec)...")
-    webm_cmd = [
-        'ffmpeg', '-y',
-        '-framerate', str(info['fps']),
-        '-i', str(temp_dir / 'frame_%05d.png'),
-        '-c:v', 'libvpx-vp9',
-        '-pix_fmt', 'yuva420p',
-        '-auto-alt-ref', '0',
-        '-lossless', '0',
-        '-crf', '30',
-        '-b:v', '0',
-        output_webm
-    ]
-    
-    result = subprocess.run(webm_cmd, capture_output=True, text=True)
-    if result.returncode == 0:
-        print(f"✓ WebM created successfully!")
-    else:
-        print(f"⚠ WebM encoding issue: {result.stderr[:200]}")
-    print()
+    # Create WebM with VP9 and alpha (only if output_webm is provided)
+    if output_webm:
+        print("Encoding WebM with transparency (VP9 codec)...")
+        webm_cmd = [
+            'ffmpeg', '-y',
+            '-framerate', str(info['fps']),
+            '-i', str(temp_dir / 'frame_%05d.png'),
+            '-c:v', 'libvpx-vp9',
+            '-pix_fmt', 'yuva420p',
+            '-auto-alt-ref', '0',
+            '-lossless', '0',
+            '-crf', '30',
+            '-b:v', '0',
+            output_webm
+        ]
+
+        result = subprocess.run(webm_cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"+ WebM created successfully!")
+        else:
+            print(f"! WebM encoding issue: {result.stderr[:200]}")
+        print()
     
     # Optionally create MOV with ProRes 4444 (better alpha support)
     if output_mov:
@@ -122,37 +125,92 @@ def process_video_with_transparency(input_path, output_webm, output_mov=None):
         
         result = subprocess.run(mov_cmd, capture_output=True, text=True)
         if result.returncode == 0:
-            print(f"✓ MOV created successfully!")
+            print(f"+ MOV created successfully!")
         else:
-            print(f"⚠ MOV encoding issue (ProRes may not be available)")
+            print(f"! MOV encoding issue (ProRes may not be available)")
         print()
-    
+
+    # Optionally create GIF with transparency
+    if output_gif:
+        print("Creating GIF with transparency...")
+        # Calculate appropriate frame rate for GIF (max 15fps for reasonable file size)
+        gif_fps = min(info['fps'], 15)
+        gif_cmd = [
+            'ffmpeg', '-y',
+            '-framerate', str(info['fps']),
+            '-i', str(temp_dir / 'frame_%05d.png'),
+            '-vf', f'fps={gif_fps},scale=iw:ih:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse',
+            '-gifflags', '+transdiff',
+            output_gif
+        ]
+
+        result = subprocess.run(gif_cmd, capture_output=True, text=True)
+        if result.returncode == 0:
+            print(f"+ GIF created successfully!")
+        else:
+            print(f"! GIF encoding issue, trying simpler approach...")
+            # Fallback: simpler GIF without palette optimization
+            simple_gif_cmd = [
+                'ffmpeg', '-y',
+                '-framerate', str(info['fps']),
+                '-i', str(temp_dir / 'frame_%05d.png'),
+                '-vf', f'fps={gif_fps}',
+                output_gif
+            ]
+            result = subprocess.run(simple_gif_cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"+ GIF created successfully (simple mode)!")
+            else:
+                print(f"! GIF encoding failed")
+        print()
+
     # Clean up
     print("Cleaning up temporary files...")
     for frame_file in temp_dir.glob('*.png'):
         frame_file.unlink()
     temp_dir.rmdir()
-    print("✓ Cleanup complete")
+    print("+ Cleanup complete")
     print()
     
     print("=" * 70)
-    print("✓ PROCESSING COMPLETE!")
+    print("+ PROCESSING COMPLETE!")
     print("=" * 70)
     print(f"Your transparent video loop is ready:")
     print(f"  WebM: {output_webm}")
     if output_mov:
         print(f"  MOV:  {output_mov}")
+    if output_gif:
+        print(f"  GIF:  {output_gif}")
     print()
     print("Format details:")
     print("  - WebM: VP9 codec with yuva420p (web-friendly)")
-    print("  - Maintains original dimensions and frame rate")
+    if output_mov:
+        print("  - MOV: ProRes 4444 codec (high quality editing)")
+    if output_gif:
+        print("  - GIF: Animated with transparency (social media friendly)")
+    print("  - Maintains original dimensions")
     print("  - Background replaced with alpha transparency")
     print("  - Seamless loop preserved")
     print()
 
 if __name__ == '__main__':
-    input_video = '/home/ubuntu/Uploads/openart-video_6c9b307e_1760945378949.mp4'
-    output_webm = '/home/ubuntu/aetherwave_transparent_loop_v2.webm'
-    output_mov = '/home/ubuntu/aetherwave_transparent_loop.mov'
-    
-    process_video_with_transparency(input_video, output_webm, output_mov)
+    import sys
+
+    if len(sys.argv) < 4:
+        print("Usage: python create_transparent_video_v2.py <input_video> <output_path> <format>")
+        print("  format: 'webm', 'mov', or 'gif'")
+        sys.exit(1)
+
+    input_video = sys.argv[1]
+    output_path = sys.argv[2]
+    format_type = sys.argv[3].lower()
+
+    if format_type == 'webm':
+        process_video_with_transparency(input_video, output_path, None, None)
+    elif format_type == 'mov':
+        process_video_with_transparency(input_video, None, output_path, None)
+    elif format_type == 'gif':
+        process_video_with_transparency(input_video, None, None, output_path)
+    else:
+        print(f"Error: Invalid format '{format_type}'. Use 'webm', 'mov', or 'gif'")
+        sys.exit(1)

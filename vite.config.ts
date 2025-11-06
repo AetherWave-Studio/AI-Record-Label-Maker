@@ -16,8 +16,8 @@ export default defineConfig({
           await import("@replit/vite-plugin-dev-banner").then((m) =>
             m.devBanner(),
           ),
-        ]
-      : []),
+        ]      : []),
+
   ],
   resolve: {
     alias: {
@@ -37,4 +37,15 @@ export default defineConfig({
       deny: ["**/.*"],
     },
   },
+});
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react'; // if using React
+
+export default defineConfig({
+  server: {
+    proxy: {
+      '/api': 'http://localhost:3000' // or your backend URL—string format skips extras
+    }
+  },
+  plugins: [react()],
 });
