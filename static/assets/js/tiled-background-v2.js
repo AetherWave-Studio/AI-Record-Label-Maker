@@ -1135,20 +1135,17 @@ class TiledBackground {
     }
 }
 
+// Make it globally available
+window.TiledBackground = TiledBackground;
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     window.tiledBackground = new TiledBackground();
     console.log('Tiled background initialized with dynamic media library');
-
-    // Add exit portal to AetherWave pages
-    addExitPortal();
 });
 
-// Make it globally available
-window.TiledBackground = TiledBackground;
-
-// Add exit portal to return to Ghost Musician profile
-function addExitPortal() {
+// Add exit portal to return to Ghost Musician profile (COMMENTED OUT)
+/*function addExitPortal() {
     // Check if we're on an AetherWave page (not Ghost Musician)
     const isAetherWavePage = window.location.pathname.startsWith('/static/') ||
                             window.location.pathname === '/static/' ||
@@ -1264,7 +1261,7 @@ function addExitPortal() {
             color: #fff;
         }
 
-        /* Portal particles */
+        /* Portal particles 
         .exit-portal-ring::after {
             content: '';
             position: absolute;
@@ -1298,7 +1295,7 @@ function addExitPortal() {
             to { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        /* Mobile responsive */
+        /* Mobile responsive 
         @media (max-width: 768px) {
             .exit-portal {
                 bottom: 1rem;
@@ -1326,4 +1323,4 @@ function addExitPortal() {
     document.body.appendChild(exitPortal);
 
     console.log('Exit portal added to AetherWave page');
-}
+}*/

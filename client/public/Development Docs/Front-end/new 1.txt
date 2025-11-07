@@ -1,0 +1,48 @@
+# Install dependencies
+npm install zustand framer-motion lucide-react
+
+# For TypeScript support
+npm install -D @types/react @types/react-dom
+
+import { EnclaveShell } from '@/enclave/EnclaveShell';
+
+function App() {
+  return <EnclaveShell />;
+}
+
+import { useEnclaveStore } from '@/store/enclaveStore';
+
+function MyComponent() {
+  const { viewMode, setViewMode, switchContent } = useEnclaveStore();
+  
+  return (
+    <button onClick={() => setViewMode('theater')}>
+      Enter Theater Mode
+    </button>
+  );
+}
+
+
+// Layout
+setViewMode(mode: ViewMode)
+resetLayout()
+
+// Content
+switchContent(content: ContentType)
+setMainPanelSize(size: PanelSize)
+
+// Panels
+togglePanel(panelId: string)
+setPanelSize(panelId: string, size: PanelSize)
+zoomPanel(panelId: string)
+
+// Sidebars
+toggleLeftSidebar()
+toggleRightSidebar()
+
+// Alerts
+addAlert(alert: Omit<Alert, 'id' | 'timestamp' | 'read'>)
+focusAlert(alert: Alert)
+dismissAlert(alertId: string)
+markAlertRead(alertId: string)
+clearAlerts()

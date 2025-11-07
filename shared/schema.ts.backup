@@ -161,11 +161,12 @@ export const VideoModel = z.enum([
   'seedance-pro',       // Fal.ai ByteDance Seedance V1 Pro
   'veo3_fast',          // KIE.ai Google Veo 3 Fast
   'sora2',              // KIE.ai OpenAI Sora 2 Standard
+  'luma-pro',			//	
 ]);
 export type VideoModel = z.infer<typeof VideoModel>;
 
 // Image engine options
-export const ImageEngine = z.enum(['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion']);
+export const ImageEngine = z.enum(['dall-e-2', 'dall-e-3', 'flux', 'midjourney', 'stable-diffusion','nasno-banano']);
 export type ImageEngine = z.infer<typeof ImageEngine>;
 
 // Music model options

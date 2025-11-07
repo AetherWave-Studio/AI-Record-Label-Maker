@@ -1,5 +1,5 @@
 import { db } from './db';
-import { products } from '@shared/schema';
+import { products } from '#shared/schema';
 
 const seedProducts = async () => {
   console.log('Starting product seed...');

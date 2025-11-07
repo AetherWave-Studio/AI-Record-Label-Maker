@@ -1,0 +1,245 @@
+/* AlertOverlay.module.css - Focused alert display */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+}
+
+.alertCard {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 600px;
+  background: linear-gradient(135deg, rgba(10, 14, 39, 0.95) 0%, rgba(26, 31, 58, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  border: 2px solid var(--priority-color, var(--neon-cyan));
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 
+    0 0 40px var(--priority-color, var(--neon-cyan)),
+    inset 0 0 40px rgba(0, 255, 255, 0.1);
+  z-index: 1001;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Close button */
+.closeBtn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--neon-cyan);
+  border-radius: 50%;
+  color: var(--neon-cyan);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.closeBtn:hover {
+  background: rgba(255, 0, 255, 0.2);
+  border-color: var(--neon-magenta);
+  color: var(--neon-magenta);
+  box-shadow: 0 0 15px var(--neon-magenta);
+}
+
+/* Priority badge */
+.priorityBadge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--priority-color, var(--neon-cyan));
+  border-radius: 20px;
+  color: var(--priority-color, var(--neon-cyan));
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-shadow: 0 0 10px var(--priority-color, var(--neon-cyan));
+}
+
+.priorityBadge[data-priority="critical"] {
+  animation: criticalPulse 1s ease-in-out infinite;
+}
+
+@keyframes criticalPulse {
+  0%, 100% {
+    box-shadow: 0 0 10px var(--priority-color);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--priority-color), 0 0 30px var(--priority-color);
+  }
+}
+
+/* Icon */
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  margin: 40px auto 24px;
+  background: rgba(0, 255, 255, 0.1);
+  border: 2px solid var(--priority-color, var(--neon-cyan));
+  border-radius: 50%;
+  color: var(--priority-color, var(--neon-cyan));
+  box-shadow: 
+    0 0 30px var(--priority-color, var(--neon-cyan)),
+    inset 0 0 20px rgba(0, 255, 255, 0.2);
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Content */
+.content {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 0 10px var(--neon-cyan);
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.message {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.timestamp {
+  font-size: 12px;
+  color: rgba(0, 255, 255, 0.6);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+/* Actions */
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.actionBtn,
+.dismissBtn {
+  padding: 12px 32px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.actionBtn {
+  background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-magenta) 100%);
+  border: none;
+  color: #000;
+  box-shadow: 0 0 20px var(--neon-cyan);
+}
+
+.actionBtn:hover {
+  box-shadow: 0 0 30px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+}
+
+.dismissBtn {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+.dismissBtn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+/* Animated border */
+.animatedBorder {
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    var(--priority-color, var(--neon-cyan)) 50%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  border-radius: 16px;
+  opacity: 0.3;
+  animation: borderFlow 3s linear infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes borderFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .alertCard {
+    width: 95%;
+    padding: 32px 24px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .message {
+    font-size: 14px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .actionBtn,
+  .dismissBtn {
+    width: 100%;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .priorityBadge,
+  .icon,
+  .animatedBorder {
+    animation: none;
+  }
+}

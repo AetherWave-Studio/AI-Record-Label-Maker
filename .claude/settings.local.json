@@ -36,7 +36,16 @@
       "Bash(move:*)",
       "Bash(find:*)",
       "Bash(cat:*)",
-      "WebFetch(domain:www.topmediai.com)"
+      "WebFetch(domain:www.topmediai.com)",
+      "Bash(npm run db:generate:*)",
+      "Bash(npm run)",
+      "Bash(npx drizzle-kit push:*)",
+      "Bash(npx drizzle-kit:*)",
+      "Bash(where:*)",
+      "Bash(npm run build:*)",
+      "Bash(git restore:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run dev:server:*)"
     ],
     "deny": [],
     "ask": []

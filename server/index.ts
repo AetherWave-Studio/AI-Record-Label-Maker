@@ -3,6 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import path from "path";
+import { promises as fs } from "fs";
 
 const app = express();
 
@@ -84,6 +85,34 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+  }
+
+  // Handle React SPA routes - these should be served by the React app
+  const reactRoutes = ['/profile', '/buy-credits', '/card-shop', '/seamless-loop-creator', '/channels'];
+
+  if (app.get("env") === "development") {
+    // In development, serve React app for specific routes
+    app.use(reactRoutes, async (req, res, next) => {
+      try {
+        const clientTemplate = path.resolve(
+          import.meta.dirname,
+          "..",
+          "index.html",
+        );
+        console.log(`Serving React route ${req.path} from: ${clientTemplate}`);
+        const template = await fs.readFile(clientTemplate, "utf-8");
+        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+      } catch (e) {
+        console.error(`Error serving React route ${req.path}:`, e);
+        next(e);
+      }
+    });
+  } else {
+    // In production, serve built React app
+    app.use(reactRoutes, (req, res) => {
+      const distPath = path.resolve(import.meta.dirname, "..", "dist");
+      res.sendFile(path.resolve(distPath, "index.html"));
+    });
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT

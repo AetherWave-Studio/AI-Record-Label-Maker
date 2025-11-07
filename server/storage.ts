@@ -1,4 +1,4 @@
-import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Product, type InsertProduct, products, type UserInventory, type InsertUserInventory, userInventory } from "@shared/schema";
+import { type User, type UpsertUser, type CreditCheckResult, type CreditDeductionResult, SERVICE_CREDIT_COSTS, UNLIMITED_SERVICE_PLANS, type ServiceType, type PlanType, users, FREE_TIER_WELCOME_BONUS, FREE_TIER_DAILY_CREDITS, FREE_TIER_CREDIT_CAP, type Product, type InsertProduct, products, type UserInventory, type InsertUserInventory, userInventory } from "#shared/schema";
 import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool, neonConfig } from "@neondatabase/serverless";
 import { eq, and, desc } from "drizzle-orm";
@@ -73,6 +73,7 @@ export class MemStorage implements IStorage {
       lastName: userData.lastName || null,
       profileImageUrl: userData.profileImageUrl || null,
       username: userData.username || null,
+      lastUsernameChange: userData.lastUsernameChange || existingUser?.lastUsernameChange || null,
       vocalGenderPreference: userData.vocalGenderPreference || existingUser?.vocalGenderPreference || 'm',
       subscriptionPlan: userData.subscriptionPlan || existingUser?.subscriptionPlan || 'free',
       credits: existingUser?.credits ?? userData.credits ?? FREE_TIER_WELCOME_BONUS,
@@ -457,6 +458,7 @@ export class DbStorage implements IStorage {
         lastName: userData.lastName || null,
         profileImageUrl: userData.profileImageUrl || null,
         username: userData.username || null,
+        lastUsernameChange: userData.lastUsernameChange || null,
         vocalGenderPreference: userData.vocalGenderPreference || 'm',
         subscriptionPlan: userData.subscriptionPlan || 'free',
         credits: userData.credits ?? FREE_TIER_WELCOME_BONUS, // New users get welcome bonus
@@ -474,6 +476,7 @@ export class DbStorage implements IStorage {
           lastName: userData.lastName || null,
           profileImageUrl: userData.profileImageUrl || null,
           username: userData.username || null,
+          lastUsernameChange: userData.lastUsernameChange,
           vocalGenderPreference: userData.vocalGenderPreference,
           subscriptionPlan: userData.subscriptionPlan,
           stripeCustomerId: userData.stripeCustomerId,
@@ -1023,7 +1026,7 @@ export class DbStorage implements IStorage {
     }
 
     // Calculate growth based on FAME and tier multiplier
-    const { FAME_GROWTH_MULTIPLIERS, ACHIEVEMENT_MILESTONES } = await import('@shared/schema');
+    const { FAME_GROWTH_MULTIPLIERS, ACHIEVEMENT_MILESTONES } = await import('#shared/schema');
     let tierMultiplier = FAME_GROWTH_MULTIPLIERS[user.subscriptionPlan as PlanType] || 1.0;
     
     // Check for manager and producer bonuses from inventory
@@ -1115,7 +1118,7 @@ export class DbStorage implements IStorage {
     const existingAchievements = await this.getBandAchievements(bandId);
     const existingTypes = new Set(existingAchievements.map(a => a.achievementType));
     
-    const { ACHIEVEMENT_MILESTONES } = await import('@shared/schema');
+    const { ACHIEVEMENT_MILESTONES } = await import('#shared/schema');
     const totalSales = band.physicalCopies + band.digitalDownloads + band.totalStreams;
     
     const newAchievements: BandAchievement[] = [];

@@ -1,4 +1,4 @@
-import type { CardDesignType } from "@shared/schema";
+import type { CardDesignType } from "#shared/schema";
 
 /**
  * DALL-E Prompt Templates for Trading Card Designs

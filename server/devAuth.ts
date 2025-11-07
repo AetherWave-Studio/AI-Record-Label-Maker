@@ -2,7 +2,7 @@ import type { Express, RequestHandler } from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
-import type { User } from "@shared/schema";
+import type { User } from "#shared/schema";
 
 // Dev superuser configuration
 const DEV_USER: User = {

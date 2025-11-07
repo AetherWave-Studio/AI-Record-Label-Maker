@@ -1,0 +1,253 @@
+/* TopBar.module.css - Curved status bar with cyberpunk styling */
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(10, 14, 39, 0.9) 0%, rgba(26, 31, 58, 0.9) 100%);
+  backdrop-filter: blur(10px);
+  border-radius: 40px;
+  padding: 0 32px;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 
+    0 0 20px rgba(0, 255, 255, 0.3),
+    inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+/* Curved shape effect */
+.topBar::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 110%;
+  height: 150%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 255, 255, 0.05) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+/* Left section - Branding */
+.leftSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoIcon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-magenta) 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 15px var(--neon-cyan);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    box-shadow: 0 0 15px var(--neon-cyan);
+  }
+  50% {
+    box-shadow: 0 0 25px var(--neon-cyan), 0 0 40px var(--neon-cyan);
+  }
+}
+
+.logoText {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--neon-cyan);
+  text-shadow: var(--text-glow);
+  text-transform: uppercase;
+}
+
+/* Center section - View mode controls */
+.centerSection {
+  display: flex;
+  gap: 8px;
+  z-index: 1;
+}
+
+.viewModeBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 20px;
+  color: var(--neon-cyan);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.viewModeBtn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-magenta) 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.viewModeBtn:hover::before {
+  opacity: 0.1;
+}
+
+.viewModeBtn.active {
+  background: linear-gradient(135deg, rgba(0, 255, 255, 0.2) 0%, rgba(255, 0, 255, 0.2) 100%);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+  color: #fff;
+}
+
+.shortcut {
+  font-size: 10px;
+  opacity: 0.6;
+  margin-left: 4px;
+}
+
+/* Right section - Status indicators */
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+.dateTime {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--neon-cyan);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.dateTime svg {
+  opacity: 0.8;
+}
+
+.divider {
+  opacity: 0.3;
+}
+
+.iconBtn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 50%;
+  color: var(--neon-cyan);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+}
+
+.iconBtn:active {
+  transform: scale(0.95);
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #ff0080 0%, #ff00ff 100%);
+  border: 2px solid rgba(10, 14, 39, 0.9);
+  border-radius: 9px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 0 4px;
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.6);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .topBar {
+    padding: 0 24px;
+  }
+
+  .logoText {
+    font-size: 14px;
+  }
+
+  .centerSection {
+    gap: 6px;
+  }
+
+  .viewModeBtn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .topBar {
+    border-radius: 20px;
+    padding: 0 16px;
+  }
+
+  .logoIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .logoText {
+    display: none;
+  }
+
+  .centerSection {
+    display: none;
+  }
+
+  .dateTime span:last-child {
+    display: none;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .logoIcon,
+  .viewModeBtn,
+  .iconBtn {
+    animation: none;
+    transition: none;
+  }
+}

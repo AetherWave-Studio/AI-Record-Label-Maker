@@ -7,6 +7,7 @@ import BuyCreditsPage from "@/pages/buy-credits";
 import CardShopPage from "@/pages/card-shop";
 import VideoGenerationPage from "@/pages/video-generation";
 import ChannelsPage from "@/pages/channels";
+import ProfilePage from "@/pages/profile";
 
 function HomePage() {
   return (
@@ -64,6 +65,7 @@ function Router() {
       <Route path="/card-shop" component={CardShopPage} />
       <Route path="/seamless-loop-creator" component={VideoGenerationPage} />
       <Route path="/channels" component={ChannelsPage} />
+      <Route path="/profile" component={ProfilePage} />
       <Route>
         <div className="container mx-auto px-4 py-16 text-center">
           <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>

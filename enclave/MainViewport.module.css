@@ -1,0 +1,252 @@
+/* MainViewport.module.css - Main content area with cyberpunk styling */
+
+.viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 14, 39, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+
+/* Size variants */
+.viewport[data-size="expanded"] {
+  transform: scale(1.02);
+}
+
+.viewport[data-size="compact"] {
+  transform: scale(0.98);
+}
+
+/* Holographic border effect */
+.border {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.borderTop,
+.borderRight,
+.borderBottom,
+.borderLeft {
+  position: absolute;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--neon-cyan) 50%, 
+    transparent 100%
+  );
+  opacity: 0.6;
+  animation: borderPulse 3s ease-in-out infinite;
+}
+
+.borderTop {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+}
+
+.borderRight {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    var(--neon-magenta) 50%, 
+    transparent 100%
+  );
+  animation-delay: 0.75s;
+}
+
+.borderBottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--neon-cyan) 50%, 
+    transparent 100%
+  );
+  animation-delay: 1.5s;
+}
+
+.borderLeft {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, 
+    transparent 0%, 
+    var(--neon-magenta) 50%, 
+    transparent 100%
+  );
+  animation-delay: 2.25s;
+}
+
+@keyframes borderPulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Content wrapper */
+.contentWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 1;
+}
+
+/* Custom scrollbar */
+.contentWrapper::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contentWrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+}
+
+.contentWrapper::-webkit-scrollbar-thumb {
+  background: var(--neon-cyan);
+  border-radius: 4px;
+  box-shadow: 0 0 6px var(--neon-cyan);
+}
+
+.contentWrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--neon-magenta);
+  box-shadow: 0 0 8px var(--neon-magenta);
+}
+
+/* Content area */
+.content {
+  width: 100%;
+  height: 100%;
+  color: var(--neon-cyan);
+}
+
+/* Curved display overlay - creates the holographic curve effect */
+.curveOverlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 255, 255, 0.05) 70%,
+    rgba(255, 0, 255, 0.05) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 3;
+  transform: perspective(1200px) rotateY(-2deg);
+  mix-blend-mode: screen;
+}
+
+/* Loading spinner */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 24px;
+}
+
+.spinner {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.spinnerRing {
+  position: absolute;
+  inset: 0;
+  border: 3px solid transparent;
+  border-top-color: var(--neon-cyan);
+  border-radius: 50%;
+  animation: spin 1.5s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+}
+
+.spinnerRing:nth-child(2) {
+  border-top-color: var(--neon-magenta);
+  animation-delay: -0.5s;
+  inset: 8px;
+}
+
+.spinnerRing:nth-child(3) {
+  border-top-color: var(--neon-blue);
+  animation-delay: -1s;
+  inset: 16px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  color: var(--neon-cyan);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: var(--text-glow);
+  animation: textPulse 2s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Hover effects */
+.viewport:hover .border {
+  opacity: 1;
+}
+
+.viewport:hover .curveOverlay {
+  opacity: 0.8;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .contentWrapper {
+    padding: 16px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .borderTop,
+  .borderRight,
+  .borderBottom,
+  .borderLeft,
+  .spinnerRing,
+  .loadingText {
+    animation: none;
+  }
+
+  .viewport {
+    transition: none;
+  }
+}

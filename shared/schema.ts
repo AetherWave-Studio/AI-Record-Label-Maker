@@ -22,6 +22,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   username: varchar("username").unique(),
+  lastUsernameChange: timestamp("last_username_change"), // Track last username change for 30-day restriction
   vocalGenderPreference: varchar("vocal_gender_preference").default('m'),
   credits: integer("credits").default(50).notNull(),
   subscriptionPlan: varchar("subscription_plan").default('free').notNull(), // 'free', 'studio', 'creator', 'producer', 'mogul'

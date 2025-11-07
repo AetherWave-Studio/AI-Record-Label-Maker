@@ -1,0 +1,155 @@
+/* EnclaveShell.module.css - Cyberpunk-themed styling */
+
+.enclaveContainer {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1420 100%);
+  overflow: hidden;
+  position: relative;
+  font-family: 'Arial', 'Helvetica', sans-serif;
+}
+
+/* Grid background effect */
+.enclaveContainer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  opacity: 0.3;
+  pointer-events: none;
+  animation: gridScroll 20s linear infinite;
+}
+
+@keyframes gridScroll {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  100% {
+    transform: translateY(50px) translateX(50px);
+  }
+}
+
+.enclaveGrid {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  padding: 20px;
+  box-sizing: border-box;
+  position: relative;
+  z-index: 1;
+}
+
+/* Grid areas */
+.topBarArea {
+  position: relative;
+  z-index: 10;
+}
+
+.leftSidebarArea {
+  position: relative;
+  overflow: hidden;
+}
+
+.mainViewportArea {
+  position: relative;
+  overflow: hidden;
+}
+
+.rightSidebarArea {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cyberpunk glow effects - Applied to child components via CSS variables */
+.enclaveContainer {
+  --neon-cyan: #00ffff;
+  --neon-magenta: #ff00ff;
+  --neon-blue: #1e88e5;
+  --dark-bg: rgba(10, 14, 39, 0.95);
+  --border-glow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-cyan);
+  --text-glow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+}
+
+/* View mode specific adjustments */
+.enclaveGrid[data-view-mode="theater"] .mainViewportArea {
+  transform: perspective(1200px) rotateY(-1deg);
+  filter: brightness(1.1);
+}
+
+.enclaveGrid[data-view-mode="focus"] .mainViewportArea {
+  transform: scale(1.05);
+}
+
+/* Debug info */
+.debugInfo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--neon-cyan);
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
+  border: 1px solid var(--neon-cyan);
+  box-shadow: var(--border-glow);
+  z-index: 9999;
+}
+
+.debugInfo p {
+  margin: 4px 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .enclaveGrid {
+    padding: 12px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Force theater mode on smaller screens */
+  .enclaveGrid {
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 80px 1fr !important;
+    grid-template-areas: 
+      "topbar"
+      "main" !important;
+  }
+
+  .leftSidebarArea,
+  .rightSidebarArea {
+    display: none;
+  }
+}
+
+/* Accessibility - High contrast mode */
+@media (prefers-contrast: high) {
+  .enclaveContainer {
+    background: #000;
+  }
+
+  .enclaveContainer::before {
+    display: none;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .enclaveContainer::before {
+    animation: none;
+  }
+
+  .enclaveGrid,
+  .topBarArea,
+  .leftSidebarArea,
+  .mainViewportArea,
+  .rightSidebarArea {
+    transition: none !important;
+    animation: none !important;
+  }
+}

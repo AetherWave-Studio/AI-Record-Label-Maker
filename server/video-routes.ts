@@ -1,6 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { storage } from "./storage";
-import type { User } from "@shared/schema";
+import type { User } from "#shared/schema";
 import { fal } from "@fal-ai/client";
 import { uploadImageToKie } from "./kieClient";
 import { lumaTextToLoop, lumaImageToLoop, lumaVideoToLoop } from "./lumaClient";

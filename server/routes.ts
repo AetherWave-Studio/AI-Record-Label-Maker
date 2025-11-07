@@ -21,10 +21,11 @@ import {
   type VideoModel,
   type ImageEngine,
   type MusicModel,
-  CARD_DESIGNS,
+  type CARD_DESIGNS,
   type CardDesignType,
-  CREDIT_BUNDLES
-} from "@shared/schema";
+  CREDIT_BUNDLES}
+ from "../shared/schema.js";
+
 import { eq, lt } from "drizzle-orm";
 import virtualArtistsRouter from './VirtualArtistsRoutes.js';
 import { setupVideoRoutes } from './video-routes';
@@ -278,6 +279,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch user" });
     }
         
+  });
+
+  // Get username change restriction info
+  app.get('/api/user/username-restriction', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      let canChangeUsername = true;
+      let daysRemaining = 0;
+      let nextChangeDate = null;
+
+      if (user.lastUsernameChange) {
+        const lastChange = new Date(user.lastUsernameChange);
+        const now = new Date();
+        const daysSinceChange = Math.floor((now.getTime() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (daysSinceChange < 30) {
+          canChangeUsername = false;
+          daysRemaining = 30 - daysSinceChange;
+          nextChangeDate = new Date(lastChange.getTime() + (30 * 24 * 60 * 60 * 1000));
+        }
+      }
+
+      res.json({
+        canChangeUsername,
+        daysRemaining,
+        lastUsernameChange: user.lastUsernameChange,
+        nextChangeDate
+      });
+    } catch (error: any) {
+      console.error("Error fetching username restriction:", error);
+      res.status(500).json({ message: "Failed to fetch username restriction info" });
+    }
+  });
+
+  // Update user profile
+  app.patch('/api/user/profile', authMiddleware, async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      const { firstName, lastName, username, vocalGenderPreference } = req.body;
+
+      // Get current user to preserve other fields
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Username validation with 30-day restriction
+      let finalUsername = currentUser.username;
+      let lastUsernameChange = currentUser.lastUsernameChange;
+
+      if (username !== undefined && username !== currentUser.username) {
+        // Check if username is being changed
+        if (currentUser.lastUsernameChange) {
+          const lastChange = new Date(currentUser.lastUsernameChange);
+          const now = new Date();
+          const daysSinceChange = Math.floor((now.getTime() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (daysSinceChange < 30) {
+            const daysRemaining = 30 - daysSinceChange;
+            return res.status(429).json({
+              message: `Username can only be changed once every 30 days. Please wait ${daysRemaining} more days.`,
+              daysRemaining,
+              lastUsernameChange: currentUser.lastUsernameChange
+            });
+          }
+        }
+
+        // Username validation
+        if (!username || username.trim().length < 3) {
+          return res.status(400).json({ message: "Username must be at least 3 characters long" });
+        }
+
+        if (username.trim().length > 20) {
+          return res.status(400).json({ message: "Username must be 20 characters or less" });
+        }
+
+        // Check if username contains only valid characters (letters, numbers, underscores, hyphens)
+        if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
+          return res.status(400).json({ message: "Username can only contain letters, numbers, underscores, and hyphens" });
+        }
+
+        finalUsername = username.trim();
+        lastUsernameChange = new Date(); // Set to current time when username changes
+      }
+
+      // Update user with new profile data
+      const updatedUser = await storage.upsertUser({
+        id: userId,
+        email: currentUser.email,
+        firstName: firstName !== undefined ? firstName : currentUser.firstName,
+        lastName: lastName !== undefined ? lastName : currentUser.lastName,
+        username: finalUsername,
+        lastUsernameChange: lastUsernameChange,
+        vocalGenderPreference: vocalGenderPreference !== undefined ? vocalGenderPreference : currentUser.vocalGenderPreference,
+        profileImageUrl: currentUser.profileImageUrl,
+        subscriptionPlan: currentUser.subscriptionPlan,
+        credits: currentUser.credits,
+        stripeCustomerId: currentUser.stripeCustomerId,
+        stripeSubscriptionId: currentUser.stripeSubscriptionId,
+      });
+
+      console.log('Profile updated for user:', userId);
+      res.json({
+        ...updatedUser,
+        usernameChanged: username !== undefined && username !== currentUser.username,
+        lastUsernameChange: lastUsernameChange
+      });
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      // Check for unique constraint violations
+      if (error.message?.includes('unique')) {
+        return res.status(400).json({ message: "Username already taken" });
+      }
+      res.status(500).json({ message: "Failed to update profile" });
+    }
   });
 
   // Logout endpoint
@@ -929,7 +1051,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Check and reset daily credits if needed
-  app.post('/api/user/credits/check-reset', authMiddleware, async (req: any, res) => {
+  app.post('/api/user/credits/check-reset', authMiddleware, async (req: any, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { message: string; }): void; new(): any; }; }; json: (arg0: { credits: any; resetOccurred: boolean; message?: string; hoursUntilReset?: number; }) => void; }) => {
     try {
       const userId = getUserId(req);
       const user = await storage.getUser(userId);

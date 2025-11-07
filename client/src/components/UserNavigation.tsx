@@ -2,13 +2,14 @@ import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Coins, ShoppingBag, Video, Radio } from "lucide-react";
+import { Coins, ShoppingBag, Video, Radio, User } from "lucide-react";
 
 export function UserNavigation() {
   const { user, isAuthenticated } = useAuth();
   const [location] = useLocation();
 
   const navItems = [
+    { path: "/profile", label: "Profile", icon: User },
     { path: "/buy-credits", label: "Buy Credits", icon: Coins },
     { path: "/card-shop", label: "Card Shop", icon: ShoppingBag },
     { path: "/video-generation", label: "Video Generation", icon: Video },
@@ -68,13 +69,17 @@ export function UserNavigation() {
               <Coins className="w-4 h-4 text-yellow-500" />
               <span className="font-semibold">{user?.credits || 0}</span>
             </div>
-            
-            <Avatar className="w-8 h-8" data-testid="user-avatar">
-              <AvatarImage src={user?.profileImageUrl || undefined} />
-              <AvatarFallback>
-                {user?.firstName?.[0]}{user?.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
+
+            <Link href="/profile">
+              <a className="cursor-pointer hover:opacity-80 transition-opacity" title="View Profile">
+                <Avatar className="w-8 h-8" data-testid="user-avatar">
+                  <AvatarImage src={user?.profileImageUrl || undefined} />
+                  <AvatarFallback>
+                    {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+              </a>
+            </Link>
           </div>
         </div>
       </div>
