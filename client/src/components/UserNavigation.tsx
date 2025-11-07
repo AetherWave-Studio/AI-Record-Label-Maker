@@ -21,10 +21,11 @@ export function UserNavigation() {
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/">
-              <a className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
-                AetherWave Studio
-              </a>
+            <Link 
+              href="/" 
+              className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent"
+            >
+              AetherWave Studio
             </Link>
             <Button asChild data-testid="button-login">
               <a href="/api/dev/login">Login</a>
@@ -39,10 +40,11 @@ export function UserNavigation() {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
-          <Link href="/">
-            <a className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent whitespace-nowrap">
-              AetherWave
-            </a>
+          <Link 
+            href="/" 
+            className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent whitespace-nowrap"
+          >
+            AetherWave
           </Link>
 
           <div className="flex items-center gap-2 flex-1 justify-center">
@@ -54,11 +56,9 @@ export function UserNavigation() {
                 asChild
                 data-testid={`nav-${path.slice(1)}`}
               >
-                <Link href={path}>
-                  <a className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{label}</span>
-                  </a>
+                <Link href={path} className="flex items-center gap-2">
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{label}</span>
                 </Link>
               </Button>
             ))}
