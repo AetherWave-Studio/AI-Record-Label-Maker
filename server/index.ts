@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { maintenanceMiddleware } from "./maintenance";
 import path from "path";
 import { promises as fs } from "fs";
 
@@ -19,6 +20,9 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: false, limit: '100mb' }));
+
+// Maintenance mode - shows "Coming Soon" page to visitors
+app.use(maintenanceMiddleware);
 
 app.use((req, res, next) => {
   const start = Date.now();
