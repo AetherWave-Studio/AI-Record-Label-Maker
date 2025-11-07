@@ -174,6 +174,19 @@ export function maintenanceMiddleware(req: Request, res: Response, next: NextFun
           Get ready to unleash your creativity with cutting-edge AI tools.
         </p>
         
+        <!-- Featured Video -->
+        <div style="margin: 2rem 0; border-radius: 1rem; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+          <div style="position: relative; padding-bottom: 56.25%; height: 0;">
+            <iframe 
+              style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+              src="https://www.youtube.com/embed/1iKkiuoUoLs?si=350ig1iisiSEW-Tj&autoplay=0&mute=0&rel=0&modestbranding=1" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowfullscreen>
+            </iframe>
+          </div>
+        </div>
+        
         <div class="features">
           <div class="feature">
             <div class="feature-icon">🎵</div>
