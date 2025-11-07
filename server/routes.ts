@@ -21,10 +21,8 @@ import {
   type VideoModel,
   type ImageEngine,
   type MusicModel,
-  type CARD_DESIGNS,
-  type CardDesignType,
-  CREDIT_BUNDLES}
- from "../shared/schema.js";
+  CREDIT_BUNDLES
+} from "../shared/schema";
 
 import { eq, lt } from "drizzle-orm";
 import virtualArtistsRouter from './VirtualArtistsRoutes.js';
@@ -1001,7 +999,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: user.profileImageUrl,
         subscriptionPlan: user.subscriptionPlan,
         credits: user.credits,
-        dailyLoginStreak: user.dailyLoginStreak,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
       });
@@ -1051,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Check and reset daily credits if needed
-  app.post('/api/user/credits/check-reset', authMiddleware, async (req: any, res: { status: (arg0: number) => { (): any; new(): any; json: { (arg0: { message: string; }): void; new(): any; }; }; json: (arg0: { credits: any; resetOccurred: boolean; message?: string; hoursUntilReset?: number; }) => void; }) => {
+  app.post('/api/user/credits/check-reset', authMiddleware, async (req: any, res: any) => {
     try {
       const userId = getUserId(req);
       const user = await storage.getUser(userId);
@@ -2510,10 +2507,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
-          key: process.env.IMGBB_API_KEY || "your_imgbb_api_key_here", // You'll need to set this
+          key: process.env.IMGBB_API_KEY || "your_imgbb_api_key_here",
           image: base64Image,
           name: `profile-${userId}-${Date.now()}`,
-          expiration: 0, // No expiration
+          expiration: "0", // No expiration (must be string for URLSearchParams)
         }),
       });
 
@@ -2599,7 +2596,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('✅ New test user registered:', { id: userId, username, email: newUser.email });
 
         // Auto-login after registration by setting session
-        req.session.devUser = {
+        (req.session as any).devUser = {
           claims: {
             sub: newUser.id,
             email: newUser.email,
@@ -2656,7 +2653,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('✅ Test user logged in:', { id: user.id, username: user.username });
 
         // Set session
-        req.session.devUser = {
+        (req.session as any).devUser = {
           claims: {
             sub: user.id,
             email: user.email,
