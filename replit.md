@@ -100,6 +100,24 @@ A dedicated video tool at `/seamless-loop-creator/` for generating perfect loopi
 
 ## Recent Changes (November 2024)
 
+### Username Onboarding System (November 9, 2024)
+**Implemented mandatory username creation for new users:**
+- New users must set a unique username (3-20 characters, alphanumeric + underscore/hyphen) upon first login
+- Created WelcomeModal component with real-time username availability checking (500ms debounce)
+- Added POST /api/user/check-username endpoint for validation
+- Implemented getUserByUsername() method in storage layer (MemStorage and DbStorage)
+- Non-dismissible modal blocks platform access until username is set
+- Visual feedback: green checkmark (available), red X (taken), loading spinner
+- Username stored in database with UNIQUE constraint, changeable once every 30 days
+- Pattern: queryClient.setQueryData() for immediate UI update, then invalidateQueries() to refetch auth state
+
+**Technical Flow:**
+1. User logs in via Replit Auth → App.tsx detects missing username
+2. WelcomeModal appears globally (blocks ESC key and click-outside)
+3. User enters username → debounced availability check → visual feedback
+4. Submit → PATCH /api/user/profile → cache updated → modal closes
+5. User gains full platform access
+
 ### Ghost Musician Removal
 Ghost Musician has been completely removed from this repository and moved to a separate codebase:
 - Removed 1,426+ lines of Ghost Musician code (routes, schema, storage methods)
