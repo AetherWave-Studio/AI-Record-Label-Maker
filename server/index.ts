@@ -86,6 +86,35 @@ app.use((req, res, next) => {
   });
 
   // Serve all static HTML directories
+
+  app.use(
+    "/virtual-artists",
+    express.static(path.join(rootDir, "virtual-artists")),
+  );
+  app.use(
+    "/creator-studio",
+    express.static(path.join(rootDir, "creator-studio")),
+  );
+  app.use("/playlists", express.static(path.join(rootDir, "Playlists")));
+  app.use(
+    "/featured-artist",
+    express.static(path.join(rootDir, "Featured Artist")),
+  );
+  app.use(
+    "/video-generation",
+    express.static(path.join(rootDir, "video-generation")),
+  );
+  app.use(
+    "/seamless-loop-creator",
+    express.static(path.join(rootDir, "seamless-loop-creator")),
+  );
+  app.use("/static", express.static(path.join(rootDir, "static")));
+  app.use("/welcome", express.static(path.join(rootDir, "welcome")));
+  app.use(
+    "/aimusic-media",
+    express.static(path.join(rootDir, "aimusic-media")),
+  );
+
   app.use(
     "/virtual-artists",
     express.static(path.join(rootDir, "virtual-artists")),

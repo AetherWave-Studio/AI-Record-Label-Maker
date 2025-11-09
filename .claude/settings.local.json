@@ -45,7 +45,11 @@
       "Bash(npm run build:*)",
       "Bash(git restore:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm run dev:server:*)"
+      "Bash(npm run dev:server:*)",
+      "Bash(then echo \"exists\")",
+      "Bash(npm rebuild)",
+      "Bash(then echo \"bin directory exists\")",
+      "Bash(ping:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Video API</title>
+</head>
+<body>
+    <h1>Test Video Generation API</h1>
+
+    <div>
+        <label>Prompt: <input type="text" id="prompt" value="A cat sitting on a couch" size="50"></label><br><br>
+        <label>Model:
+            <select id="model">
+                <option value="seedance-lite">Seedance Lite</option>
+                <option value="veo3_fast">VEO 3 Fast</option>
+            </select>
+        </label><br><br>
+        <label>Duration:
+            <select id="duration">
+                <option value="5">5 seconds</option>
+                <option value="10">10 seconds</option>
+            </select>
+        </label><br><br>
+        <button onclick="testAPI()">Test API Call</button>
+    </div>
+
+    <div id="result" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+
+    <script>
+        async function testAPI() {
+            const prompt = document.getElementById('prompt').value;
+            const model = document.getElementById('model').value;
+            const duration = parseInt(document.getElementById('duration').value);
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.innerHTML = '<p>Testing API call...</p>';
+
+            try {
+                // Determine endpoint
+                const isSeedance = model.startsWith('seedance');
+                const endpoint = isSeedance ? '/api/generate-video-fal' : '/api/generate-video-premium';
+
+                const requestBody = {
+                    prompt: prompt,
+                    model: model,
+                    aspectRatio: '16:9',
+                    duration: duration
+                };
+
+                // Add seedance-specific parameters
+                if (isSeedance) {
+                    requestBody.resolution = '720p';
+                    requestBody.modelVersion = model.includes('pro') ? 'pro' : 'lite';
+                    requestBody.cameraFixed = false;
+                    requestBody.enableSafetyChecker = true;
+                }
+
+                console.log('Making request to:', endpoint);
+                console.log('Request body:', requestBody);
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(requestBody)
+                });
+
+                console.log('Response status:', response.status);
+                const result = await response.json();
+                console.log('Response:', result);
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3>✅ Success!</h3>
+                        <p>Status: ${response.status}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>${result.error || result.message || 'Unknown error'}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <h3>❌ Exception</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
