@@ -7,9 +7,14 @@ export interface User {
   lastName: string | null;
   profileImageUrl: string | null;
   username: string | null;
+  lastUsernameChange: string | null;
+  vocalGenderPreference: string | null;
   subscriptionPlan: "free" | "studio" | "studio_plus" | "pro" | "mogul";
   credits: number;
   welcomeBonusClaimed: number;
+  lastCreditReset: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export function useAuth() {
