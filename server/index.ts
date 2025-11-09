@@ -94,18 +94,35 @@ app.use((req, res, next) => {
   app.use('/welcome', express.static(path.join(rootDir, 'welcome')));
   app.use('/aimusic-media', express.static(path.join(rootDir, 'aimusic-media')));
 
-  // Setup Vite in development to serve the React SPA for feature pages
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
   // Handle React SPA routes - these should be served by the React app
-  const reactRoutes = ['/profile', '/buy-credits', '/card-shop', '/seamless-loop-creator', '/channels'];
+  const reactRoutes = ['/profile', '/buy-credits', '/card-shop', '/channels'];
 
+  // Setup Vite in development or serve static in production
   if (app.get("env") === "development") {
-    // In development, serve React app for specific routes
+    // Create Vite dev server manually to control middleware order
+    const { createServer: createViteServer, createLogger } = await import("vite");
+    const viteConfig = (await import("../vite.config.js")).default;
+    const viteLogger = createLogger();
+    
+    const vite = await createViteServer({
+      ...viteConfig,
+      configFile: false,
+      customLogger: {
+        ...viteLogger,
+        error: (msg: string, options: any) => {
+          viteLogger.error(msg, options);
+          process.exit(1);
+        },
+      },
+      server: {
+        middlewareMode: true,
+        hmr: { server },
+        allowedHosts: true as const,
+      },
+      appType: "custom",
+    });
+
+    // Serve React SPA routes BEFORE Vite middleware to preserve original URL
     app.use(reactRoutes, async (req, res, next) => {
       try {
         const clientTemplate = path.resolve(
@@ -113,20 +130,26 @@ app.use((req, res, next) => {
           "..",
           "index.html",
         );
-        console.log(`Serving React route ${req.path} from: ${clientTemplate}`);
+        console.log(`🎯 Serving React route: ${req.originalUrl}`);
         const template = await fs.readFile(clientTemplate, "utf-8");
-        res.status(200).set({ "Content-Type": "text/html" }).end(template);
+        const html = await vite.transformIndexHtml(req.originalUrl, template);
+        res.status(200).set({ "Content-Type": "text/html" }).end(html);
       } catch (e) {
-        console.error(`Error serving React route ${req.path}:`, e);
+        console.error(`Error serving React route ${req.originalUrl}:`, e);
         next(e);
       }
     });
+
+    // Now mount Vite middleware for assets/HMR
+    app.use(vite.middlewares);
   } else {
-    // In production, serve built React app
+    // In production, serve built React app for specific routes
     app.use(reactRoutes, (req, res) => {
       const distPath = path.resolve(import.meta.dirname, "..", "dist");
       res.sendFile(path.resolve(distPath, "index.html"));
     });
+    
+    serveStatic(app);
   }
 
   // ALWAYS serve the app on the port specified in the environment variable PORT
