@@ -11,9 +11,9 @@
     "build": "npm run build:client",
     "build:client": "vite build",
     "build:server": "tsc -p server/tsconfig.json --noEmitOnError false || echo 'Server build completed with warnings'",
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\""
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "tsx watch server/index.ts",
-    "dev:client": "vite",
+    "dev:client": "vite"
   },
   "dependencies": {
     "@fal-ai/client": "^1.7.0",
