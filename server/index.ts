@@ -21,6 +21,16 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: false, limit: '100mb' }));
 
+// Lightweight health check endpoint for deployment health checks
+// Must be BEFORE maintenance middleware to respond quickly
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+});
+
+app.get('/api/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+});
+
 // Maintenance mode - shows "Coming Soon" page to visitors
 app.use(maintenanceMiddleware);
 

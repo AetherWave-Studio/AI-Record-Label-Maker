@@ -22,8 +22,8 @@ export function maintenanceMiddleware(req: Request, res: Response, next: NextFun
     return next();
   }
 
-  // Show maintenance page for all other routes
-  res.status(503).send(`
+  // Show maintenance page for all other routes (return 200 for better health checks)
+  res.status(200).send(`
     <!DOCTYPE html>
     <html lang="en">
     <head>

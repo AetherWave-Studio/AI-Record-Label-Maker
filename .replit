@@ -9,7 +9,7 @@ packages = ["ffmpeg", "freetype", "lcms2", "libGL", "libGLU", "libimagequant", "
 [deployment]
 deploymentTarget = "autoscale"
 build = ["sh", "build.sh"]
-run = ["npm", "run", "start"]
+run = ["sh", "-c", "node dist/index.js"]
 
 [[ports]]
 localPort = 5000
@@ -34,6 +34,10 @@ externalPort = 3002
 [[ports]]
 localPort = 42297
 externalPort = 3001
+
+[[ports]]
+localPort = 43585
+externalPort = 5173
 
 [[ports]]
 localPort = 44541
