@@ -279,6 +279,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
   });
 
+  // Check username availability
+  app.post('/api/user/check-username', async (req: any, res) => {
+    try {
+      const { username } = req.body;
+
+      if (!username || typeof username !== 'string') {
+        return res.status(400).json({ 
+          available: false, 
+          message: "Username is required" 
+        });
+      }
+
+      const trimmedUsername = username.trim();
+
+      // Validate username format
+      if (trimmedUsername.length < 3) {
+        return res.status(400).json({ 
+          available: false, 
+          message: "Username must be at least 3 characters long" 
+        });
+      }
+
+      if (trimmedUsername.length > 20) {
+        return res.status(400).json({ 
+          available: false, 
+          message: "Username must be 20 characters or less" 
+        });
+      }
+
+      if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
+        return res.status(400).json({ 
+          available: false, 
+          message: "Username can only contain letters, numbers, underscores, and hyphens" 
+        });
+      }
+
+      // Check if username is already taken
+      const existingUser = await storage.getUserByUsername(trimmedUsername);
+      
+      if (existingUser) {
+        return res.status(200).json({ 
+          available: false, 
+          message: "Username is already taken" 
+        });
+      }
+
+      res.json({ 
+        available: true, 
+        message: "Username is available" 
+      });
+    } catch (error: any) {
+      console.error("Error checking username:", error);
+      res.status(500).json({ 
+        available: false, 
+        message: "Failed to check username availability" 
+      });
+    }
+  });
+
   // Get username change restriction info
   app.get('/api/user/username-restriction', authMiddleware, async (req: any, res) => {
     try {

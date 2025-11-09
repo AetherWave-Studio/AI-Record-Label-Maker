@@ -3,6 +3,8 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { UserNavigation } from "@/components/UserNavigation";
+import { WelcomeModal } from "@/components/WelcomeModal";
+import { useAuth } from "@/hooks/useAuth";
 import BuyCreditsPage from "@/pages/buy-credits";
 import CardShopPage from "@/pages/card-shop";
 import VideoGenerationPage from "@/pages/video-generation";
@@ -79,6 +81,19 @@ function Router() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <AppContent />
+    </QueryClientProvider>
+  );
+}
+
+function AppContent() {
+  const { user, isLoading } = useAuth();
+
+  // Check if user needs to set username
+  const needsUsername = user && !user.username;
+
+  return (
+    <>
       <div className="min-h-screen bg-background">
         <UserNavigation />
         <main>
@@ -86,6 +101,9 @@ export default function App() {
         </main>
       </div>
       <Toaster />
-    </QueryClientProvider>
+      
+      {/* Show welcome modal if user is logged in but has no username */}
+      {!isLoading && needsUsername && <WelcomeModal open={true} user={user} />}
+    </>
   );
 }
