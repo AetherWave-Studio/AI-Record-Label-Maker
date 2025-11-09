@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,7 +52,7 @@ export default function ProfilePage() {
   };
 
   // Initialize form data when user loads
-  useState(() => {
+  useEffect(() => {
     if (user) {
       setFormData({
         firstName: user.firstName || "",
@@ -61,7 +61,7 @@ export default function ProfilePage() {
         vocalGenderPreference: user.vocalGenderPreference || "m",
       });
     }
-  });
+  }, [user]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (data: ProfileFormData) => {

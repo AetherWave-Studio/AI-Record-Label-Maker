@@ -12,14 +12,6 @@
   <link rel="stylesheet" href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9ce7aa2-0609-46cc-92a8-169d8d8ca076">
   <!-- Tiled Background CSS -->
   <link rel="stylesheet" href="/static/assets/css/tiled-background.css">
-  <script type="module">
-  import RefreshRuntime from '/@react-refresh'
-  RefreshRuntime.injectIntoGlobalHook(window)
-  window.$RefreshReg$ = () => {}
-  window.$RefreshSig$ = () => (type) => type
-  window.__vite_plugin_react_preamble_installed__ = true
-</script>
-<script type="module" src="/@vite/client"></script>
   <style>
    /*:root {
     --aetherwave-pink: #ff2ea6;
@@ -975,7 +967,7 @@
     /* ===== PREMIUM AUDIO PLAYER (Option 2) ===== */
     
     .premium-track-card {
-      background-image: url'(https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Fsmall)Player.png?alt=media&token=a0d08fe4-2580-4657-8771-5a5a27c239e6)';
+      background: linear-gradient(135deg, rgba(26, 22, 37, 0.9), rgba(13, 11, 21, 0.95));
       border: 1px solid rgba(139, 92, 246, 0.2);
       border-radius: 16px;
       padding: 1rem;
@@ -2055,7 +2047,7 @@
   </div>
 
   <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72')";>
-    <div style="display: flex; align-items: left; margin-top:auto; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
       <a href="#" class="logo">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
@@ -2070,9 +2062,9 @@
     <!--<div id="navigation-container"></div>-->
 	<nav class="aether-nav">
 				<ul>
-					<li><ahref="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
+					<li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
 					<li class="dropdown">
-						<a href="/playlists.html">Playlists</a>
+						<a href="https://aetherwavestudio.com/static/playlists.html">Playlists</a>
 						<div class="dropdown-content">
 							<a href="https://playlists.aetherwavestudio.com/darkwave/">DarkWave Essentials</a>
 							<a href="https://playlists.aetherwavestudio.com/meditation/">Meditation Soundscapes</a>
@@ -2082,20 +2074,19 @@
 					</li>
 					<!--<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>-->
 					<li class="dropdown">
-						<a href="Virtual Bands">Virtual Artists</a>
+						<a href="https://shop.aetherwavestudio.com">Shop</a>
 						<div class="dropdown-content">
-							<a href="/virtual-artists/Gallery.html">Gallery</a>
-							<a href="/virtual-artists/Featured-Artist.html">Featured Artists</a>
-							<a href="/Virtual-artists/Ghosts-Online.html">Ghosts Online</a>
+							<a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+							<a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
 						</div>
 					</li>
 					<li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
    
-    <div id="auth-section" style="display: flex; align-items: l; gap: 1rem;">
+    <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
         <!-- Credits Badge -->
-        <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" >
+        <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
           <span id="credits-count">0</span>
         </div>
         <!-- Quest Gift Box Icon -->
@@ -2112,6 +2103,7 @@
     </div>
     </nav>
   </header>
+
   <main>
 
   <!-- Portal Welcome Section -->
@@ -2262,9 +2254,9 @@
           const profileTrigger = document.getElementById('profile-trigger');
           if (profileTrigger && !profileTrigger.hasAttribute('data-listener-attached')) {
             profileTrigger.addEventListener('click', function() {
-              console.log('Profile trigger clicked - showing profile modal');
-              // Show the profile modal instead of navigating away
-              showProfileModal();
+              console.log('Profile trigger clicked - navigating to user profile page');
+              // Navigate to the full GhostMusician user profile page
+              window.location.href = `/ghost-musician/user/${user.id}`;
             });
             profileTrigger.setAttribute('data-listener-attached', 'true');
             console.log('Profile trigger event listener attached');
@@ -2293,17 +2285,12 @@
         chat: document.querySelector('.panel-chat'),
         media: document.querySelector('.panel-media')
       };
-
-      // Check if panels exist before proceeding
-      if (!panels.music && !panels.chat && !panels.media) {
-        return; // No mobile panels on this page
-      }
-
+      
       // Set initial active panel (music)
       if (window.innerWidth <= 768) {
-        if (panels.music) panels.music.classList.add('mobile-active');
-        if (panels.chat) panels.chat.classList.remove('mobile-active');
-        if (panels.media) panels.media.classList.remove('mobile-active');
+        panels.music.classList.add('mobile-active');
+        panels.chat.classList.remove('mobile-active');
+        panels.media.classList.remove('mobile-active');
       }
       
       // Handle mobile nav clicks
@@ -2318,13 +2305,11 @@
           // Update panel visibility (only on mobile)
           if (window.innerWidth <= 768) {
             Object.keys(panels).forEach(key => {
-              if (panels[key]) {
-                if (key === targetPanel) {
-                  panels[key].classList.add('mobile-active');
-                  panels[key].scrollIntoView({ behavior: 'smooth', block: 'start' });
-                } else {
-                  panels[key].classList.remove('mobile-active');
-                }
+              if (key === targetPanel) {
+                panels[key].classList.add('mobile-active');
+                panels[key].scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                panels[key].classList.remove('mobile-active');
               }
             });
           }
@@ -2339,12 +2324,12 @@
           if (window.innerWidth > 768) {
             // Desktop mode - remove mobile-active classes
             Object.values(panels).forEach(panel => {
-              if (panel) panel.classList.remove('mobile-active');
+              panel.classList.remove('mobile-active');
             });
           } else {
             // Mobile mode - ensure one panel is active
-            const hasActive = Array.from(Object.values(panels)).some(p => p && p.classList.contains('mobile-active'));
-            if (!hasActive && panels.music) {
+            const hasActive = Array.from(Object.values(panels)).some(p => p.classList.contains('mobile-active'));
+            if (!hasActive) {
               panels.music.classList.add('mobile-active');
             }
           }
@@ -2433,20 +2418,8 @@
 
     async function loadQuests() {
       try {
-        const response = await fetch('/api/quests', { credentials: 'include' });
-
-        // If quest endpoint doesn't exist or returns error, silently fail
-        if (!response.ok) {
-          console.log('Quests not available on this page');
-          return null;
-        }
-
-        // Check if response is JSON before parsing
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          console.log('Quest endpoint returned non-JSON response');
-          return null;
-        }
+        const response = await fetch('/api/quests');
+        if (!response.ok) throw new Error('Failed to load quests');
 
         const data = await response.json();
         userQuests = data.quests;
@@ -2465,7 +2438,7 @@
 
         return data;
       } catch (error) {
-        console.log('Quests feature not available on this page');
+        console.error('Error loading quests:', error);
         return null;
       }
     }
@@ -2801,13 +2774,13 @@
             <div style="background: rgba(255, 255, 255, 0.02); border: 2px solid var(--border-color); border-radius: 16px; padding: 1rem; display: flex; flex-direction: column;">
               <div style="text-align: center; margin-bottom: 1rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/music-icon.png" style="width: 40px; height: 40px;"></div>
-                <h3 style="font-size: clamp(1rem, 3vw, 1.1rem); font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Fan</h3>
+                <h3 style="font-size: clamp(1rem, 3vw, 1.1rem); font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Free</h3>
                 <div style="font-size: clamp(1.5rem, 4vw, 1.75rem); font-weight: 700; color: var(--text-primary);">$0<span style="font-size: clamp(0.75rem, 2vw, 0.85rem); font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span>20 credits/day (limit 100cr)</span>
+                  <span>50 credits/day</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
@@ -2827,13 +2800,13 @@
             <div style="background: rgba(255, 255, 255, 0.02); border: 2px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
               <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/video-icon.png" style="width: 48px; height: 48px;"></div>
-                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Studio</h3>
+                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Starter</h3>
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$9.99<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span><strong style="color: var(--text-primary);">400</strong> media credits/mo</span>
+                  <span><strong style="color: var(--text-primary);">200</strong> media credits/mo</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
@@ -2861,7 +2834,7 @@
             <div style="background: rgba(255, 255, 255, 0.02); border: 2px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column;">
               <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/microphone-icon.png" style="width: 48px; height: 48px;"></div>
-                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Record Label</h3>
+                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Studio</h3>
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$19<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
@@ -2875,7 +2848,7 @@
                 </li>
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
-                  <span>1000 media credits/mo</span>
+                  <span>500 media credits/mo</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-purple);">✓</span>
@@ -2896,7 +2869,7 @@
               <div style="position: absolute; top: 0.75rem; right: 0.75rem; background: var(--aetherwave-purple); color: white; font-size: 0.65rem; font-weight: 600; padding: 0.3rem 0.65rem; border-radius: 12px;">POPULAR</div>
               <div style="text-align: center; margin-bottom: 1.25rem;">
                 <div style="margin-bottom: 0.5rem;"><img src="/assets/icon-set/camera1-icon.png" style="width: 48px; height: 48px;"></div>
-                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Mogul</h3>
+                <h3 style="font-size: 1.1rem; font-weight: 600; color: var(--text-primary); margin: 0 0 0.5rem 0;">Creator</h3>
                 <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary);">$49<span style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);">/mo</span></div>
               </div>
               <ul style="list-style: none; padding: 0; margin: 0 0 1.25rem 0; flex: 1;">
@@ -2910,7 +2883,7 @@
                 </li>
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
-                  <span><strong style="color: var(--text-primary);">4000</strong> media credits/mo</span>
+                  <span><strong style="color: var(--text-primary);">2000</strong> media credits/mo</span>
                 </li>
                 <li style="color: var(--text-muted); font-size: clamp(0.75rem, 2vw, 0.85rem); padding: 0.3rem 0; display: flex; align-items: center; gap: 0.4rem;">
                   <span style="color: var(--aetherwave-pink);">✓</span>
@@ -3231,14 +3204,9 @@
           </div>
           
           <div style="padding: 1.5rem 2rem; border-top: 1px solid var(--border-color); display: flex; gap: 1rem; justify-content: space-between; flex-shrink: 0;">
-            <div style="display: flex; gap: 1rem;">
-              <a href="/api/logout" style="padding: 0.75rem 1.5rem; background: rgba(244, 63, 94, 0.1); color: rgb(244, 63, 94); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; text-decoration: none; display: inline-block;" onmouseover="this.style.background='rgba(244, 63, 94, 0.2)'" onmouseout="this.style.background='rgba(244, 63, 94, 0.1)'">
-                Logout
-              </a>
-              <a href="/profile" style="padding: 0.75rem 1.5rem; background: rgba(139, 92, 246, 0.1); color: var(--aetherwave-purple); border: 1px solid var(--aetherwave-purple); border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; text-decoration: none; display: inline-block;" onmouseover="this.style.background='rgba(139, 92, 246, 0.2)'" onmouseout="this.style.background='rgba(139, 92, 246, 0.1)'">
-                Manage Profile
-              </a>
-            </div>
+            <a href="/api/logout" style="padding: 0.75rem 1.5rem; background: rgba(244, 63, 94, 0.1); color: rgb(244, 63, 94); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; text-decoration: none; display: inline-block;" onmouseover="this.style.background='rgba(244, 63, 94, 0.2)'" onmouseout="this.style.background='rgba(244, 63, 94, 0.1)'">
+              Logout
+            </a>
             <button onclick="closeProfileModal()" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform=''">
               Close
             </button>
@@ -3263,6 +3231,214 @@
       closeProfileModal: typeof window.closeProfileModal
     });
 
+    // Add message to chat
+    const pauseIcon = card.querySelector('.pause-icon');
+    
+    // Pause all other tracks
+    this.audioElements.forEach((otherAudio, otherId) => {
+      if (otherId !== trackId && !otherAudio.paused) {
+        otherAudio.pause();
+        const otherCard = document.querySelector(`[data-track-id="${otherId}"]`);
+        if (otherCard) {
+          const otherPlayIcon = otherCard.querySelector('.play-icon');
+          const otherPauseIcon = otherCard.querySelector('.pause-icon');
+          if (otherPlayIcon) otherPlayIcon.style.display = 'block';
+          if (otherPauseIcon) otherPauseIcon.style.display = 'none';
+        }
+      }
+    });
+    
+    if (audio.paused) {
+      audio.play();
+      if (playIcon) playIcon.style.display = 'none';
+      if (pauseIcon) pauseIcon.style.display = 'block';
+      this.currentTrack = trackId;
+    } else {
+      audio.pause();
+      if (playIcon) playIcon.style.display = 'block';
+      if (pauseIcon) pauseIcon.style.display = 'none';
+    }
+  },
+
+  seek(trackId, event) {
+    const audio = this.audioElements.get(trackId);
+    if (!audio) return;
+    
+    const progressBar = event.currentTarget;
+    const rect = progressBar.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const percentage = x / rect.width;
+    
+    audio.currentTime = percentage * audio.duration;
+  },
+
+  previous(trackId) {
+    const audio = this.audioElements.get(trackId);
+    if (!audio) return;
+    
+    // If more than 3 seconds in, restart current track
+    if (audio.currentTime > 3) {
+      audio.currentTime = 0;
+    } else {
+      // Go to previous track
+      const trackIds = Array.from(this.audioElements.keys());
+      const currentIndex = trackIds.indexOf(trackId);
+      if (currentIndex > 0) {
+        this.togglePlay(trackIds[currentIndex - 1]);
+      }
+    }
+  },
+
+  next(trackId) {
+    const trackIds = Array.from(this.audioElements.keys());
+    const currentIndex = trackIds.indexOf(trackId);
+    if (currentIndex < trackIds.length - 1) {
+      this.togglePlay(trackIds[currentIndex + 1]);
+    }
+  },
+
+  formatTime(seconds) {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  },
+
+  openDownloadModal(trackId, title, url) {
+    this.downloadData = { trackId, title, url };
+    this.selectedFormat = 'mp3';
+    
+    const modal = document.getElementById('download-modal');
+    const modalTitle = document.getElementById('modal-track-title');
+    
+    if (modalTitle) modalTitle.textContent = title;
+    if (modal) modal.style.display = 'flex';
+    
+    // Reset download button text
+    const downloadBtn = document.querySelector('[data-testid="button-modal-download"]');
+    if (downloadBtn) downloadBtn.textContent = 'Download';
+    
+    // Reset selection UI
+    document.querySelectorAll('.download-option').forEach(opt => {
+      opt.style.background = 'rgba(139, 92, 246, 0.08)';
+      opt.style.borderColor = 'var(--border-color)';
+    });
+    
+    // Highlight MP3 by default
+    const mp3Option = document.querySelector('[data-testid="option-mp3"]');
+    if (mp3Option) {
+      mp3Option.style.background = 'rgba(139, 92, 246, 0.15)';
+      mp3Option.style.borderColor = 'var(--aetherwave-purple)';
+    }
+    
+    // Add Pro badge to WAV option for free users
+    const wavOption = document.querySelector('[data-testid="option-wav"]');
+    if (wavOption && userPlanType === 'free') {
+      // Add visual "locked" state
+      wavOption.style.opacity = '0.6';
+      wavOption.style.cursor = 'not-allowed';
+      
+      // Add Pro badge if not already present
+      const wavTitle = wavOption.querySelector('.download-option-title');
+      if (wavTitle && !wavTitle.querySelector('.pro-badge')) {
+        const badge = document.createElement('span');
+        badge.className = 'pro-badge';
+        badge.textContent = 'PRO';
+        badge.style.cssText = 'margin-left: 0.5rem; padding: 0.125rem 0.5rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; font-size: 0.65rem; font-weight: 700; border-radius: 4px; vertical-align: middle;';
+        wavTitle.appendChild(badge);
+      }
+    } else if (wavOption && userPlanType !== 'free') {
+      // Remove locked state for paid users
+      wavOption.style.opacity = '1';
+      wavOption.style.cursor = 'pointer';
+      const badge = wavOption.querySelector('.pro-badge');
+      if (badge) badge.remove();
+    }
+  },
+
+  closeDownloadModal() {
+    const modal = document.getElementById('download-modal');
+    if (modal) modal.style.display = 'none';
+  },
+
+  selectFormat(format) {
+    // Check if user is trying to select WAV on free plan
+    if (format === 'wav' && userPlanType === 'free') {
+      // Show upgrade notification
+      const wavOption = document.querySelector('[data-testid="option-wav"]');
+      if (wavOption) {
+        // Visual feedback - shake animation
+        wavOption.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          wavOption.style.animation = '';
+        }, 500);
+      }
+      
+      // Show upgrade tooltip
+      showNotification('WAV downloads require Studio plan or higher. Upgrade to unlock lossless audio!', 'error');
+      return; // Don't select WAV
+    }
+    
+    this.selectedFormat = format;
+    
+    // Update UI to show selection
+    document.querySelectorAll('.download-option').forEach(opt => {
+      opt.style.background = 'rgba(139, 92, 246, 0.08)';
+      opt.style.borderColor = 'var(--border-color)';
+    });
+    
+    const selectedOption = document.querySelector(`[data-testid="option-${format}"]`);
+    if (selectedOption) {
+      selectedOption.style.background = 'rgba(139, 92, 246, 0.15)';
+      selectedOption.style.borderColor = 'var(--aetherwave-purple)';
+    }
+  },
+
+  async confirmDownload() {
+    const { title, url } = this.downloadData;
+    const filename = `${title}.${this.selectedFormat}`;
+    
+    const downloadBtn = document.querySelector('[data-testid="button-modal-download"]');
+    
+    try {
+      // Show loading state on download button
+      if (downloadBtn) downloadBtn.textContent = 'Downloading...';
+      
+      // Fetch the file as a blob to work around CORS restrictions
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create download link with blob URL
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+      }, 100);
+      
+      // Reset button text before closing
+      if (downloadBtn) downloadBtn.textContent = 'Download';
+     
+
+    
+        // When Generate Album Art button is clicked, show the dropdown.
+        document.addEventListener('click', function(e) {
+        if (e.target && e.target.matches('.download-btn[onclick*="Generate Album Art"]')) {
+    document.getElementById('album-art-style-container').style.display = 'block';
+    document.getElementById('album-art-style').value = 'photorealistic';
+                }
+        });
+
+    // Add message to chat
     function addMessage(content, type = 'user') {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type}`;
@@ -4127,11 +4303,11 @@ async function generateMedia() {
     function displayMediaResult(data, type) {
     if (type === 'video') {
     const generationTime = data.timings ? ` (${Math.round(data.timings.inference / 1000)}s)` : '';
-
+    
     // Determine the model display name and provider
     let modelDisplay = 'Seedance 1.0';
     let provider = 'Fal.ai';
-
+    
     if (data.model) {
       if (data.model.startsWith('veo3')) {
         modelDisplay = 'VEO 3';
@@ -4148,43 +4324,75 @@ async function generateMedia() {
       }
     }
 
-    mediaResult.innerHTML = `
-    <div class="result-box">
-    <div class="result-title">✅ Video Generated with ${provider} ${modelDisplay}${generationTime}</div>
-    <video controls autoplay loop src="${data.videoUrl}" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;"></video>
-    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-    <button onclick="downloadVideo('${data.videoUrl}', 'aetherwave-video.mp4')" class="download-btn" style="cursor: pointer;">Download Video</button>
-    ${data.seed ? `<span class="download-btn" style="cursor: default;">Seed: ${data.seed}</span>` : ''}
-    </div>
-    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
-    Model: ${modelDisplay}
-    </p>
-    </div>
-    `;
-    } else if (type === 'image') {
-    mediaResult.innerHTML = `
-    <div class="result-box">
-    <div class="result-title">✅ Image Generated with DALL-E 3</div>
-    <img src="${data.imageUrl}" alt="Generated image" style="width: 100%; border-radius: 8px; margin-top: 0.5rem;" />
-    <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-    <button onclick="downloadFile('${data.imageUrl}', 'aetherwave-image.png')" class="download-btn" style="cursor: pointer;">Download Image</button>
-    </div>
-    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
-    Style: ${data.style || 'N/A'}
-    </p>
-    ${data.revisedPrompt ? `<p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.5rem; font-style: italic;">DALL-E Revision: ${data.revisedPrompt}</p>` : ''}
-    </div>
-    `;
-    }
 
-    mediaResult.style.display = 'block';
-    }
 
-    // Chat functionality
-    const chatMessages = document.querySelector('.chat-messages');
-    const chatInput = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('send-btn');
-    const suggestionChips = document.querySelectorAll('.suggestion-chip');
+      // Create modal HTML
+      const modalHtml = `
+        <div id="video-duration-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 1rem;">
+          <div style="background: var(--card-bg); border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 100%; box-shadow: 0 8px 32px rgba(0,0,0,0.4);">
+            <h3 style="margin: 0 0 1rem 0; color: var(--text-primary); font-size: 1.1rem;">🎬 Animate Album Art</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Choose animation duration for "${trackTitle}"</p>
+            
+            <div style="margin-bottom: 1.5rem;">
+              <label style="display: block; color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Duration</label>
+              <select id="album-video-duration" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: var(--text-primary); font-size: 0.9rem;" ${isFree ? 'disabled' : ''}>
+                <option value="5" selected>5 seconds (8 credits)</option>
+                <option value="10">10 seconds (15 credits)</option>
+              </select>
+              ${isFree ? `<p style="color: #fbbf24; font-size: 0.75rem; margin-top: 0.5rem;">⚠️ Free accounts limited to 5 seconds</p>` : ''}
+            </div>
+            
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 3px solid var(--accent-color);">
+              <strong>Settings:</strong> Lite model, 480p resolution<br>
+              <strong>Mode:</strong> Image-to-video (album art as first frame)
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+              <button onclick="closeVideoDurationModal()" style="flex: 1; padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.9rem;" data-testid="button-cancel-video-duration">Cancel</button>
+              <button onclick="confirmAlbumArtToVideo('${trackId}', '${trackTitle}', '${albumArtUrl}')" style="flex: 1; padding: 0.75rem; border-radius: 8px; border: none; background: linear-gradient(135deg, var(--primary-color), var(--accent-color)); color: white; cursor: pointer; font-weight: 600; font-size: 0.9rem;" data-testid="button-confirm-video-duration">🎬 Animate</button>
+            </div>
+          </div>
+        </div>
+      `;
+  
+      
+        const data = await response.json();
+        console.log('Album art to video response:', data);
+
+        if (!response.ok) {
+          console.error('Video generation error response:', data);
+          throw new Error(data.details || data.error || 'Failed to generate video from album art');
+        }
+
+        if (data.status === 'complete' && data.videoUrl) {
+          // Store the video URL in media storage
+          if (!window.mediaStorage[trackId]) {
+            window.mediaStorage[trackId] = {};
+          }
+          window.mediaStorage[trackId].videoUrl = data.videoUrl;
+          window.mediaStorage[trackId].videoDuration = duration;
+          
+          // Show video view
+          toggleMediaView(trackId, true);
+          
+          // Update credits display
+          if (data.creditsRemaining !== undefined) {
+            updateCreditsDisplay(data.creditsRemaining);
+          }
+        } else {
+          throw new Error('Video generation completed but no video URL returned');
+        }
+      } catch (error) {
+        console.error('Album art to video error:', error);
+        // Restore album art view on error
+        toggleMediaView(trackId, false);
+        // Show error message
+        resultDiv.innerHTML += `<p style="color: #ff6b6b; font-size: 0.85rem; margin-top: 0.5rem; text-align: center;">❌ ${error.message}</p>`;
+      }
+    };
+
+
+
 
     // Event listeners - Chat
     if (sendBtn && chatInput) {
@@ -4209,7 +4417,7 @@ async function generateMedia() {
         });
       });
     }
-  </script>
+
 
   <!-- Quest Modal -->
   <div id="quest-modal" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeQuestModal()">

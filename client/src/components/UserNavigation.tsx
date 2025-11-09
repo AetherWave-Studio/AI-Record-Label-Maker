@@ -47,20 +47,17 @@ export function UserNavigation() {
 
           <div className="flex items-center gap-2 flex-1 justify-center">
             {navItems.map(({ path, label, icon: Icon }) => (
-              <Button
-                key={path}
-                variant={location === path ? "default" : "ghost"}
-                size="sm"
-                asChild
-                data-testid={`nav-${path.slice(1)}`}
-              >
-                <Link href={path}>
-                  <a className="flex items-center gap-2">
-                    <Icon className="w-4 h-4" />
-                    <span className="hidden sm:inline">{label}</span>
-                  </a>
-                </Link>
-              </Button>
+              <Link key={path} href={path} className="flex items-center gap-2">
+                <Button
+                  variant={location === path ? "default" : "ghost"}
+                  size="sm"
+                  className="px-2 py-1"
+                  data-testid={`nav-${path.slice(1)}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{label}</span>
+                </Button>
+              </Link>
             ))}
           </div>
 

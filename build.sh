@@ -1,6 +1,6 @@
 #!/bin/bash
-# Production build script - recreates Ghost-Musician symlinks for protected configs
-set -e
+# Production build script - recreates symlinks for protected configs
+set -e  # Exit on error
 
 echo "🏗️  Building AetherWave Studio for production..."
 echo ""

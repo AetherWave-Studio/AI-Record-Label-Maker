@@ -1,8 +1,3 @@
-/* @refresh skip */
-import * as React from "react";
-import { forwardRef } from "react";
-// ... rest of file
-
 import * as React from "react";
 import { forwardRef } from "react";
 import * as ToastPrimitives from "@radix-ui/react-toast";
