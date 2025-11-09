@@ -333,39 +333,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalUsername = currentUser.username;
       let lastUsernameChange = currentUser.lastUsernameChange;
 
-      if (username !== undefined && username !== currentUser.username) {
-        // Check if username is being changed
-        if (currentUser.lastUsernameChange) {
-          const lastChange = new Date(currentUser.lastUsernameChange);
-          const now = new Date();
-          const daysSinceChange = Math.floor((now.getTime() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+      // Only process username change if a non-empty username is provided AND it's different from current
+      if (username !== undefined && username !== null && username.trim() !== '') {
+        const trimmedUsername = username.trim();
+        
+        // Only enforce restriction if username is actually changing
+        if (trimmedUsername !== currentUser.username) {
+          // Check if username is being changed
+          if (currentUser.lastUsernameChange) {
+            const lastChange = new Date(currentUser.lastUsernameChange);
+            const now = new Date();
+            const daysSinceChange = Math.floor((now.getTime() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
 
-          if (daysSinceChange < 30) {
-            const daysRemaining = 30 - daysSinceChange;
-            return res.status(429).json({
-              message: `Username can only be changed once every 30 days. Please wait ${daysRemaining} more days.`,
-              daysRemaining,
-              lastUsernameChange: currentUser.lastUsernameChange
-            });
+            if (daysSinceChange < 30) {
+              const daysRemaining = 30 - daysSinceChange;
+              return res.status(429).json({
+                message: `Username can only be changed once every 30 days. Please wait ${daysRemaining} more days.`,
+                daysRemaining,
+                lastUsernameChange: currentUser.lastUsernameChange
+              });
+            }
           }
-        }
 
-        // Username validation
-        if (!username || username.trim().length < 3) {
-          return res.status(400).json({ message: "Username must be at least 3 characters long" });
-        }
+          // Username validation
+          if (trimmedUsername.length < 3) {
+            return res.status(400).json({ message: "Username must be at least 3 characters long" });
+          }
 
-        if (username.trim().length > 20) {
-          return res.status(400).json({ message: "Username must be 20 characters or less" });
-        }
+          if (trimmedUsername.length > 20) {
+            return res.status(400).json({ message: "Username must be 20 characters or less" });
+          }
 
-        // Check if username contains only valid characters (letters, numbers, underscores, hyphens)
-        if (!/^[a-zA-Z0-9_-]+$/.test(username.trim())) {
-          return res.status(400).json({ message: "Username can only contain letters, numbers, underscores, and hyphens" });
-        }
+          // Check if username contains only valid characters (letters, numbers, underscores, hyphens)
+          if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
+            return res.status(400).json({ message: "Username can only contain letters, numbers, underscores, and hyphens" });
+          }
 
-        finalUsername = username.trim();
-        lastUsernameChange = new Date(); // Set to current time when username changes
+          finalUsername = trimmedUsername;
+          lastUsernameChange = new Date(); // Set to current time when username changes
+        }
       }
 
       // Update user with new profile data

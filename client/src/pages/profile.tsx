@@ -79,8 +79,19 @@ export default function ProfilePage() {
 
       return response.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    onSuccess: (updatedUser) => {
+      // Immediately update the cache with the new user data
+      queryClient.setQueryData(["/api/auth/user"], updatedUser);
+      
+      // Update local form state to reflect saved changes
+      setFormData({
+        firstName: updatedUser.firstName || "",
+        lastName: updatedUser.lastName || "",
+        username: updatedUser.username || "",
+        vocalGenderPreference: updatedUser.vocalGenderPreference || "m",
+        profileImageUrl: updatedUser.profileImageUrl || "",
+      });
+      
       setIsEditing(false);
       toast({
         title: "Profile updated",
@@ -98,7 +109,21 @@ export default function ProfilePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateProfileMutation.mutate(formData);
+    
+    // Only send fields that are allowed to change
+    // Don't send username if it can't be changed (30-day restriction)
+    const updateData: Partial<ProfileFormData> = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      vocalGenderPreference: formData.vocalGenderPreference,
+    };
+    
+    // Only include username if it can be changed and has changed
+    if (canChangeUsername() && formData.username !== user?.username) {
+      updateData.username = formData.username;
+    }
+    
+    updateProfileMutation.mutate(updateData as ProfileFormData);
   };
 
   const handleCancel = () => {
@@ -157,8 +182,16 @@ export default function ProfilePage() {
 
       const data = await response.json();
 
-      // Update local state and query cache
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      // Immediately update the cache with the new user data
+      if (data.user) {
+        queryClient.setQueryData(["/api/auth/user"], data.user);
+        
+        // Update local form state to show new image
+        setFormData(prev => ({
+          ...prev,
+          profileImageUrl: data.user.profileImageUrl || "",
+        }));
+      }
 
       toast({
         title: "Profile image updated",
