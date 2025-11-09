@@ -828,7 +828,7 @@
     }
 
     .use-case-card:hover {
-	 background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Fuse-case-card-bg_1761537069997.png?alt=media&token=f5fd0aa6-e95a-4ea5-9055-603eb872bf89') no-repeat center center;
+         background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Fuse-case-card-bg_1761537069997.png?alt=media&token=f5fd0aa6-e95a-4ea5-9055-603eb872bf89') no-repeat center center;
     background-size: 100% 100%;
     border-color: var(--aetherwave-purple);
     filter: brightness(1.2);
@@ -942,7 +942,7 @@
 
     /* Generate Music Button Glow */
     generate-music-btn:active {
-	background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FActive.gif?alt=media&token=b37ff771-3d6f-43c6-9eb9-0c2da933c5c4') no-repeat center center;
+        background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FActive.gif?alt=media&token=b37ff771-3d6f-43c6-9eb9-0c2da933c5c4') no-repeat center center;
     background-size: 100% 100%;
     filter: drop-shadow(0 0 20px rgba(255, 46, 166, 0.9)) brightness(1.2);
     transform: scale(0.98);
@@ -1793,9 +1793,9 @@
         width: 20px;
         height: 20px;
       }
-	  
-	  .player-small {
-	  }
+          
+          .player-small {
+          }
     }
 
   </style>
@@ -1871,23 +1871,23 @@
     <!-- Music Generation Panel -->
     <div class="panel panel-music">
     <div class="panel-header" ;>
-	<div style="margin-top: 0.1rem;">
-	<div class="panel-title" style="display:inline";><img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Icon%20Set%20Black%2Fmusic-icon.png?alt=media&token=e8c570af-e6a6-41d7-bc7b-f5aa39d83852" style="width: 24px; height: 24px; margin-left: 0.5rem; vertical-align: middle;"> Music Generation</div>
-	
-	   <select id="music-model-header" class="version-dropdown" data-testid="select-version" style="margin-left:60p inner-glow">
+        <div style="margin-top: 0.1rem;">
+        <div class="panel-title" style="display:inline";><img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Icon%20Set%20Black%2Fmusic-icon.png?alt=media&token=e8c570af-e6a6-41d7-bc7b-f5aa39d83852" style="width: 24px; height: 24px; margin-left: 0.5rem; vertical-align: middle;"> Music Generation</div>
+        
+           <select id="music-model-header" class="version-dropdown" data-testid="select-version" style="margin-left:60p inner-glow">
         <option value="V5">v5 (Premium) ▼</option>
         <option value="V4_5PLUS">v4.5+ (Premium) ▼</option>
         <option value="V4_5">v4.5 (Premium) ▼</option>
         <option value="V4" selected>v4 (Free) ▼</option>
         <option value="V3_5">v3.5 (Free) ▼</option>
       </select>
-	  </div>
+          </div>
     <div class="music-panel-header">
-	
-	 
+        
+         
       <div class="panel-title" style="text-align: left";>
       
-	  <div class="panel-description">Create AI-generated music Powered by SUNO</div>
+          <div class="panel-description">Create AI-generated music Powered by SUNO</div>
       </div>
    
    
@@ -2430,17 +2430,7 @@
             }
           }
           
-          // Attach event listener to profile trigger (after profile section is shown)
-          const profileTrigger = document.getElementById('profile-trigger');
-          if (profileTrigger && !profileTrigger.hasAttribute('data-listener-attached')) {
-            profileTrigger.addEventListener('click', function() {
-              console.log('Profile trigger clicked - navigating to user profile page');
-              // Navigate to the full GhostMusician user profile page
-              window.location.href = `/ghost-musician/user/${user.id}`;
-            });
-            profileTrigger.setAttribute('data-listener-attached', 'true');
-            console.log('Profile trigger event listener attached');
-          }
+          // Profile trigger click handler is managed by auth.js module
         } else {
           // User not logged in
           document.getElementById('login-btn').style.display = 'inline-block';
@@ -6454,5 +6444,7 @@ updateMediaInputs();
   </script>
   <!-- Shared Navigation JavaScript -->
   <script src="/static/assets/js/navigation.js"></script>
+  <!-- Authentication Module -->
+  <script type="module" src="/static/assets/js/auth.js"></script>
 </body>
 </html>
