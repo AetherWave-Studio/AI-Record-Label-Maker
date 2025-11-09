@@ -78,9 +78,9 @@ app.use((req, res, next) => {
   // Serve static HTML directories and landing page
   const rootDir = path.resolve(import.meta.dirname, '..');
   
-  // Serve the landing page at root
+  // Redirect root to static directory
   app.get('/', (_req, res) => {
-    res.sendFile(path.join(rootDir, 'static', 'index.html'));
+    res.redirect('/static/');
   });
   
   // Serve all static HTML directories
