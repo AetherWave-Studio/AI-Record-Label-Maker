@@ -854,40 +854,69 @@
           <div class="form-group">
             <label class="form-label">AI Model</label>
             <select class="form-select" id="modelSelect">
-              <option value="veo3_fast">VEO 3 Fast (Premium - 30 credits, ~2 mins)</option>
-              <option value="sora2">SORA 2 (Premium - 15 credits/10s, ~3-5 mins)</option>
+              <option value="hailou23">Hailou 2.3 (Premium - 25 credits/5s, ~1-2 mins)</option>
+              <option value="sora2">SORA 2 (Premium - 30 credits/10s, ~3-5 mins)</option>
               <option value="seedance-lite">Seedance Lite (Fast - 8 credits/5s, ~1-2 mins)</option>
+              <option value="seedance-pro-fast">Seedance Pro Fast (Fast Pro Quality - ~11 credits/5s, ~1-2 mins)</option>
               <option value="seedance-pro">Seedance Pro (High Quality - 15 credits/5s, ~2-4 mins)</option>
             </select>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label">Aspect Ratio</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;" id="aspectRatioGroup">
+              <label class="form-label">Aspect Ratio (Seedance only)</label>
               <select class="form-select" id="aspectRatio">
-                <option value="16:9">16:9 (YouTube)</option>
-                <option value="9:16">9:16 (TikTok)</option>
-                <option value="1:1">1:1 (Instagram)</option>
+                <option value="16:9" selected>16:9</option>
+                <option value="4:3">4:3</option>
+                <option value="1:1">1:1</option>
+                <option value="3:4">3:4</option>
+                <option value="9:16">9:16</option>
+                <option value="9:21">9:21</option>
+                <option value="auto">Auto (Model decides)</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label">Resolution (Seedance only)</label>
+              <select class="form-select" id="resolutionSelect">
+                <option value="480p" selected>480p (Fastest)</option>
+                <option value="720p">720p (Balanced)</option>
+                <option value="1080p">1080p (High Quality)</option>
               </select>
             </div>
 
             <div class="form-group" style="margin-bottom: 0;">
               <label class="form-label">Duration</label>
               <select class="form-select" id="durationSelect">
-                <option value="5">5 seconds</option>
-                <option value="10">10 seconds</option>
-                <option value="15">15 seconds</option>
+                <!-- Duration options will be populated dynamically based on model selection -->
               </select>
             </div>
           </div>
 
           <div class="form-group">
-            <label class="form-label">Reference Image (Optional)</label>
+            <label class="form-label">
+              <span>Upload Image (Optional)</span>
+              <span id="imageLabelHint" style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- First frame or reference</span>
+            </label>
             <div class="upload-area" id="uploadArea" style="padding: 1rem;">
               <i class="ri-image-add-line upload-icon" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
               <p class="upload-text" style="font-size: 0.875rem;">Click to upload</p>
               <input type="file" id="imageInput" accept="image/*" style="display: none;">
               <img id="previewImage" class="preview-image" style="display: none; max-height: 100px;">
+            </div>
+          </div>
+
+          <!-- Second Image Upload for Last Frame (hidden by default) -->
+          <div class="form-group" id="lastFrameUploadGroup" style="display: none;">
+            <label class="form-label">
+              <span>Upload Second Image (Optional)</span>
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight: normal; margin-left: 0.5rem;">- Last frame</span>
+            </label>
+            <div class="upload-area" id="lastFrameUploadArea" style="padding: 1rem;">
+              <i class="ri-image-add-line upload-icon" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+              <p class="upload-text" style="font-size: 0.875rem;">Click to upload last frame</p>
+              <input type="file" id="lastFrameInput" accept="image/*" style="display: none;">
+              <img id="previewLastFrame" class="preview-image" style="display: none; max-height: 100px;">
             </div>
           </div>
 
@@ -907,7 +936,7 @@
           <div class="result-card" id="resultCard">
             <video id="resultVideo" class="result-video" controls style="max-height: 300px;"></video>
             <div class="result-actions">
-              <button class="btn-secondary" onclick="downloadVideo()">
+              <button class="btn-secondary" onclick="downloadCurrentVideo()">
                 <i class="ri-download-line"></i>
                 Download
               </button>
@@ -975,9 +1004,11 @@
   <script>
     // Configuration
     const API_BASE = window.location.origin;
-    let currentModel = 'veo3_fast';
+    let currentModel = 'hailou23';
     let uploadedImage = null;
+    let uploadedLastFrameData = null;
     let currentVideoUrl = null;
+    let userPlanType = 'free'; // Default to free, will be updated from API
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
@@ -995,7 +1026,9 @@
         
         if (response.ok) {
           const data = await response.json();
+          userPlanType = data.planType || 'free'; // Update user plan type
           document.getElementById('creditBalance').textContent = `${data.credits} Credits`;
+          applyVideoQualityRestrictions(); // Apply free account restrictions
         } else {
           document.getElementById('creditBalance').textContent = 'Login Required';
         }
@@ -1009,20 +1042,122 @@
     function setupEventListeners() {
       // Model selection dropdown
       const modelSelect = document.getElementById('modelSelect');
+      const durationSelect = document.getElementById('durationSelect');
+      const resolutionSelect = document.getElementById('resolutionSelect');
+      const aspectRatioGroup = document.getElementById('aspectRatioGroup');
+      const aspectRatioSelect = document.getElementById('aspectRatio');
+
       if (modelSelect) {
         modelSelect.addEventListener('change', (e) => {
           currentModel = e.target.value;
+          updateDurationOptions(); // Update duration options when model changes
+          updateResolutionOptions(); // Update resolution options when model changes
+          updateAspectRatioVisibility(); // Update aspect ratio visibility when model changes
+          updateLastFrameVisibility(); // Update last frame upload visibility when model changes
         });
         // Set initial model from dropdown
         currentModel = modelSelect.value;
       }
 
-      // Duration slider
-      const durationSlider = document.getElementById('durationSlider');
-      const durationValue = document.getElementById('durationValue');
-      durationSlider.addEventListener('input', (e) => {
-        durationValue.textContent = `${e.target.value}s`;
-      });
+      // Duration Options Function
+      function updateDurationOptions() {
+        const selectedModel = modelSelect.value;
+
+        // Clear existing options
+        durationSelect.innerHTML = '';
+
+        if (selectedModel === 'hailou23') {
+          // Hailou 2.3 supports 2-12 seconds (adjust based on API)
+          let options = '';
+          for (let i = 2; i <= 12; i++) {
+            const selected = i === 5 ? ' selected' : '';
+            options += `<option value="${i}"${selected}>${i} seconds</option>`;
+          }
+          durationSelect.innerHTML = options;
+        } else if (selectedModel === 'sora2') {
+          // Sora 2 only allows 10 or 15 seconds (from documentation)
+          durationSelect.innerHTML = `
+            <option value="10">10 seconds</option>
+            <option value="15">15 seconds</option>
+          `;
+        } else if (currentModel.startsWith('seedance')) {
+          // All Seedance models support 2-12 seconds
+          let options = '';
+          for (let i = 2; i <= 12; i++) {
+            const selected = i === 5 ? ' selected' : '';
+            options += `<option value="${i}"${selected}>${i} seconds</option>`;
+          }
+          durationSelect.innerHTML = options;
+        }
+      }
+
+      // Resolution Options Function (no model-specific restrictions needed)
+      function updateResolutionOptions() {
+        // All resolution options (480p, 720p, 1080p) are available for all Seedance models
+      }
+
+      // Aspect Ratio Visibility Function
+      function updateAspectRatioVisibility() {
+        const selectedModel = modelSelect.value;
+        const isSeedance = selectedModel.startsWith('seedance');
+        const gridContainer = aspectRatioGroup?.parentElement;
+
+        if (aspectRatioGroup) {
+          // Show aspect ratio for Seedance models, hide for premium models (VEO/SORA)
+          if (isSeedance) {
+            aspectRatioGroup.style.display = 'block';
+            if (gridContainer) {
+              gridContainer.style.gridTemplateColumns = '1fr 1fr 1fr';
+            }
+          } else {
+            aspectRatioGroup.style.display = 'none';
+            if (gridContainer) {
+              gridContainer.style.gridTemplateColumns = '1fr 1fr';
+            }
+          }
+        }
+      }
+
+      // Apply Video Quality Restrictions for Free Accounts
+      function applyVideoQualityRestrictions() {
+        if (userPlanType === 'free') {
+          // Free accounts can only use lowest settings
+          modelSelect.value = 'seedance-lite';
+          resolutionSelect.value = '480p';
+          durationSelect.value = '5';
+
+          // Disable all dropdowns
+          modelSelect.disabled = true;
+          resolutionSelect.disabled = true;
+          durationSelect.disabled = true;
+          if (aspectRatioSelect) aspectRatioSelect.disabled = true;
+
+          // Update duration options to only show 5 seconds
+          durationSelect.innerHTML = '<option value="5" selected>5 seconds</option>';
+
+          // Update resolution options to only show 480p
+          resolutionSelect.innerHTML = '<option value="480p" selected>480p (Fastest)</option>';
+
+          // Hide aspect ratio for free accounts (they get auto aspect)
+          if (aspectRatioGroup) {
+            aspectRatioGroup.style.display = 'none';
+            if (aspectRatioGroup.parentElement) {
+              aspectRatioGroup.parentElement.style.gridTemplateColumns = '1fr 1fr';
+            }
+          }
+        } else {
+          // Enable all dropdowns for paid accounts
+          modelSelect.disabled = false;
+          resolutionSelect.disabled = false;
+          durationSelect.disabled = false;
+          if (aspectRatioSelect) aspectRatioSelect.disabled = false;
+        }
+      }
+
+      // Initialize duration, resolution, and aspect ratio options on page load
+      updateDurationOptions();
+      updateResolutionOptions();
+      updateAspectRatioVisibility();
 
       // Image upload
       const uploadArea = document.getElementById('uploadArea');
@@ -1053,20 +1188,39 @@
         }
       });
 
+      // Last frame image upload
+      const lastFrameUploadArea = document.getElementById('lastFrameUploadArea');
+      const lastFrameInput = document.getElementById('lastFrameInput');
+      const previewLastFrame = document.getElementById('previewLastFrame');
+
+      lastFrameUploadArea.addEventListener('click', () => lastFrameInput.click());
+      lastFrameUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        lastFrameUploadArea.style.borderColor = 'var(--aetherwave-purple)';
+      });
+      lastFrameUploadArea.addEventListener('dragleave', () => {
+        lastFrameUploadArea.style.borderColor = 'var(--border-color)';
+      });
+      lastFrameUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        lastFrameUploadArea.style.borderColor = 'var(--border-color)';
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+          handleLastFrameUpload(file);
+        }
+      });
+
+      lastFrameInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleLastFrameUpload(file);
+        }
+      });
+
       // Generate button
       document.getElementById('generateBtn').addEventListener('click', generateVideo);
 
-      // Edit tab video upload
-      const editUploadArea = document.getElementById('editUploadArea');
-      const videoEditInput = document.getElementById('videoEditInput');
-      editUploadArea.addEventListener('click', () => videoEditInput.click());
-      videoEditInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          handleVideoUpload(file);
-        }
-      });
-    }
+      }
 
     // Handle image upload
     function handleImageUpload(file) {
@@ -1077,19 +1231,138 @@
         previewImage.src = uploadedImage;
         previewImage.style.display = 'block';
         document.getElementById('uploadArea').classList.add('has-image');
-        document.querySelector('.upload-icon').style.display = 'none';
-        document.querySelector('.upload-text').textContent = 'Image uploaded successfully!';
+        const uploadIcon = document.querySelector('#uploadArea .upload-icon');
+        const uploadText = document.querySelector('#uploadArea .upload-text');
+        if (uploadIcon) uploadIcon.style.display = 'none';
+        if (uploadText) uploadText.textContent = 'Image uploaded successfully!';
+
+        // Show/hide last frame upload based on model
+        updateLastFrameVisibility();
       };
       reader.readAsDataURL(file);
     }
 
-    // Handle video upload for editing
+    // Handle last frame image upload
+    function handleLastFrameUpload(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        uploadedLastFrameData = e.target.result;
+        const previewLastFrame = document.getElementById('previewLastFrame');
+        previewLastFrame.src = uploadedLastFrameData;
+        previewLastFrame.style.display = 'block';
+        document.getElementById('lastFrameUploadArea').classList.add('has-image');
+        const uploadIcon = document.querySelector('#lastFrameUploadArea .upload-icon');
+        const uploadText = document.querySelector('#lastFrameUploadArea .upload-text');
+        if (uploadIcon) uploadIcon.style.display = 'none';
+        if (uploadText) uploadText.textContent = 'Last frame uploaded successfully!';
+
+        // Update first image label to "First frame"
+        const imageLabelHint = document.getElementById('imageLabelHint');
+        if (imageLabelHint) {
+          imageLabelHint.textContent = '- First frame';
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Update visibility of last frame upload based on current model and image
+    function updateLastFrameVisibility() {
+      const lastFrameUploadGroup = document.getElementById('lastFrameUploadGroup');
+      const imageLabelHint = document.getElementById('imageLabelHint');
+      const modelSelect = document.getElementById('modelSelect');
+      const currentModel = modelSelect ? modelSelect.value : 'veo3_fast';
+
+      const isSeedanceLite = currentModel === 'seedance-lite';
+      const isSeedancePro = currentModel === 'seedance-pro';
+      const isSeedanceProFast = currentModel === 'seedance-pro-fast';
+        // Show last frame uploader for Seedance LITE and Seedance Pro Fast
+      // Seedance Pro only supports reference mode
+      if (uploadedImage && (isSeedanceLite || isSeedanceProFast)) {
+        if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'block';
+      } else {
+        if (lastFrameUploadGroup) lastFrameUploadGroup.style.display = 'none';
+      }
+
+      // Update image label hint based on model
+      if (imageLabelHint) {
+        if (isSeedancePro) {
+          imageLabelHint.textContent = '- Reference only';
+        } else if (isSeedanceProFast) {
+          imageLabelHint.textContent = '- First frame';
+        } else {
+          imageLabelHint.textContent = '- First frame or reference';
+        }
+      }
+    }
+
+    // Handle video upload for editing (currently not implemented)
     function handleVideoUpload(file) {
-      const editPreview = document.getElementById('editPreview');
-      const url = URL.createObjectURL(file);
-      editPreview.src = url;
-      editPreview.style.display = 'block';
-      document.getElementById('editingTools').style.display = 'block';
+      showToast('Video editing features coming soon!', 'warning');
+    }
+
+    // Poll KIE.ai video generation status
+    function pollVideoStatus(taskId) {
+      let attempts = 0;
+      const maxAttempts = 180; // 6 minutes max (180 * 2 seconds)
+
+      const poll = async () => {
+        try {
+          attempts++;
+          updateProgress(`Generating video... (${Math.round((attempts / maxAttempts) * 100)}%)`);
+
+          const response = await fetch(`${API_BASE}/api/generate-video/status/${taskId}`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+
+          if (!response.ok) {
+            throw new Error(`Status check failed: ${response.status}`);
+          }
+
+          const data = await response.json();
+          console.log(`Poll attempt ${attempts}/${maxAttempts}:`, data);
+
+          // Check if generation is complete
+          if (data.status === 'SUCCESS' || data.status === 'success' || data.status === 'complete') {
+            const videoUrl = data.data?.video?.url ||
+                           data.data?.video_url ||
+                           data.video?.url ||
+                           data.video_url ||
+                           data.result?.videoUrl ||
+                           data.result?.video_url;
+
+            if (videoUrl) {
+              currentVideoUrl = videoUrl;
+              showResult(currentVideoUrl);
+              showToast('Video generated successfully!', 'success');
+              loadCredits(); // Refresh credit balance
+              hideProgress();
+              return;
+            }
+          }
+
+          // Check for errors
+          if (data.status === 'FAILED' || data.status === 'failed' || data.status === 'error') {
+            throw new Error(data.error || data.message || 'Video generation failed');
+          }
+
+          // Continue polling if not complete
+          if (attempts >= maxAttempts) {
+            throw new Error('Video generation timed out after 6 minutes');
+          }
+
+          // Poll again in 2 seconds
+          setTimeout(poll, 2000);
+
+        } catch (error) {
+          console.error('Polling error:', error);
+          hideProgress();
+          showToast(error.message || 'Video generation failed', 'error');
+        }
+      };
+
+      // Start polling
+      poll();
     }
 
     // Generate Video
@@ -1110,24 +1383,44 @@
       resultCard.classList.remove('active');
 
       const aspectRatio = document.getElementById('aspectRatio').value;
-      const duration = parseInt(document.getElementById('durationSlider').value);
-      const resolution = document.getElementById('resolution').value;
+      const duration = parseInt(document.getElementById('durationSelect').value);
+      const resolution = document.getElementById('resolutionSelect').value;
 
       try {
-        // Determine which endpoint to use based on model
-        const endpoint = currentModel.startsWith('veo3') || currentModel.startsWith('sora2')
-          ? '/api/generate-video-premium'
-          : '/api/generate-video-fal';
+        // Use the correct endpoint based on the video provider (matching aimusic-media.html)
+        const isSeedance = currentModel.startsWith('seedance');
+        const endpoint = isSeedance ? '/api/generate-video-fal' : '/api/generate-video';
 
+        // Build request body based on the working pattern from aimusic-media.html
         const requestBody = {
-          prompt,
+          prompt: prompt,
           model: currentModel,
-          aspectRatio,
-          duration,
-          resolution: currentModel.startsWith('seedance') ? resolution : undefined,
-          imageData: uploadedImage,
-          quality: 'standard'
+          aspectRatio: aspectRatio,
+          duration: duration,
+          enableSafetyChecker: true
         };
+
+        // Add image data if uploaded with proper model-specific handling
+        if (uploadedImage) {
+          requestBody.imageData = uploadedImage;
+          // Seedance Pro: Always reference mode (doesn't support first/last frame)
+          // Seedance Lite & Pro Fast: First-frame mode
+          const isSeedancePro = currentModel === 'seedance-pro';
+          requestBody.imageMode = isSeedancePro ? 'reference' : 'first-frame';
+        }
+
+        // Add second image data if provided (for Seedance Lite/VEO last frame only)
+        // Seedance Pro doesn't support first/last frame mode
+        if (uploadedLastFrameData && currentModel !== 'seedance-pro') {
+          requestBody.endImageData = uploadedLastFrameData;
+        }
+
+        // Add seedance-specific parameters based on aimusic-media.html
+        if (currentModel.startsWith('seedance')) {
+          requestBody.resolution = resolution;
+          requestBody.modelVersion = currentModel.includes('pro') ? 'pro' : 'lite';
+          requestBody.cameraFixed = false;
+        }
 
         updateProgress('Submitting request...');
         
@@ -1147,12 +1440,25 @@
 
         const result = await response.json();
 
-        // Handle successful generation
-        if (result.videoUrl || result.status === 'complete') {
+        // Check if this is a KIE.ai async response (has taskId) or Fal.ai sync response
+        if (result.taskId) {
+          // KIE.ai async response - start frontend polling for task status
+          console.log('KIE.ai async generation started, taskId:', result.taskId);
+          pollVideoStatus(result.taskId);
+          return;
+        }
+
+        // Handle Fal.ai synchronous response
+        if (result.videoUrl) {
           currentVideoUrl = result.videoUrl;
           showResult(currentVideoUrl);
           showToast('Video generated successfully!', 'success');
           loadCredits(); // Refresh credit balance
+        } else if (result.status === 'complete' && result.result) {
+          currentVideoUrl = result.result.videoUrl || result.result.video_url;
+          showResult(currentVideoUrl);
+          showToast('Video generated successfully!', 'success');
+          loadCredits();
         } else {
           throw new Error('No video URL in response');
         }
@@ -1188,26 +1494,70 @@
       document.getElementById('promptInput').value = '';
       document.getElementById('imageInput').value = '';
       document.getElementById('previewImage').style.display = 'none';
-      document.querySelector('.upload-icon').style.display = 'block';
-      document.querySelector('.upload-text').textContent = 'Click to upload or drag and drop';
+      document.querySelector('#uploadArea .upload-icon').style.display = 'block';
+      document.querySelector('#uploadArea .upload-text').textContent = 'Click to upload or drag and drop';
       document.getElementById('uploadArea').classList.remove('has-image');
+
+      // Clear last frame upload
+      document.getElementById('lastFrameInput').value = '';
+      document.getElementById('previewLastFrame').style.display = 'none';
+      document.querySelector('#lastFrameUploadArea .upload-icon').style.display = 'block';
+      document.querySelector('#lastFrameUploadArea .upload-text').textContent = 'Click to upload last frame';
+      document.getElementById('lastFrameUploadArea').classList.remove('has-image');
+      document.getElementById('lastFrameUploadGroup').style.display = 'none';
+
+      // Reset image label hint
+      const imageLabelHint = document.getElementById('imageLabelHint');
+      if (imageLabelHint) {
+        imageLabelHint.textContent = '- First frame or reference';
+      }
+
       document.getElementById('resultCard').classList.remove('active');
       uploadedImage = null;
+      uploadedLastFrameData = null;
       currentVideoUrl = null;
     }
 
-    // Download video
-    function downloadVideo() {
+    // Helper function to download videos (prevents opening in same window) - matching aimusic-media.html
+    window.downloadVideo = async function(url, filename) {
+      try {
+        console.log('Downloading video:', url);
+
+        // Fetch the video as a blob
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Download failed');
+
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+
+        // Create download link with blob URL
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        setTimeout(() => {
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(blobUrl);
+        }, 100);
+
+        console.log('Download initiated for:', filename);
+        showToast('Download completed!', 'success');
+      } catch (error) {
+        console.error('Download failed:', error);
+        showToast('Download failed. Please try again or right-click and select "Save Video As..."', 'error');
+      }
+    }
+
+    // Download video using current video URL
+    async function downloadCurrentVideo() {
       if (!currentVideoUrl) return;
-      
-      const a = document.createElement('a');
-      a.href = currentVideoUrl;
-      a.download = `ghostmusician-video-${Date.now()}.mp4`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      
-      showToast('Download started!', 'success');
+
+      const filename = `ghostmusician-video-${Date.now()}.mp4`;
+      await downloadVideo(currentVideoUrl, filename);
     }
 
     // Save project

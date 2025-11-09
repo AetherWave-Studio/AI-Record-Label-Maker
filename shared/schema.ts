@@ -100,7 +100,7 @@ export const VideoModel = z.enum([
   "seedance-lite", // Fal.ai ByteDance Seedance V1 Lite
   "seedance-pro-fast", // Fal.ai ByteDance Seedance V1 Pro Fast
   "seedance-pro", // Fal.ai ByteDance Seedance V1 Pro
-  "veo3_fast", // KIE.ai Google Veo 3 Fast
+  "hailou23", // KIE.ai Hailou 2.3
   "sora2" // KIE.ai OpenAI Sora 2 Standard
 ])
 
@@ -183,7 +183,7 @@ export const PLAN_FEATURES = {
       "seedance-pro-fast",
       "seedance-pro",
       "sora2",
-      "veo3_fast"
+      "hailou23"
     ], // All available models
     allowedImageEngines: [
       "dall-e-2",
@@ -210,7 +210,7 @@ export const PLAN_FEATURES = {
       "seedance-pro-fast",
       "seedance-pro",
       "sora2",
-      "veo3_fast"
+      "hailou23"
     ], // All available models
     allowedImageEngines: [
       "dall-e-2",

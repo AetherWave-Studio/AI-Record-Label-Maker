@@ -93,7 +93,14 @@ function calculateVideoCredits(
   if (model === 'veo3_fast') {
     return 0.30; // $0.30 per 8s generation (fixed cost)
   } else if (model === 'sora2') {
-    costPerSecond = 0.015; // $0.15/10s via KIE.ai (60% cheaper than OpenAI!)
+    // Sora 2: Fixed pricing from documentation
+    if (duration === 10) {
+      return 30; // 30 credits for 10 seconds
+    } else if (duration === 15) {
+      return 45; // 45 credits for 15 seconds (30 credits/10s × 1.5)
+    } else {
+      throw new Error('Sora 2 only supports 10 or 15 second durations');
+    }
     // Seedance models (fal.ai) - resolution-dependent pricing
   } else if (model === 'seedance-lite') {
     if (resolution === '480p') costPerSecond = 0.010;        // 480p pricing
@@ -1321,39 +1328,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (model.includes('pro')) {
           kieInput.size = quality === 'hd' ? 'high' : 'standard';
         }
+      } else if (model === 'hailou23') {
+        // Hailou 2.3 uses standard format
+        kieInput.aspect_ratio = aspectRatio;
+        kieInput.duration = duration;
       } else {
-        // Seedance and VEO 3 use standard format
+        // Seedance uses standard format
         kieInput.aspect_ratio = aspectRatio;
         kieInput.duration = duration;
       }
 
       // Add image if provided
       if (imageData) {
-        // SORA 2 and VEO 3 require publicly accessible URLs, not base64 data
-        if (model.startsWith('sora') || model.startsWith('veo3')) {
-          const modelName = model.startsWith('sora') ? 'SORA 2' : 'VEO 3';
-          console.log(`${modelName}: Uploading base64 image to ImgBB...`);
+        // SORA 2 requires publicly accessible URLs, not base64 data
+        if (model.startsWith('sora')) {
+          console.log(`SORA 2: Uploading base64 image to ImgBB...`);
           try {
             const publicUrl = await uploadImageToKie(imageData, process.env.KIE_API_KEY!);
-            console.log(`${modelName}: Image uploaded successfully: ${publicUrl}`);
-
-            if (model.startsWith('sora')) {
-              kieInput.image_urls = [publicUrl];
-            } else {
-              // VEO 3: Use imageUrl parameter
-              kieInput.imageUrl = publicUrl;
-
-              // If second image provided (for FIRST_AND_LAST_FRAMES_2_VIDEO)
-              if (endImageData) {
-                console.log(`${modelName}: Uploading second image (last frame) to ImgBB...`);
-                const endPublicUrl = await uploadImageToKie(endImageData, process.env.KIE_API_KEY!);
-                console.log(`${modelName}: Second image uploaded successfully: ${endPublicUrl}`);
-                kieInput.endImageUrl = endPublicUrl;
-              }
-            }
+            console.log(`SORA 2: Image uploaded successfully: ${publicUrl}`);
+            kieInput.image_urls = [publicUrl];
           } catch (uploadError: any) {
-            console.error(`${modelName}: Image upload failed:`, uploadError);
-            throw new Error(`Failed to upload image for ${modelName}: ${uploadError.message}`);
+            console.error(`SORA 2: Image upload failed:`, uploadError);
+            throw new Error(`Failed to upload image for SORA 2: ${uploadError.message}`);
+          }
+        } else if (model === 'hailou23') {
+          // Hailou 2.3 image handling - upload to public URL if needed
+          console.log(`Hailou 2.3: Processing image input...`);
+          try {
+            const publicUrl = await uploadImageToKie(imageData, process.env.KIE_API_KEY!);
+            console.log(`Hailou 2.3: Image uploaded successfully: ${publicUrl}`);
+            kieInput.image_url = publicUrl; // Assuming it uses image_url parameter
+          } catch (uploadError: any) {
+            console.error(`Hailou 2.3: Image upload failed:`, uploadError);
+            throw new Error(`Failed to upload image for Hailou 2.3: ${uploadError.message}`);
           }
         } else {
           // Seedance accepts base64 data URLs
@@ -1367,34 +1374,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Call KIE.ai API
-      console.log(`Generating video with KIE.ai model: ${model}`);
+      // Call appropriate API based on model
+      console.log(`Generating video with model: ${model}`);
 
-      
-      const result = await kieSubscribe({
-        model,
-        input: kieInput,
-        apiKey: process.env.KIE_API_KEY!,
-        logs: true
-      });
+      if (model === 'hailou23') {
+        // Hailou 2.3 uses different API endpoint and format
+        const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+        const domain = process.env.REPLIT_DOMAIN || 'localhost:5000';
+        const callBackUrl = `${protocol}://${domain}/api/hailou-callback`;
 
-      if (result.status === 'failed') {
-        throw new Error(result.error || 'Video generation failed');
+        console.log('Hailou 2.3: Creating task with callback...');
+
+        // Prepare Hailou 2.3 request
+        const hailouRequest = {
+          model: "hailuo/02-text-to-video-pro",
+          callBackUrl: callBackUrl,
+          input: {
+            prompt: kieInput.prompt,
+            prompt_optimizer: true
+          }
+        };
+
+        // Add image to input if provided
+        if (kieInput.image_url) {
+          hailouRequest.input.image_url = kieInput.image_url;
+        }
+
+        // Add duration and aspect ratio to prompt if specified
+        if (duration && aspectRatio) {
+          hailouRequest.input.prompt += `, ${duration} seconds, ${aspectRatio} aspect ratio`;
+        }
+
+        console.log('Hailou 2.3 request:', JSON.stringify(hailouRequest, null, 2));
+
+        // Make API call to Hailou 2.3 endpoint
+        const proxyAgent = createProxyAgent();
+        const hailouResponse = await nodeFetch('https://api.kie.ai/api/v1/jobs/createTask', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.KIE_API_KEY}`
+          },
+          body: JSON.stringify(hailouRequest),
+          agent: proxyAgent
+        });
+
+        if (!hailouResponse.ok) {
+          const errorData = await hailouResponse.json().catch(() => ({}));
+          console.error('Hailou 2.3 API error:', errorData);
+          throw new Error(`Hailou 2.3 API error: ${errorData.msg || errorData.message || hailouResponse.statusText}`);
+        }
+
+        const hailouData = await hailouResponse.json();
+        console.log('Hailou 2.3 response:', JSON.stringify(hailouData, null, 2));
+
+        // Deduct credits (unless unlimited)
+        if (!creditCheck.reason || creditCheck.reason !== 'unlimited') {
+          await storage.deductCredits(userId, 'video_generation');
+        }
+
+        return res.json({
+          status: 'processing',
+          taskId: hailouData.taskId || hailouData.data?.taskId,
+          model: model,
+          creditsUsed: creditCheck.reason === 'unlimited' ? 0 : creditCost,
+          message: 'Hailou 2.3 video generation started. You will be notified when complete.'
+        });
+
+      } else {
+        // Other models use existing kieSubscribe function
+        const result = await kieSubscribe({
+          model,
+          input: kieInput,
+          apiKey: process.env.KIE_API_KEY!,
+          logs: true
+        });
+
+        if (result.status === 'failed') {
+          throw new Error(result.error || 'Video generation failed');
+        }
+
+        // Deduct credits (unless unlimited)
+        if (!creditCheck.reason || creditCheck.reason !== 'unlimited') {
+          await storage.deductCredits(userId, 'video_generation');
+        }
+
+        return res.json({
+          status: 'complete',
+          videoUrl: result.videoUrl,
+          model: model,
+          creditsUsed: creditCheck.reason === 'unlimited' ? 0 : creditCost
+        });
       }
-
-      // Deduct credits (unless unlimited)
-      if (!creditCheck.reason || creditCheck.reason !== 'unlimited') {
-        await storage.deductCredits(userId, 'video_generation');
-      }
-
-      return res.json({
-        status: 'complete',
-        videoUrl: result.videoUrl,
-        model: model,
-        creditsUsed: creditCheck.reason === 'unlimited' ? 0 : creditCost
-      });
     } catch (error: any) {
       console.error('Video generation error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Hailou 2.3 callback (receives completion updates from KIE.ai)
+  app.post("/api/hailou-callback", async (req, res) => {
+    try {
+      // Basic validation - ensure callback has expected structure
+      const { taskId, status, result, error } = req.body;
+
+      console.log('Hailou 2.3 callback received:', JSON.stringify(req.body, null, 2));
+
+      // TODO: Store Hailou 2.3 result in database or emit via WebSocket
+      // The callback should include:
+      // - taskId: The task identifier
+      // - status: 'success' or 'failed'
+      // - result: { videoUrl: ... } if successful
+      // - error: error message if failed
+
+      // For now, just log the result
+      if (status === 'success' && result?.videoUrl) {
+        console.log(`✅ Hailou 2.3 task ${taskId} completed successfully: ${result.videoUrl}`);
+        // TODO: Store in database and/or notify user via WebSocket
+      } else if (status === 'failed') {
+        console.error(`❌ Hailou 2.3 task ${taskId} failed:`, error);
+        // TODO: Store failure and/or notify user via WebSocket
+      }
+
+      // Acknowledge receipt
+      res.json({ received: true, taskId });
+
+    } catch (error: any) {
+      console.error('Hailou 2.3 callback error:', error);
       res.status(500).json({ error: error.message });
     }
   });
@@ -2153,14 +2259,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Build request input
-      // Frame calculation: ~24fps + 1 end frame
-      // Formula: (duration * 24) + 1
-      const durationNum = parseInt(duration);
-      const numFrames = (durationNum * 24) + 1;
-      
+      // Use DurationEnum instead of calculating frames
       const input: any = {
         prompt: prompt,
-        num_frames: numFrames,
+        duration: duration,
         enable_safety_checker: enableSafetyChecker
       };
 
@@ -2504,10 +2606,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         // Build Fal.ai input
-        const numFrames = duration === 3 ? 73 : duration === 10 ? 241 : 121;
         const falInput: any = {
           prompt: prompt,
-          num_frames: numFrames,
+          duration: duration,
           resolution: resolution,
           enable_safety_checker: enableSafetyChecker
         };

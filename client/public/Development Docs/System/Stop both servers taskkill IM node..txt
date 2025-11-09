@@ -1,0 +1,2 @@
+Stop both servers: taskkill /IM node.exe /F
+Start both servers: yarn dev
