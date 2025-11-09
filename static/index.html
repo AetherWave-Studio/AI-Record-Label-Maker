@@ -4370,42 +4370,6 @@ async function generateMedia() {
           </div>
         </div>
       `;
-  
-      
-        const data = await response.json();
-        console.log('Album art to video response:', data);
-
-        if (!response.ok) {
-          console.error('Video generation error response:', data);
-          throw new Error(data.details || data.error || 'Failed to generate video from album art');
-        }
-
-        if (data.status === 'complete' && data.videoUrl) {
-          // Store the video URL in media storage
-          if (!window.mediaStorage[trackId]) {
-            window.mediaStorage[trackId] = {};
-          }
-          window.mediaStorage[trackId].videoUrl = data.videoUrl;
-          window.mediaStorage[trackId].videoDuration = duration;
-          
-          // Show video view
-          toggleMediaView(trackId, true);
-          
-          // Update credits display
-          if (data.creditsRemaining !== undefined) {
-            updateCreditsDisplay(data.creditsRemaining);
-          }
-        } else {
-          throw new Error('Video generation completed but no video URL returned');
-        }
-      } catch (error) {
-        console.error('Album art to video error:', error);
-        // Restore album art view on error
-        toggleMediaView(trackId, false);
-        // Show error message
-        resultDiv.innerHTML += `<p style="color: #ff6b6b; font-size: 0.85rem; margin-top: 0.5rem; text-align: center;">❌ ${error.message}</p>`;
-      }
-    };
 
 
 
