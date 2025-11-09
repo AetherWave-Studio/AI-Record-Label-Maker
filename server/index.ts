@@ -8,27 +8,29 @@ import { promises as fs } from "fs";
 
 const app = express();
 
-declare module 'http' {
+declare module "http" {
   interface IncomingMessage {
-    rawBody: unknown
+    rawBody: unknown;
   }
 }
-app.use(express.json({
-  limit: '100mb',
-  verify: (req, _res, buf) => {
-    req.rawBody = buf;
-  }
-}));
-app.use(express.urlencoded({ extended: false, limit: '100mb' }));
+app.use(
+  express.json({
+    limit: "100mb",
+    verify: (req, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }),
+);
+app.use(express.urlencoded({ extended: false, limit: "100mb" }));
 
 // Lightweight health check endpoint for deployment health checks
 // Must be BEFORE maintenance middleware to respond quickly
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", timestamp: Date.now() });
 });
 
-app.get('/api/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+app.get("/api/health", (_req, res) => {
+  res.status(200).json({ status: "ok", timestamp: Date.now() });
 });
 
 // Maintenance mode - shows "Coming Soon" page to visitors
@@ -76,34 +78,54 @@ app.use((req, res, next) => {
   });
 
   // Serve static HTML directories and landing page
-  const rootDir = path.resolve(import.meta.dirname, '..');
-  
+  const rootDir = path.resolve(import.meta.dirname, "..");
+
   // Redirect root to static directory
-  app.get('/', (_req, res) => {
-    res.redirect('/static/');
+  app.get("/", (_req, res) => {
+    res.redirect("/static/");
   });
-  
+
   // Serve all static HTML directories
-  app.use('/virtual-artists', express.static(path.join(rootDir, 'virtual-artists')));
-  app.use('/creator-studio', express.static(path.join(rootDir, 'creators-lounge')));
-  app.use('/playlists', express.static(path.join(rootDir, 'Playlists')));
-  app.use('/featured-artist', express.static(path.join(rootDir, 'Featured Artist')));
-  app.use('/video-generation', express.static(path.join(rootDir, 'video-generation')));
-  app.use('/seamless-loop-creator', express.static(path.join(rootDir, 'seamless-loop-creator')));
-  app.use('/static', express.static(path.join(rootDir, 'static')));
-  app.use('/welcome', express.static(path.join(rootDir, 'welcome')));
-  app.use('/aimusic-media', express.static(path.join(rootDir, 'aimusic-media')));
+  app.use(
+    "/virtual-artists",
+    express.static(path.join(rootDir, "virtual-artists")),
+  );
+  app.use(
+    "/creator-studio",
+    express.static(path.join(rootDir, "creator-studio")),
+  );
+  app.use("/playlists", express.static(path.join(rootDir, "Playlists")));
+  app.use(
+    "/featured-artist",
+    express.static(path.join(rootDir, "Featured Artist")),
+  );
+  app.use(
+    "/video-generation",
+    express.static(path.join(rootDir, "video-generation")),
+  );
+  app.use(
+    "/seamless-loop-creator",
+    express.static(path.join(rootDir, "seamless-loop-creator")),
+  );
+  app.use("/static", express.static(path.join(rootDir, "static")));
+  app.use("/welcome", express.static(path.join(rootDir, "welcome")));
+  app.use(
+    "/aimusic-media",
+    express.static(path.join(rootDir, "aimusic-media")),
+  );
 
   // Handle React SPA routes - these should be served by the React app
-  const reactRoutes = ['/profile', '/buy-credits', '/card-shop', '/channels'];
+  const reactRoutes = ["/profile", "/buy-credits", "/card-shop", "/channels"];
 
   // Setup Vite in development or serve static in production
   if (app.get("env") === "development") {
     // Create Vite dev server manually to control middleware order
-    const { createServer: createViteServer, createLogger } = await import("vite");
+    const { createServer: createViteServer, createLogger } = await import(
+      "vite"
+    );
     const viteConfig = (await import("../vite.config.js")).default;
     const viteLogger = createLogger();
-    
+
     const vite = await createViteServer({
       ...viteConfig,
       configFile: false,
@@ -149,7 +171,7 @@ app.use((req, res, next) => {
       const distPath = path.resolve(import.meta.dirname, "..", "dist");
       res.sendFile(path.resolve(distPath, "index.html"));
     });
-    
+
     serveStatic(app);
   }
 
@@ -158,8 +180,8 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   // Bind to 0.0.0.0 to make the server accessible from outside the container (required for publishing)
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen(port, '0.0.0.0', () => {
+  const port = parseInt(process.env.PORT || "5000", 10);
+  server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
   });
 })();
