@@ -3235,7 +3235,19 @@
       closeProfileModal: typeof window.closeProfileModal
     });
 
-    // Add message to chat
+  // Audio Player Object
+  const audioPlayer = {
+  audioElements: new Map(),
+  currentTrack: null,
+
+  togglePlay(trackId) {
+    const audio = this.audioElements.get(trackId);
+    if (!audio) return;
+    
+    const card = document.querySelector(`[data-track-id="${trackId}"]`);
+    if (!card) return;
+    
+    const playIcon = card.querySelector('.play-icon');
     const pauseIcon = card.querySelector('.pause-icon');
     
     // Pause all other tracks
