@@ -126,11 +126,14 @@ function showProfileModal() {
         </div>
       </div>
       
-      <div style="padding: 1.5rem 2rem; border-top: 1px solid var(--border-color); display: flex; gap: 1rem; justify-content: space-between; flex-shrink: 0;">
+      <div style="padding: 1.5rem 2rem; border-top: 1px solid var(--border-color); display: flex; gap: 1rem; flex-wrap: wrap; flex-shrink: 0;">
         <a href="/api/logout" style="padding: 0.75rem 1.5rem; background: rgba(244, 63, 94, 0.1); color: rgb(244, 63, 94); border: 1px solid rgba(244, 63, 94, 0.3); border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem; text-decoration: none; display: inline-block;" data-testid="button-logout">
           Logout
         </a>
-        <button onclick="closeProfileModal()" style="padding: 0.75rem 2rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem;" data-testid="button-close-profile">
+        <a href="/profile" style="padding: 0.75rem 1.5rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); color: white; border: none; border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem; text-decoration: none; display: inline-block; flex: 1; text-align: center;" data-testid="button-manage-profile">
+          Manage Profile
+        </a>
+        <button onclick="closeProfileModal()" style="padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.05); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 12px; font-weight: 500; cursor: pointer; font-size: 0.9rem;" data-testid="button-close-profile">
           Close
         </button>
       </div>
