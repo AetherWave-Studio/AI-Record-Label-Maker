@@ -108,6 +108,21 @@ Ghost Musician has been completely removed from this repository and moved to a s
 - Cleaned up server/storage.ts and server/routes.ts
 - Database now contains only core platform tables: users, products, userInventory
 
+### Static Homepage Cleanup (November 9, 2024)
+**Cleaned up static/index.html from 4,495 lines to 2,270 lines:**
+- Removed 2,220+ lines of broken code mixed from other pages (music players, chat UI, quest modals, media generation)
+- Created modular authentication system: `static/assets/js/auth.js` (191 lines, clean & tested)
+- Fixed all JavaScript syntax errors (51 LSP diagnostics → 0)
+- Preserved essential features: animated background, header navigation, credits/quest/profile indicators
+- Authentication flow now working correctly: login state toggles header UI, credits display updates, profile modal functions
+
+**Auth Module Features:**
+- `checkAuth()` - Verifies login status via `/api/auth/user` and `/api/user/credits`
+- `updateCreditsDisplay()` - Shows credit balance (number or ∞ for Mogul plan)
+- `showProfileModal()` - Displays user profile with credits, plan, logout
+- `showQuestModal()` / `showPaymentModal()` - Navigate to /buy-credits page
+- All functions exposed globally for onclick handlers in static HTML
+
 ### New Frontend Structure
 - Created 4 core pages: buy-credits, card-shop, video-generation, channels
 - Implemented UserNavigation component with authentication and credit display
