@@ -114,9 +114,10 @@
     position: relative;
     z-index: 10;
     padding: .5rem 2rem;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    gap: 1rem;
     border-bottom: 1px solid var(--border-color);
     backdrop-filter: blur(12px);
     background: url('/assets/header-panel_1761541736595.png') no-repeat center center, rgba(13, 11, 21, 0.8);
@@ -2047,7 +2048,8 @@
   </div>
 
   <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72')";>
-    <div style="display: flex; align-items: center; gap: 1rem;">
+    <!-- Left: Logo -->
+    <div style="display: flex; align-items: center; gap: 1rem; justify-self: start;">
       <a href="#" class="logo">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
@@ -2058,31 +2060,32 @@
       </a>
     </div>
    
-        <!-- Navigation will be injected here -->
-    <!--<div id="navigation-container"></div>-->
-        <nav class="aether-nav">
-                                <ul>
-                                        <li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
-                                        <li class="dropdown">
-                                                <a href="https://aetherwavestudio.com/static/playlists.html">Playlists</a>
-                                                <div class="dropdown-content">
-                                                        <a href="https://playlists.aetherwavestudio.com/darkwave/">DarkWave Essentials</a>
-                                                        <a href="https://playlists.aetherwavestudio.com/meditation/">Meditation Soundscapes</a>
-                                                        <a href="https://playlists.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
-                                                        <a href="https://playlists.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
-                                                </div>
-                                        </li>
-                                        <!--<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>-->
-                                        <li class="dropdown">
-                                                <a href="https://shop.aetherwavestudio.com">Shop</a>
-                                                <div class="dropdown-content">
-                                                        <a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
-                                                        <a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
-                                                </div>
-                                        </li>
-                                        <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
+    <!-- Center: Navigation -->
+    <nav class="aether-nav" style="justify-self: center;">
+      <ul>
+        <li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
+        <li class="dropdown">
+          <a href="https://aetherwavestudio.com/static/playlists.html">Playlists</a>
+          <div class="dropdown-content">
+            <a href="https://playlists.aetherwavestudio.com/darkwave/">DarkWave Essentials</a>
+            <a href="https://playlists.aetherwavestudio.com/meditation/">Meditation Soundscapes</a>
+            <a href="https://playlists.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+            <a href="https://playlists.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+          </div>
+        </li>
+        <li class="dropdown">
+          <a href="https://shop.aetherwavestudio.com">Shop</a>
+          <div class="dropdown-content">
+            <a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
+            <a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
+          </div>
+        </li>
+        <li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
+      </ul>
+    </nav>
    
-    <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
+    <!-- Right: Auth Section -->
+    <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
         <!-- Credits Badge -->
@@ -2101,7 +2104,6 @@
         <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
       </div>
     </div>
-    </nav>
   </header>
 
   <main>
