@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AetherWave Studio - Your Page Title</title>
+  <meta name="description" content="Your page description here">
+  <link rel="icon" type="image/png" href="/assets/icon-set/aetherwave-logo.png">
+  
+  <style>
+    :root {
+      --aetherwave-purple: #8B5CF6;
+      --aetherwave-pink: #FF2EA6;
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #13131a;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0b0;
+      --text-muted: #6b6b80;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --card-bg: rgba(19, 19, 26, 0.95);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background */
+    .bg-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(139, 92, 246, 0.15), transparent 50%),
+                  radial-gradient(ellipse at 0% 50%, rgba(255, 46, 166, 0.1), transparent 50%),
+                  radial-gradient(ellipse at 100% 50%, rgba(139, 92, 246, 0.1), transparent 50%);
+      animation: bgPulse 15s ease-in-out infinite;
+    }
+
+    @keyframes bgPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Header Styles */
+    header {
+      position: relative;
+      z-index: 100;
+      background: rgba(10, 10, 15, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .logo img {
+      width: 40px;
+      height: 40px;
+    }
+
+    nav {
+      display: flex;
+      gap: 0.5rem;
+      justify-self: center;
+    }
+
+    .nav-btn {
+      padding: 0.6rem 1.25rem;
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .nav-btn:hover {
+      background: rgba(139, 92, 246, 0.1);
+      color: var(--text-primary);
+    }
+
+    #auth-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-self: end;
+    }
+
+    #user-profile {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    #user-profile img {
+      width: 32px !important;
+      height: 32px !important;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .credits-indicator {
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, rgba(255, 46, 166, 0.1), rgba(139, 92, 246, 0.1));
+      border: 1px solid var(--aetherwave-pink);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .credits-indicator:hover {
+      background: linear-gradient(135deg, rgba(255, 46, 166, 0.2), rgba(139, 92, 246, 0.2));
+      transform: translateY(-2px);
+    }
+
+    #profile-trigger {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      transition: all 0.2s;
+    }
+
+    #profile-trigger:hover {
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    #user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--aetherwave-purple);
+    }
+
+    /* Main Content Container */
+    .content-container {
+      position: relative;
+      z-index: 1;
+      min-height: calc(100vh - 80px);
+      padding: 2rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      header {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1rem;
+      }
+
+      nav {
+        justify-self: start;
+        overflow-x: auto;
+        width: 100%;
+      }
+
+      #auth-section {
+        justify-self: start;
+      }
+
+      .content-container {
+        padding: 1rem;
+      }
+    }
+
+    /* Animation for modal fade in */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-container"></div>
+
+  <!-- Header with Navigation -->
+  <header>
+    <!-- Logo -->
+    <a href="/" class="logo">
+      <img src="/assets/icon-set/aetherwave-logo.png" alt="AetherWave Studio">
+      <span>AetherWave Studio</span>
+    </a>
+
+    <!-- Navigation -->
+    <nav>
+      <a href="/" class="nav-btn">Home</a>
+      <a href="/aimusic-media.html" class="nav-btn">AI Studio</a>
+      <a href="/buy-credits" class="nav-btn">Credits</a>
+      <a href="/video-generation" class="nav-btn">Video</a>
+    </nav>
+
+    <!-- Auth Section -->
+    <div id="auth-section">
+      <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
+      <div id="user-profile">
+        <!-- Credits Badge -->
+        <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+          <span id="credits-count" style="font-weight: 600; color: var(--aetherwave-pink);">0</span>
+        </div>
+
+        <!-- Profile Trigger -->
+        <div id="profile-trigger" data-testid="button-profile">
+          <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User">
+          <span id="user-name" style="color: var(--text-primary); font-size: 0.9rem;" data-testid="text-username"></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area - CUSTOMIZE THIS SECTION -->
+  <div class="content-container">
+    <div style="max-width: 1200px; margin: 0 auto;">
+      
+      <!-- REPLACE THIS WITH YOUR CUSTOM CONTENT -->
+      <h1 style="font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+        Your Page Title
+      </h1>
+      
+      <p style="font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 2rem;">
+        Replace this content with your own custom HTML.
+      </p>
+
+      <div style="background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 2rem;">
+        <h2 style="font-size: 1.5rem; margin-bottom: 1rem;">Example Section</h2>
+        <p style="color: var(--text-secondary);">
+          This is a placeholder section. You can add cards, forms, images, or any other content here.
+        </p>
+      </div>
+      <!-- END CUSTOM CONTENT -->
+
+    </div>
+  </div>
+
+  <!-- Authentication Module -->
+  <script type="module" src="/static/assets/js/auth.js"></script>
+</body>
+</html>
