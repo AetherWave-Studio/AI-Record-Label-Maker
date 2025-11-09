@@ -1024,6 +1024,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Upload profile image
+  app.post('/api/user/profile/image', authMiddleware, uploadImage.single('profileImage'), async (req: any, res) => {
+    try {
+      const userId = getUserId(req);
+      
+      if (!req.file) {
+        return res.status(400).json({ message: "No image file provided" });
+      }
+
+      // Get current user
+      const currentUser = await storage.getUser(userId);
+      if (!currentUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Convert uploaded file to base64
+      const base64Image = req.file.buffer.toString('base64');
+      const mimeType = req.file.mimetype;
+      const base64WithPrefix = `data:${mimeType};base64,${base64Image}`;
+
+      // Upload to ImgBB
+      const imgbbApiKey = process.env.IMGBB_API_KEY;
+      if (!imgbbApiKey) {
+        return res.status(500).json({ message: "Image upload service not configured" });
+      }
+
+      console.log(`Uploading profile image for user ${userId}...`);
+      const imageUrl = await uploadImageToKie(base64WithPrefix, imgbbApiKey);
+      console.log(`Profile image uploaded successfully: ${imageUrl}`);
+
+      // Update user's profileImageUrl in database
+      const updatedUser = await storage.upsertUser({
+        ...currentUser,
+        profileImageUrl: imageUrl,
+      });
+
+      res.json({
+        success: true,
+        imageUrl,
+        user: updatedUser
+      });
+    } catch (error: any) {
+      console.error("Error uploading profile image:", error);
+      res.status(500).json({ message: error.message || "Failed to upload profile image" });
+    }
+  });
+
   // Credit Management Routes
   
   // Get user's current credits
