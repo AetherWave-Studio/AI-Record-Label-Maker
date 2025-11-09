@@ -68,16 +68,9 @@ export function WelcomeModal({ open, user }: WelcomeModalProps) {
 
   const setUsernameMutation = useMutation({
     mutationFn: async (newUsername: string) => {
-      const response = await apiRequest("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: newUsername.trim() }),
+      const response = await apiRequest("PATCH", "/api/user/profile", {
+        username: newUsername.trim(),
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to set username");
-      }
 
       return response.json();
     },
