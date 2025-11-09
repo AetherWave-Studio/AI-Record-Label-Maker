@@ -1,7 +1,8 @@
 import type { Request, Response, NextFunction } from "express";
 
 // Toggle this to enable/disable maintenance mode
-export const MAINTENANCE_MODE = true;
+// Only enable in production (disable in development for previewing)
+export const MAINTENANCE_MODE = process.env.NODE_ENV === 'production';
 
 // Bypass key - add ?bypass=your_secret_key to URL to access the app during maintenance
 const BYPASS_KEY = process.env.MAINTENANCE_BYPASS_KEY || "dev123";
