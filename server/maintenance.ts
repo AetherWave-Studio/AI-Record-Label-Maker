@@ -181,7 +181,7 @@ export function maintenanceMiddleware(req: Request, res: Response, next: NextFun
           <div style="position: relative; padding-bottom: 56.25%; height: 0;">
             <iframe 
               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
-              src="https://www.youtube.com/embed/videoseries?list=PLwQ2SChzAjIxUU1015eTb5nUtTWq_6vjA&autoplay=0&rel=0&modestbranding=1" 
+              src="https://www.youtube.com/embed/videoseries?list=PLwQ2SChzAjIxUU1015eTb5nUtTWq_6vjA&autoplay=1&loop=1&rel=0&modestbranding=1" 
               frameborder="0" 
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
               allowfullscreen>
