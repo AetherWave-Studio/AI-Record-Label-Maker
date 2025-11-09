@@ -128,6 +128,7 @@ app.use((req, res, next) => {
         const clientTemplate = path.resolve(
           import.meta.dirname,
           "..",
+          "client",
           "index.html",
         );
         console.log(`🎯 Serving React route: ${req.originalUrl}`);
