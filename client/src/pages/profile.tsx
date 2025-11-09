@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { User, Edit3, Save, X, Crown, Calendar, Mail, Upload, Lock } from "lucide-react";
+import { User, Edit3, Save, X, Crown, Calendar, Mail, Upload, Lock, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProfileFormData {
@@ -261,6 +261,18 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="space-y-6">
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="gap-2"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
+
         {/* Header Card */}
         <Card className="relative overflow-hidden">
           <div className={`absolute inset-0 opacity-10 ${getPlanColor(user.subscriptionPlan)}`} />
