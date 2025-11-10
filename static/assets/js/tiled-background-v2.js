@@ -48,7 +48,6 @@ class TiledBackground {
                 "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2FPublic_Aurora_echo.mp4?alt=media&token=5dd12592-b09f-435d-90b5-5df82204ac88",
                 "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Media%20to%20Showcase%2FHailuo_Video_4.mp4?alt=media&token=22027476-839f-4681-a048-051932e7d7fd",
                 "https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faetherwave-production-video.mp4?alt=media&token=7b2937e7-bc47-4d75-a1c4-1303367aaf8a",
-                "2025-11-02T11-52-07_the_ball_spins.mp4",
                 "https://www.dropbox.com/scl/fi/ln0evl33xyczz96ebz2cn/aetherwave-backstage-2.mp4?rlkey=3ptjf3bof0pk5li44enaccx3b&raw=1",
                 "https://www.dropbox.com/scl/fi/633b8ag55rypv6wase92y/Dixie_butts.mp4?rlkey=h1g2zv5x340p7e5fkiyoz0h8x&raw=1",
                 "https://www.dropbox.com/scl/fi/0cuszeqsfufqe2e52fbsp/Electric-Dreamer-video.mp4?rlkey=n34x2x52s4jg3xoq69z400ugi&raw=1",
@@ -271,7 +270,7 @@ class TiledBackground {
         const controlPanel = document.createElement("div");
         controlPanel.className = "tiled-background-controls";
         controlPanel.innerHTML = `
-            <div class="controls-header">
+            <div class="controls-header" style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FBlack_Surface.png?alt=media&token=06d4bfdc-41d8-4d55-bbfd-5756c5d63845');">
                 <h3>🎨 Background Controls</h3>
                 <button class="toggle-controls" title="Toggle panel">⊟</button>
             </div>
@@ -456,6 +455,7 @@ class TiledBackground {
                 width: 18px;
                 height: 18px;
                 background: linear-gradient(135deg, #ff2ea6, #8b5cf6);
+                background-image: url('https://www.dropbox.com/scl/fi/poke2kjms84a997psbuhi/Black-Glass-Knob-1-Transparent.png?rlkey=2nenvpvn66ffji2lpfp59ku1s&raw=1');
                 border-radius: 50%;
                 cursor: pointer;
                 border: 2px solid rgba(255, 255, 255, 0.8);

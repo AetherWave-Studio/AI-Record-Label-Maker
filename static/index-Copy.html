@@ -196,8 +196,7 @@
     z-index: 1;
     flex: 1;
     display: flex;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     padding: 1.5rem;
     max-width: 1600px;
     margin: 0 auto;
@@ -213,33 +212,6 @@
     flex: 1;
     min-height: 0;
     position: relative;
-    }
-
-    /* Centered Chat Panel Container */
-    .chat-panel-container {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60%;
-    max-width: 600px;
-    height: 400px;
-    max-height: 400px;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    background: var(--card-bg);
-    border: px solid var(--aetherwave-pink);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow:
-      0 0 30px rgba(255, 46, 166, 0.5),
-      0 0 60px rgba(255, 46, 166, 0.3),
-      0 0 90px rgba(255, 46, 166, 0.1),
-      0 20px 60px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(20px);
-    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transition: height 0.4s ease-out, max-height 0.4s ease-out;
     }
 
     .hero-text {
@@ -845,8 +817,8 @@
 
     .suggestion-chip {
     padding: 0.4rem 0.75rem;
-    background: url('https://www.dropbox.com/scl/fi/z4d19h9rgwx5q0z1egybs/Pick-btn.png?rlkey=4rqcc8yhxqs817dk7jogrj9wg&raw=1') no-repeat center center, rgba(139, 92, 246, 0.1);
-    border: 1px solid var(--aetherwave-pink);
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid var(--border-color);
     border-radius: 20px;
     font-size: 0.75rem;
     color: var(--text-muted);
@@ -856,7 +828,7 @@
     }
 
     .suggestion-chip:hover {
-    background: url('https://www.dropbox.com/scl/fi/713wojh1f5mmxw3j7ppim/Pick-btn-on.png?rlkey=74f7kp7he8grstmd7i1gtmwen&raw=1') no-repeat center center;
+    background: rgba(139, 92, 246, 0.2);
     border-color: var(--aetherwave-purple);
     color: var(--text-primary);
     }
@@ -864,7 +836,7 @@
     /* Use Case Cards */
     .use-case-card {
     position: relative;
-    background: url('/assets/use-case-card-bg_1761537069997.png') no-repeat 100% 100%;
+    background: url('/assets/use-case-card-bg_1761537069997.png') no-repeat center center;
     background-size: 100% 100%;
     border: 2px solid var(--border-color);
     border-radius: 12px;
@@ -1450,19 +1422,6 @@
     
     /* Mobile Breakpoint (≤768px) */
     @media (max-width: 768px) {
-      /* Adjust centered chat panel for mobile */
-      .chat-panel-container {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 95%;
-        height: 70vh;
-        max-height: 70vh;
-        border-radius: 16px;
-        transition: height 0.4s ease-out, max-height 0.4s ease-out;
-      }
-
       /* Prevent horizontal scrolling */
       html, body {
         overflow-x: hidden;
@@ -2078,16 +2037,6 @@
       width: 100%;
       justify-content: center;
     }
-	.brain {
-	 box-shadow:
-      0 0 30px rgba(255, 46, 166, 0.5),
-      0 0 60px rgba(255, 46, 166, 0.3),
-      0 0 90px rgba(255, 46, 166, 0.1),
-      0 20px 60px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(20px);
-    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    transition: height 0.4s ease-out, max-height 0.4s ease-out;
-	}
   }
   </style>
 </head>
@@ -2098,28 +2047,20 @@
     <div class="orb orb-2"></div>
   </div>
 
-  <!-- DISABLED: Header Panel Items
   <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72')";>
-    -->
-  <!-- Header container kept for layout but hidden -->
-  <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72'); opacity: 0.3; pointer-events: none;">
     <!-- Left: Logo -->
     <div style="display: flex; align-items: center; gap: 1rem; justify-self: start;">
-      <!-- DISABLED: Logo Link
       <a href="#" class="logo">
-      -->
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
         </div>
         <span>
           <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
         </span>
-      </div>
-      <!-- </a> -->
+      </a>
     </div>
-
-    <!-- DISABLED: Navigation Links
+   
+    <!-- Center: Navigation -->
     <nav class="aether-nav" style="justify-self: center;">
       <ul>
         <li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
@@ -2142,15 +2083,16 @@
         <li><a href="/static/aimusic-media.html">AI MUSIC-Media</a></li>
       </ul>
     </nav>
-    -->
-
-    <!-- DISABLED: Auth Section
+   
+    <!-- Right: Auth Section -->
      <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
+        <!-- Credits Badge -->
         <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
           <span id="credits-count">0</span>
         </div>
+        <!-- Quest Gift Box Icon -->
         <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
           <span style="font-size: 1.3rem;">🎁</span>
           <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
@@ -2162,49 +2104,103 @@
         <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
       </div>
     </div>
-    -->
   </header>
 
   <main>
-    <!-- Hero Section -->
-    <div class="hero-text">
-      <h1>AI Music and Media Center</h1>
-      <p class="subtitle">Create music, chat with AI, and generate album art - all in one creative studio</p>
-    </div>
 
-    <!-- Centered Chat Panel -->
-    <div class="chat-panel-container">
-      <div class="panel-header" style= "background-image: url('https://www.dropbox.com/scl/fi/vhbsthvh5rsv82mcux2by/Glowing_smaller-Copy.gif?rlkey=xcm91ktgqlepkkn0tbvmacaxi&raw=1');" size="cover" style="align:right">
-       <div class="panel-title" style="display: flex; align-items: center;">
-          <img class="brain" src="https://www.dropbox.com/scl/fi/ovn15yp0vh85dxk988mey/brain3.png?rlkey=nybrl56w09u2qu998dx8l573f&raw=1" style="width: 67px; height: auto; margin-left: 0.5rem; margin-top:8px; vertical-align: middle;"></div>
-          <!--<div><span class="panel-content">AetherWave AI Chat </span>
-		  </div>-->
-		  </div>
-      <div class="panel-content">
-        <div class="chat-messages" style="flex: 1; overflow-y: auto;">
-          <div class="message assistant">
-            <div class="message-label">AetherWave AI
-			</div>
-            <div class="message-content">
-              Hello! I can help you create music, generate album art, or answer questions about AetherWave Studio. What would you like to create today?
+  <!-- Portal Welcome Section -->
+  <section class="portal-welcome-section">
+    <div class="portal-welcome-container">
+      <div class="portal-welcome-content">
+        <div class="portal-icon">
+          <div class="portal-ring">
+            <div class="portal-core">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 2v20M2 12h20"/>
+                <path d="m15 9-3 3 3 3"/>
+                <path d="m9 15 3-3-3-3"/>
+              </svg>
             </div>
           </div>
         </div>
-      </div>
-      <div class="chat-input-area" style="flex-shrink: 0;">
-        <div class="input-wrapper">
-          <input type="text" id="chat-input" placeholder="Ask me anything..." style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FBlack_Surface.png?alt=media&token=06d4bfdc-41d8-4d55-bbfd-5756c5d63845');"/>
-          <button class="send-btn" id="send-btn">Send</button>
+
+        <div class="portal-text">
+          <h1 class="portal-title">Welcome to AetherWave Studio</h1>
+          <!--<p class="portal-subtitle">You've successfully passed through the portal from Ghost Musician</p>
+          <p class="portal-description">-->
+            Explore our AI-powered media generation tools and create stunning content with cutting-edge technology
+          </p>
         </div>
-        <div class="suggestions">
-          <div class="suggestion-chip">About AetherWave</div>
-          <div class="suggestion-chip">Prompts for Music</div>
-          <div class="suggestion-chip">Lyric Generation</div>
-          <div class="suggestion-chip">Album Art tips</div>
+
+        <div class="portal-actions">
+          <a href="https://ai-hub.aetherwavestudio.com"></a><button class="portal-btn primary"></a>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Explore AI Tools
+          </button>
+
+          <a href="/user/profile" class="portal-btn secondary">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+            Ask Me Anything
+          </a>
         </div>
       </div>
     </div>
-  </main>
+  </section>
+
+<!--<div class="panels-container">
+    Music Generation Panel 
+    <div class="panel panel-music">
+    <div class="panel-header">
+    <div class="music-panel-header">
+      <select id="music-model-header" class="version-dropdown" data-testid="select-version">
+        <option value="V5">v5 (Premium) ▼</option>
+        <option value="V4_5PLUS">v4.5+ (Premium) ▼</option>
+        <option value="V4_5">v4.5 (Premium) ▼</option>
+        <option value="V4" selected>v4 (Free) ▼</option>
+        <option value="V3_5">v3.5 (Free) ▼</option>
+      </select>
+    </div>-->
+    Hero Section -->
+   <div class="hero-text">
+    <h1>AI Music and Media Center</h1>
+    <p class="subtitle">Create music, chat with AI, and generate album art - all in one creative studio</p>
+    </div>
+
+    <!-- Chat Panel -->
+    <div class="panel panel-chat">
+    <div class="panel-header"style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72')";>
+    <div class="panel-title"><img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Icon%20Set%20Black%2FChat.png?alt=media&token=06f024db-dbc2-4400-ad2d-6b7b3e061d12" style="width: 50px; height: 50px; margin-right: 0.3rem; margin-top: 15px; margin-left: 15px; vertical-align: middle;"> </div>
+    <div class="panel-description"></div>
+    </div>
+    <div class="panel-content">
+    <div class="chat-messages">
+    <div class="message assistant">
+    <div class="message-label">AetherWave AI</div>
+    <div class="message-content">
+    Hello! I can help you create music, generate album art, or answer questions about AetherWave Studio. What would you like to create today?
+    </div>
+    </div>
+    </div>
+    </div>
+    <div class="chat-input-area">
+    <div class="input-wrapper">
+    <input type="text" id="chat-input" placeholder="Ask me anything..." style="background-image: url("https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FBlack_Surface.png?alt=media&token=06d4bfdc-41d8-4d55-bbfd-5756c5d63845")";/>
+    <button class="send-btn" id="send-btn">Send</button>
+    </div>
+    <div class="suggestions">
+    <div class="suggestion-chip">Prompts for Music</div>
+    <div class="suggestion-chip">Lyric Generation</div>
+    <div class="suggestion-chip">Album Art tips</div>
+    </div>
+    </div>
+    </div>
+</div>
 
   <!-- Authentication Module -->
   <script type="module" src="/static/assets/js/auth.js"></script>
@@ -2232,160 +2228,8 @@
       if (root) root.remove();
     }
   </script>
-  <!-- Chat Functionality -->
-  <script>
-    // Wait for DOM to be ready
-    document.addEventListener('DOMContentLoaded', function() {
-      // Chat elements
-      const chatPanel = document.querySelector('.chat-panel-container');
-      const chatMessages = document.querySelector('.chat-messages');
-      const chatInput = document.getElementById('chat-input');
-      const sendBtn = document.getElementById('send-btn');
-      const suggestionChips = document.querySelectorAll('.suggestion-chip');
 
-      // Height management variables
-      const MIN_HEIGHT = 400;
-      const MAX_HEIGHT = 600;
-      const EXPANDED_HEIGHT = 550;
-      let inactivityTimer;
-      let isExpanded = false;
-
-      // Height management functions
-      function expandChatPanel() {
-        if (!isExpanded) {
-          isExpanded = true;
-          chatPanel.style.height = `${EXPANDED_HEIGHT}px`;
-          chatPanel.style.maxHeight = `${MAX_HEIGHT}px`;
-        }
-        resetInactivityTimer();
-      }
-
-      function shrinkChatPanel() {
-        if (isExpanded) {
-          isExpanded = false;
-          chatPanel.style.height = `${MIN_HEIGHT}px`;
-          chatPanel.style.maxHeight = `${MIN_HEIGHT}px`;
-        }
-      }
-
-      function resetInactivityTimer() {
-        clearTimeout(inactivityTimer);
-        inactivityTimer = setTimeout(() => {
-          shrinkChatPanel();
-        }, 4 * 60 * 1000); // 4 minutes
-      }
-
-      // Add message to chat
-      function addMessage(content, type = 'user') {
-        expandChatPanel();
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${type}`;
-
-        messageDiv.innerHTML = `
-          <div class="message-label">${type === 'user' ? 'You' : 'AetherWave AI'}</div>
-          <div class="message-content">${content}</div>
-        `;
-
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-
-      // Send message to API
-      async function sendMessage(message) {
-        if (!message || !message.trim()) return;
-
-        // Add user message
-        addMessage(message, 'user');
-
-        // Clear input and disable button
-        chatInput.value = '';
-        sendBtn.disabled = true;
-        sendBtn.textContent = 'Sending...';
-
-        try {
-          const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              message: message,
-              provider: 'openai'
-            })
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to get response');
-          }
-
-          const data = await response.json();
-          addMessage(data.message, 'assistant');
-
-        } catch (error) {
-          console.error('Chat error:', error);
-          addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
-        } finally {
-          sendBtn.disabled = false;
-          sendBtn.textContent = 'Send';
-        }
-      }
-
-      // Event listeners
-      function setupEventListeners() {
-        // Send button click
-        if (sendBtn) {
-          sendBtn.addEventListener('click', () => {
-            sendMessage(chatInput.value);
-          });
-        }
-
-        // Enter key in input
-        if (chatInput) {
-          chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-              sendMessage(chatInput.value);
-            }
-          });
-
-          // Reset timer on input focus
-          chatInput.addEventListener('focus', () => {
-            resetInactivityTimer();
-          });
-
-          // Reset timer on typing
-          chatInput.addEventListener('input', () => {
-            resetInactivityTimer();
-          });
-        }
-
-        // Suggestion chips click
-        if (suggestionChips.length > 0) {
-          suggestionChips.forEach(chip => {
-            chip.addEventListener('click', () => {
-              const chipText = chip.textContent;
-              chatInput.value = chipText;
-              sendMessage(chipText);
-            });
-          });
-        }
-
-        // Reset timer on any interaction with chat messages
-        if (chatMessages) {
-          chatMessages.addEventListener('click', () => {
-            resetInactivityTimer();
-          });
-
-          chatMessages.addEventListener('scroll', () => {
-            resetInactivityTimer();
-          });
-        }
-      }
-
-      // Initialize chat functionality
-      setupEventListeners();
-    });
-  </script>
+  <!-- Shared Navigation JavaScript -->
 
 
   <!-- Tiled Background JavaScript -->
