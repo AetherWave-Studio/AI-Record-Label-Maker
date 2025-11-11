@@ -27,6 +27,7 @@ import {
 import { eq, lt } from "drizzle-orm";
 import virtualArtistsRouter from './VirtualArtistsRoutes.js';
 import { setupVideoRoutes } from './video-routes';
+import aiMachineRouter from './aiMachineRoutes.js';
 
 
 
@@ -2677,6 +2678,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup video generation and editing routes
   setupVideoRoutes(app);
+
+  // Setup AI Machine interface
+  app.use("/api/aimachine", authMiddleware, aiMachineRouter);
 
   // Profile image upload endpoint using IMGBB
   app.post("/api/user/profile-image", authMiddleware, (req, res, next) => {

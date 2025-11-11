@@ -1,0 +1,45 @@
+{
+  "name": "@aetherwave/band-generator",
+  "version": "1.0.0",
+  "description": "Standalone AI-powered virtual band generation service - extracted from Ghost/AetherWave platform",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development tsx src/server.ts",
+    "build": "tsc && esbuild src/server.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "cross-env NODE_ENV=production node dist/server.js"
+  },
+  "keywords": [
+    "music",
+    "ai",
+    "band-generation",
+    "openai",
+    "gemini",
+    "audio-analysis"
+  ],
+  "author": "AetherWave Studio",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^1.14.0",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "multer": "^2.0.2",
+    "openai": "^5.19.1",
+    "pdfkit": "^0.15.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.21",
+    "@types/multer": "^2.0.0",
+    "@types/node": "20.16.11",
+    "@types/pdfkit": "^0.13.9",
+    "cross-env": "^10.1.0",
+    "esbuild": "^0.25.0",
+    "tsx": "^4.19.1",
+    "typescript": "5.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

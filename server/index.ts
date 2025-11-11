@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { maintenanceMiddleware } from "./maintenance";
@@ -7,6 +8,14 @@ import path from "path";
 import { promises as fs } from "fs";
 
 const app = express();
+
+// Configure CORS to allow credentials from frontend
+app.use(cors({
+  origin: true, // Allow all origins in development (you can specify specific origins in production)
+  credentials: true, // Allow cookies and authentication headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 declare module "http" {
   interface IncomingMessage {
