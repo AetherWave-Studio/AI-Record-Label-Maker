@@ -153,7 +153,7 @@ app.use((req, res, next) => {
   );
 
   // Handle React SPA routes - these should be served by the React app
-  const reactRoutes = ["/profile", "/buy-credits", "/card-shop", "/channels"];
+  const reactRoutes = ["/profile", "/buy-credits", "/card-shop", "/channels", "/ai-machine", "/seamless-loop-creator"];
 
   // Setup Vite in development or serve static in production
   if (app.get("env") === "development") {
