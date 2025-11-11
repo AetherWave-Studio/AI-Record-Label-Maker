@@ -2078,8 +2078,8 @@
       width: 100%;
       justify-content: center;
     }
-	.brain {
-	 box-shadow:
+        .brain {
+         box-shadow:
       0 0 30px rgba(255, 46, 166, 0.5),
       0 0 60px rgba(255, 46, 166, 0.3),
       0 0 90px rgba(255, 46, 166, 0.1),
@@ -2087,7 +2087,7 @@
     backdrop-filter: blur(20px);
     animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     transition: height 0.4s ease-out, max-height 0.4s ease-out;
-	}
+        }
   }
   </style>
 </head>
@@ -2098,54 +2098,30 @@
     <div class="orb orb-2"></div>
   </div>
 
-  <!-- DISABLED: Header Panel Items
-  <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72')";>
-    -->
-  <!-- Header container kept for layout but hidden -->
-  <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72'); opacity: 0.3; pointer-events: none;">
+  <header style="background-image: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72');">
     <!-- Left: Logo -->
     <div style="display: flex; align-items: center; gap: 1rem; justify-self: start;">
-      <!-- DISABLED: Logo Link
-      <a href="#" class="logo">
-      -->
-      <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <a href="/" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none;">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
         </div>
         <span>
           <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
         </span>
-      </div>
-      <!-- </a> -->
+      </a>
     </div>
 
-    <!-- DISABLED: Navigation Links
+    <!-- Navigation Links -->
     <nav class="aether-nav" style="justify-self: center;">
-      <ul>
-        <li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
-        <li class="dropdown">
-          <a href="/static/playlists.html">Playlists</a>
-          <div class="dropdown-content">
-            <a href="/Playlists/darkwave/">DarkWave Essentials</a>
-            <a href="/Playlists/meditation/">Meditation Soundscapes</a>
-            <a href="/Playlists/coastal-pulse/">Coastal Pulse</a>
-            <a href="/Playlists/synthwave-epic-loops/">SynthWave Epic Loops</a>
-          </div>
-        </li>
-        <li class="dropdown">
-          <a href="/virtual-artists/">Virtual Artists</a>
-          <div class="dropdown-content">
-            <a href="/virtual-artist/gallery.html">Gallery</a>
-            <a href="/virtual-artist/helena.html">Helena</a>
-          </div>
-        </li>
-        <li><a href="/static/aimusic-media.html">AI MUSIC-Media</a></li>
-      </ul>
+      <a href="/profile">Profile</a>
+      <a href="/buy-credits">Buy Credits</a>
+      <a href="/card-shop">Card Shop</a>
+      <a href="/channels">Channels</a>
+      <a href="/static/aimusic-media.html">AI Music</a>
     </nav>
-    -->
 
-    <!-- DISABLED: Auth Section
-     <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
+    <!-- Auth Section -->
+    <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
       <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
       <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
         <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
@@ -2155,14 +2131,13 @@
           <span style="font-size: 1.3rem;">🎁</span>
           <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
         </div>
-        <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
+        <div id="profile-trigger" onclick="showProfileModal()" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
           <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
           <span id="user-name" style="color: var(--text-primary); font-size: 0.9rem;" data-testid="text-username"></span>
         </div>
         <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
       </div>
     </div>
-    -->
   </header>
 
   <main>
@@ -2178,13 +2153,13 @@
        <div class="panel-title" style="display: flex; align-items: center;">
           <img class="brain" src="https://www.dropbox.com/scl/fi/ovn15yp0vh85dxk988mey/brain3.png?rlkey=nybrl56w09u2qu998dx8l573f&raw=1" style="width: 67px; height: auto; margin-left: 0.5rem; margin-top:8px; vertical-align: middle;"></div>
           <!--<div><span class="panel-content">AetherWave AI Chat </span>
-		  </div>-->
-		  </div>
+                  </div>-->
+                  </div>
       <div class="panel-content">
         <div class="chat-messages" style="flex: 1; overflow-y: auto;">
           <div class="message assistant">
             <div class="message-label">AetherWave AI
-			</div>
+                        </div>
             <div class="message-content">
               Hello! I can help you create music, generate album art, or answer questions about AetherWave Studio. What would you like to create today?
             </div>
