@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { UserNavigation } from "@/components/UserNavigation";
 import ProfilePage from "@/pages/profile";
 import AIMachinePage from "@/pages/ai-machine";
+import Buy-Credits from "@/pages/buy=credits";
 
 function Router() {
   return (
