@@ -2,7 +2,9 @@ import type { Express, RequestHandler } from "express";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import { storage } from "./storage";
-import type { User } from "#shared/schema";
+import { users } from "#shared/schema";
+
+type User = typeof users.$inferSelect;
 
 // Dev superuser configuration
 const DEV_USER: User = {
@@ -12,6 +14,7 @@ const DEV_USER: User = {
   lastName: 'User',
   profileImageUrl: null,
   username: 'devuser',
+  lastUsernameChange: null,
   vocalGenderPreference: 'm',
   credits: 10000,
   subscriptionPlan: 'mogul', // Highest tier plan with all features
@@ -19,9 +22,6 @@ const DEV_USER: User = {
   welcomeBonusClaimed: 1,
   stripeCustomerId: null,
   stripeSubscriptionId: null,
-  freeBandGenerations: 3, // Add missing field
-  lastLoginAt: new Date(), // Add missing field
-  dailyLoginStreak: 0, // Add missing field
   createdAt: new Date(),
   updatedAt: new Date(),
 };

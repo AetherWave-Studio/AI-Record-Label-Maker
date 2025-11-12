@@ -4,6 +4,7 @@ import cors from "cors";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { maintenanceMiddleware } from "./maintenance";
+import { setupDevAuth } from "./devAuth";
 import path from "path";
 import { promises as fs } from "fs";
 
@@ -76,6 +77,11 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Setup development authentication (only in dev mode)
+  if (app.get("env") === "development") {
+    await setupDevAuth(app);
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
