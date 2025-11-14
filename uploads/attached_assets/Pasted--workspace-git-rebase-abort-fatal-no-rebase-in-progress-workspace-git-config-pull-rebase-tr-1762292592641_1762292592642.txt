@@ -1,0 +1,19 @@
+/workspace$ git rebase --abort
+fatal: no rebase in progress
+~/workspace$ git config pull.rebase true && git pull && git push
+CONFLICT (modify/delete): client/src/pages/ArtistPage.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/ArtistPage.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/artist-page.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/artist-page.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/gallery.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/gallery.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/home.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/home.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/landing.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/landing.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/music-marketplace.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/music-marketplace.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/playlist.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/playlist.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/store.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/store.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/upgrade.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/upgrade.tsx left in tree.
+CONFLICT (modify/delete): client/src/pages/user-profile.tsx deleted in 3e79023 (Remove unused artist page components and related files) and modified in HEAD.  Version HEAD of client/src/pages/user-profile.tsx left in tree.
+error: could not apply 3e79023... Remove unused artist page components and related files
+hint: Resolve all conflicts manually, mark them as resolved with
+hint: "git add/rm <conflicted_files>", then run "git rebase --continue".
+hint: You can instead skip this commit: run "git rebase --skip".
+hint: To abort and get back to the state before "git rebase", run "git rebase --abort".
+hint: Disable this message with "git config set advice.mergeConflict false"

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protocol Calendar Extension</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="https://alcdn.msauth.net/browser/2.28.1/js/msal-browser.min.js"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1 class="title">📅 Protocol Calendar</h1>
+      <p class="subtitle">Add emotional & narrative metadata</p>
+    </header>
+
+    <!-- Auth Section -->
+    <div id="authSection" class="section">
+      <button id="loginBtn" class="btn btn-primary">🔐 Connect to Microsoft Graph</button>
+      <div id="userInfo" style="display: none;">
+        <p class="user-name" id="userName"></p>
+        <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+      </div>
+    </div>
+
+    <!-- Event Info -->
+    <div id="eventSection" class="section" style="display: none;">
+      <h2 class="section-title">Current Event</h2>
+      <div class="event-card">
+        <div class="event-field">
+          <label>Title:</label>
+          <span id="eventTitle">-</span>
+        </div>
+        <div class="event-field">
+          <label>Start:</label>
+          <span id="eventStart">-</span>
+        </div>
+        <div class="event-field">
+          <label>End:</label>
+          <span id="eventEnd">-</span>
+        </div>
+        <div class="event-field">
+          <label>Location:</label>
+          <span id="eventLocation">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Protocol Metadata Form -->
+    <div id="metadataSection" class="section" style="display: none;">
+      <h2 class="section-title">Protocol Metadata</h2>
+
+      <!-- Emotional Relics -->
+      <div class="form-group">
+        <label for="emotionalRelic">Emotional Relic</label>
+        <select id="emotionalRelic" class="form-control">
+          <option value="">Select emotional state...</option>
+          <option value="joy">✨ Joy</option>
+          <option value="anticipation">🌟 Anticipation</option>
+          <option value="reflection">🌙 Reflection</option>
+          <option value="determination">⚡ Determination</option>
+          <option value="curiosity">🔍 Curiosity</option>
+          <option value="gratitude">🙏 Gratitude</option>
+          <option value="vulnerability">💫 Vulnerability</option>
+          <option value="connection">🤝 Connection</option>
+        </select>
+      </div>
+
+      <!-- Lore Type -->
+      <div class="form-group">
+        <label for="loreType">Lore Type</label>
+        <select id="loreType" class="form-control">
+          <option value="">Select narrative element...</option>
+          <option value="origin">🌱 Origin Story</option>
+          <option value="quest">⚔️ Quest/Mission</option>
+          <option value="ritual">🕯️ Ritual/Ceremony</option>
+          <option value="revelation">💡 Revelation</option>
+          <option value="alliance">🤝 Alliance Formation</option>
+          <option value="challenge">🎯 Challenge/Trial</option>
+          <option value="celebration">🎉 Celebration</option>
+          <option value="transformation">🦋 Transformation</option>
+        </select>
+      </div>
+
+      <!-- Contributor Status -->
+      <div class="form-group">
+        <label for="contributorStatus">Contributor Status</label>
+        <select id="contributorStatus" class="form-control">
+          <option value="">Select status...</option>
+          <option value="ready">✅ Ready</option>
+          <option value="reflecting">🤔 Reflecting</option>
+          <option value="needs-support">🆘 Needs Support</option>
+          <option value="inspired">💫 Inspired</option>
+          <option value="focused">🎯 Focused</option>
+          <option value="collaborating">🤝 Collaborating</option>
+        </select>
+      </div>
+
+      <!-- Custom Tags -->
+      <div class="form-group">
+        <label for="customTags">Custom Tags</label>
+        <input type="text" id="customTags" class="form-control" placeholder="comma, separated, tags">
+        <small class="help-text">Add custom narrative or contextual tags</small>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label for="protocolNotes">Protocol Notes</label>
+        <textarea id="protocolNotes" class="form-control" rows="3" placeholder="Add context, reflections, or narrative notes..."></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="button-group">
+        <button id="saveMetadataBtn" class="btn btn-primary">💾 Save Protocol Data</button>
+        <button id="loadMetadataBtn" class="btn btn-secondary">📖 Load Existing Data</button>
+        <button id="clearMetadataBtn" class="btn btn-secondary">🗑️ Clear</button>
+      </div>
+    </div>
+
+    <!-- Saved Metadata Display -->
+    <div id="displaySection" class="section" style="display: none;">
+      <h2 class="section-title">Saved Protocol Metadata</h2>
+      <div id="metadataDisplay" class="metadata-display"></div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="statusMessage" class="status-message"></div>
+  </div>
+
+  <script src="auth.js"></script>
+  <script src="graph-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

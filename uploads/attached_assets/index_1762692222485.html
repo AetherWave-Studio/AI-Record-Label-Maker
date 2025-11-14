@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Artists - AetherWave Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px 40px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 50%, #f72585 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: #a0a0a0;
+            font-weight: 300;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            margin-top: 20px;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        .artist-card {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .artist-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,212,255,0.1) 0%, rgba(123,47,247,0.1) 50%, rgba(247,37,133,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            z-index: 1;
+        }
+
+        .artist-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(0,212,255,0.5);
+            box-shadow: 0 20px 40px rgba(0,212,255,0.3);
+        }
+
+        .artist-card:hover::before {
+            opacity: 1;
+        }
+
+        .artist-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .artist-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .artist-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.7) 100%);
+        }
+
+        .artist-info {
+            padding: 25px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .artist-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #00d4ff;
+        }
+
+        .artist-genre {
+            font-size: 0.9rem;
+            color: #a0a0a0;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .artist-bio {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #d0d0d0;
+            margin-bottom: 15px;
+        }
+
+        .artist-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #808080;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #f72585;
+        }
+
+        .view-profile {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #00d4ff 0%, #7b2ff7 100%);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .artist-card:hover .view-profile {
+            background: linear-gradient(135deg, #7b2ff7 0%, #f72585 100%);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0a0a0;
+            grid-column: 1 / -1;
+        }
+
+        .empty-state h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #00d4ff;
+            margin-bottom: 15px;
+        }
+
+        .empty-state a {
+            color: #00d4ff;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2rem;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .gallery {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">AETHERWAVE STUDIO</div>
+        <div class="tagline">AI MUSIC • HUMAN SOUL • IMMERSIVE SOUND</div>
+        <h1 class="page-title">Virtual Artists</h1>
+    </div>
+
+    <div class="container">
+        <div class="gallery" id="artistGallery"></div>
+    </div>
+
+    <script>
+        // Load artists from localStorage
+        function loadArtists() {
+            const artists = JSON.parse(localStorage.getItem('aetherwave_artists') || '[]');
+            const gallery = document.getElementById('artistGallery');
+
+            if (artists.length === 0) {
+                gallery.innerHTML = `
+                    <div class="empty-state">
+                        <h2>No Artists Yet</h2>
+                        <p>Add artists through the <a href="/admin/">admin panel</a>.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            gallery.innerHTML = '';
+            artists.forEach(artist => {
+                const card = document.createElement('a');
+                card.href = `/${artist.slug}/`;
+                card.className = 'artist-card';
+                
+                const imageContent = artist.profileImage 
+                    ? `<img src="${artist.profileImage}" alt="${artist.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=\\'position: relative; z-index: 2;\\'>🎤</span>';">`
+                    : '<span style="position: relative; z-index: 2;">🎤</span>';
+
+                card.innerHTML = `
+                    <div class="artist-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        ${imageContent}
+                    </div>
+                    <div class="artist-info">
+                        <h2 class="artist-name">${artist.name}</h2>
+                        <div class="artist-genre">${artist.genre}</div>
+                        <p class="artist-bio">${artist.bio}</p>
+                        <div class="artist-stats">
+                            <div class="stat">
+                                <span class="stat-label">Tracks</span>
+                                <span class="stat-value">${artist.tracks}</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Followers</span>
+                                <span class="stat-value">${artist.followers}</span>
+                            </div>
+                        </div>
+                        <span class="view-profile">View Profile →</span>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        // Load artists on page load
+        loadArtists();
+    </script>
+</body>
+</html>

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Coins, Check, Loader2 } from "lucide-react";
+import { Coins, Check, Loader2, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -182,8 +182,25 @@ export default function BuyCreditsPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8" 
+	style={{
+		    backgroundImage:"url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLOGO_Tiled_bg5opcacity.png?alt=media&token=d8e23a3d-b343-4ad5-87fd-892f0f722e8d')",
+			backgroundRepeat: "no-repeat",
+			backgroundSize: "cover",
+			}}
+	>
       <div className="max-w-6xl mx-auto space-y-8">
+	     {/* Back Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => window.history.back()}
+          className="gap-2"
+          data-testid="button-back"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </Button>
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold">Credits & Subscriptions</h1>
           <p className="text-muted-foreground text-lg">

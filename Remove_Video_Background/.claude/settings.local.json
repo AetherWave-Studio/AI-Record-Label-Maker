@@ -8,7 +8,9 @@
       "Bash(pkill:*)",
       "Bash(python:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Read(//e/Gits/AI-Record-Label-Maker/Outlook-Protocol-Extension/**)",
+      "Read(//e/Gits/AI-Record-Label-Maker/**)"
     ],
     "deny": [],
     "ask": []

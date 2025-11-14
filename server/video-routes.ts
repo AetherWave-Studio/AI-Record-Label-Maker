@@ -26,6 +26,7 @@ import fsPromises from "fs/promises";
 import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 import multer from "multer";
+import { EventEmitter } from "events";
 
 // Create __dirname equivalent for ES modules
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -37,6 +38,9 @@ const upload = multer({
     fileSize: 100 * 1024 * 1024 // 100MB max
   }
 });
+
+// Progress event emitters for active processing jobs
+const progressEmitters = new Map<string, EventEmitter>();
 
 // Video generation models configuration
 const VIDEO_MODELS = {
@@ -81,9 +85,12 @@ const mockVideoGeneration = async (prompt: string, model: string, imageFile?: Fi
   };
 };
 
-// Actual background removal using Python scripts
-const removeBackgroundFromVideo = async (videoFile: Express.Multer.File, format: 'webm' | 'mov' | 'gif' = 'webm') => {
-  // Ensure __dirname is available in this scope
+// Actual background removal using Python scripts with real-time progress
+const removeBackgroundFromVideo = async (
+  videoFile: Express.Multer.File,
+  format: 'webm' | 'mov' | 'gif' = 'webm',
+  jobId: string
+) => {
   const currentDir = path.dirname(fileURLToPath(import.meta.url));
 
   // Create unique filename
@@ -95,16 +102,18 @@ const removeBackgroundFromVideo = async (videoFile: Express.Multer.File, format:
   const outputDir = path.dirname(outputPath);
   await fsPromises.mkdir(outputDir, { recursive: true });
 
-  // Path to Python script
-  const pythonScript = path.join(currentDir, '..', 'Remove_Video_Background', 'create_transparent_video_v2.py');
+  // Path to NEW STREAMING Python script
+  const pythonScript = path.join(currentDir, '..', 'Remove_Video_Background', 'create_transparent_video_streaming.py');
   const inputPath = videoFile.path;
 
-  console.log(`Processing video: ${inputPath}`);
-  console.log(`Output will be: ${outputPath}`);
-  console.log(`Using Python script: ${pythonScript}`);
+  console.log(`Processing video with job ID: ${jobId}`);
+  console.log(`Using streaming Python script: ${pythonScript}`);
+
+  // Get or create progress emitter for this job
+  const emitter = progressEmitters.get(jobId) || new EventEmitter();
+  progressEmitters.set(jobId, emitter);
 
   return new Promise((resolve, reject) => {
-    // Spawn Python process
     const pythonProcess = spawn('python', [
       pythonScript,
       inputPath,
@@ -112,33 +121,51 @@ const removeBackgroundFromVideo = async (videoFile: Express.Multer.File, format:
       format
     ]);
 
-    let stdoutData = '';
-    let stderrData = '';
+    let stdoutBuffer = '';
 
     pythonProcess.stdout.on('data', (data) => {
-      stdoutData += data.toString();
-      console.log(`Python: ${data}`);
+      stdoutBuffer += data.toString();
+
+      // Process complete JSON lines
+      const lines = stdoutBuffer.split('\n');
+      stdoutBuffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+      for (const line of lines) {
+        if (line.trim()) {
+          try {
+            const progressData = JSON.parse(line);
+            console.log(`Progress [${jobId}]:`, progressData);
+
+            // Emit to SSE clients
+            emitter.emit('progress', progressData);
+          } catch (e) {
+            console.log(`Non-JSON output: ${line}`);
+          }
+        }
+      }
     });
 
     pythonProcess.stderr.on('data', (data) => {
-      stderrData += data.toString();
-      console.error(`Python Error: ${data}`);
+      console.error(`Python stderr [${jobId}]: ${data}`);
     });
 
     pythonProcess.on('close', async (code) => {
-      // Clean up input file
+      // Clean up
       try {
         await fsPromises.unlink(inputPath);
       } catch (err) {
         console.error('Failed to delete input file:', err);
       }
 
+      // Clean up emitter
+      progressEmitters.delete(jobId);
+
       if (code !== 0) {
-        reject(new Error(`Python process exited with code ${code}: ${stderrData}`));
+        reject(new Error(`Python process exited with code ${code}`));
         return;
       }
 
-      // Check if output file exists
+      // Check output file
       try {
         const stats = await fsPromises.stat(outputPath);
 
@@ -156,6 +183,7 @@ const removeBackgroundFromVideo = async (videoFile: Express.Multer.File, format:
     });
 
     pythonProcess.on('error', (error) => {
+      progressEmitters.delete(jobId);
       reject(new Error(`Failed to start Python process: ${error.message}`));
     });
   });
@@ -354,6 +382,39 @@ export function setupVideoRoutes(app: Express) {
     }
   });
 
+  // SSE endpoint for real-time progress updates
+  app.get("/api/video/remove-background/progress/:jobId", (req: Request, res: Response) => {
+    const { jobId } = req.params;
+
+    console.log(`SSE client connected for job: ${jobId}`);
+
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    // Get or create emitter for this job
+    const emitter = progressEmitters.get(jobId) || new EventEmitter();
+    progressEmitters.set(jobId, emitter);
+
+    // Listen for progress events
+    const progressListener = (data: any) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    emitter.on('progress', progressListener);
+
+    // Send initial connection message
+    res.write(`data: ${JSON.stringify({ step: 'connected', message: 'Connected to progress stream' })}\n\n`);
+
+    // Clean up on client disconnect
+    req.on('close', () => {
+      console.log(`SSE client disconnected for job: ${jobId}`);
+      emitter.off('progress', progressListener);
+    });
+  });
+
   // Remove video background
   app.post("/api/video/remove-background", authMiddleware, upload.single('video'), async (req: Request, res: Response) => {
     try {
@@ -404,14 +465,18 @@ export function setupVideoRoutes(app: Express) {
 
       console.log(`Starting background removal for user ${userId}`);
 
+      // Generate unique job ID for progress tracking
+      const jobId = `job_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
       // Deduct credits
       await storage.deductCredits(userId, 'background_removal' as any);
 
-      // Process background removal with Python scripts
-      const result = await removeBackgroundFromVideo(videoFile, format as 'webm' | 'mov' | 'gif');
+      // Process background removal with Python scripts (with job ID for progress tracking)
+      const result = await removeBackgroundFromVideo(videoFile, format as 'webm' | 'mov' | 'gif', jobId);
 
       res.json({
         success: true,
+        jobId: jobId,
         processedUrl: result.processedUrl,
         format: result.format,
         size: result.size,

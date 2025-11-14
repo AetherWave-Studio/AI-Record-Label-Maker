@@ -1,0 +1,23 @@
+{
+  "name": "protocol-calendar-extension",
+  "version": "1.0.0",
+  "description": "Outlook add-in for adding emotional and narrative metadata to calendar events",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "outlook",
+    "calendar",
+    "add-in",
+    "protocol",
+    "metadata"
+  ],
+  "author": "AetherWave Studio",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {}
+}

@@ -259,7 +259,16 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div
+  className="container mx-auto px-4 py-8 max-w-4xl"
+  style={{
+    border: "40px solid #333", // border: width style color
+    backgroundColor: "#ffffff", // background color
+    //backgroundImage:   "url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLOGO_Tiled_bg.png?alt=media&token=fec6283e-0c71-4dbc-9541-3e55576b3662')",
+    backgroundRepeat: "no-repeat",
+    backgroundSize: "cover",
+  }}
+>
       <div className="space-y-6">
         {/* Back Button */}
         <Button
@@ -274,8 +283,13 @@ export default function ProfilePage() {
         </Button>
 
         {/* Header Card */}
-        <Card className="relative overflow-hidden">
-          <div className={`absolute inset-0 opacity-10 ${getPlanColor(user.subscriptionPlan)}`} />
+        <Card className="relative overflow-hidden"
+			style={{//backgroundImage:"url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLOGO_Tiled_bg10opcacity.png?alt=media&token=12b15e4b-9a49-427c-8df6-42a23df76eed')",
+			backgroundRepeat: "no-repeat",
+			backgroundSize: "cover",
+			}}
+		>
+          <div className="absolute inset-0 opacity-10 ${getPlanColor(user.subscriptionPlan)" />
           <CardContent className="pt-6 relative">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
               <div className="relative group">
@@ -374,7 +388,13 @@ export default function ProfilePage() {
           </TabsList>
 
           <TabsContent value="profile" className="space-y-6">
-            <Card>
+            <Card
+			style={{
+		    backgroundImage:"url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLOGO_Tiled_bg5opcacity.png?alt=media&token=d8e23a3d-b343-4ad5-87fd-892f0f722e8d')",
+			backgroundRepeat: "no-repeat",
+			backgroundSize: "cover",
+			}}
+			>
               <CardHeader>
                 <CardTitle>Personal Information</CardTitle>
                 <CardDescription>

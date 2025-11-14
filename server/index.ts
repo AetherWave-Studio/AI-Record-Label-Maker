@@ -117,6 +117,10 @@ app.use((req, res, next) => {
     "/seamless-loop-creator",
     express.static(path.join(rootDir, "seamless-loop-creator")),
   );
+  app.use(
+    "/Remove_Video_Background",
+    express.static(path.join(rootDir, "Remove_Video_Background")),
+  );
   app.use("/static", express.static(path.join(rootDir, "static")));
   app.use("/welcome", express.static(path.join(rootDir, "welcome")));
   app.use(
@@ -153,7 +157,7 @@ app.use((req, res, next) => {
   );
 
   // Handle React SPA routes - these should be served by the React app
-  const reactRoutes = ["/profile", "/buy-credits", "/card-shop", "/channels", "/ai-machine", "/seamless-loop-creator"];
+  const reactRoutes = ["/profile", "/buy-credits", "/card-shop", "/channels", "/ai-machine", "/seamless-loop-creator", "/remove-background"];
 
   // Setup Vite in development or serve static in production
   if (app.get("env") === "development") {

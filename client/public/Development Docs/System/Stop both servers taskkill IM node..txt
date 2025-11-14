@@ -1,2 +1,25 @@
-Stop both servers: taskkill /IM node.exe /F
-Start both servers: yarn dev
+copilot, why am I beingl
+
+taskkill /IM node.exe /F
+
+GHOST: 
+# Kill all node processes
+pkill -f node
+
+# Then start both servers fresh
+# Terminal 1:
+npm run dev
+
+# Terminal 2:/IM
+npm run server
+
+
+http://localhost:5000/creator-studio/video-generation2.html
+still need to institute Hailou 2 integrations replacing VEO3 which takes too long to complete
+
+  Todos
+  ☒ Remove VEO 3 from video generation options
+  ☒ Add Hailou 2.3 as new video generation option
+  ☒ Update frontend UI to replace VEO 3 with Hailou 2.3
+  ☐ Implement Hailou 2.3 API integration in backend
+  ☐ Test Hailou 2.3 video generation functionality
