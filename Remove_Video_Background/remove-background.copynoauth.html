@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remove Video Background - AetherWave Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ... (existing CSS unchanged) ... */
+  </style>
+</head>
+<body>
+  <!-- ... (existing HTML unchanged) ... -->
+
+  <script>
+    let uploadedVideo = null;
+    let selectedFormat = 'webm';
+    let currentUser = null;
+    let userCredits = 0;
+    let userPlanType = 'free';
+    // top-level shared flags
+    let processingComplete = false;
+    let step4Interval = null;
+
+    // ... (existing JS code unchanged until functions) ...
+
+    function playProcessStep(step) {
+      // ... (existing code unchanged) ...
+    }
+
+    function playNextVideoInStep() {
+      if (!currentStep) return;
+
+      const stepData = processVideoMap[currentStep];
+      if (!processVideoMap[currentStep]) {
+        console.log(`🛑 Stopping playback loop for ${currentStep}`);
+        return;
+      }
+
+      const videoElement = document.getElementById('processVideo');
+
+      // Reset index if we've reached the end (looping)
+      if (currentVideoIndex >= stepData.videos.length) {
+        currentVideoIndex = 0;
+      }
+
+      // Get current video
+      const videoUrl = stepData.videos[currentVideoIndex];
+      console.log(`▶️ Playing video ${currentVideoIndex + 1}/${stepData.videos.length}: ${videoUrl}`);
+
+      // Set up video to play the next one when it ends
+      videoElement.onended = () => {
+        console.log(`✅ Video ended, advancing to next`);
+        currentVideoIndex++;
+        playNextVideoInStep();
+      };
+
+      // Set source and play
+      videoElement.src = videoUrl;
+      videoElement.load();
+
+      // Try to play with fallback
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('❌ Video play failed:', error);
+          // Advance to next video after a short delay
+          setTimeout(() => {
+            currentVideoIndex++;
+            playNextVideoInStep();
+          }, 2000);
+        });
+      }
+    }
+
+    function preloadNextStepVideos(currentStepName) {
+      // ... (existing code unchanged) ...
+    }
+
+    function playVideoWithFallback(videoElement, videoUrl) {
+      return new Promise((resolve) => {
+        // Clean previous handlers before starting
+        videoElement.onended = null;
+        videoElement.onerror = null;
+        videoElement.oncanplay = null;
+
+        videoElement.src = videoUrl;
+        videoElement.muted = true;
+        videoElement.load();
+
+        const timeout = setTimeout(() => {
+          console.warn(`Video timeout: ${videoUrl}`);
+          cleanup();
+          resolve();
+        }, 5000); // adjust timeout as needed
+
+        function cleanup() {
+          clearTimeout(timeout);
+          videoElement.onended = null;
+          videoElement.onerror = null;
+          videoElement.oncanplay = null;
+        }
+
+        videoElement.addEventListener('canplay', () => {
+          videoElement.play().catch((e) => {
+            console.warn(`Play failed for ${videoUrl}`, e);
+            cleanup();
+            resolve();
+          });
+        }, { once: true });
+
+        videoElement.addEventListener('ended', () => {
+          cleanup();
+          resolve();
+        }, { once: true });
+
+        videoElement.addEventListener('error', (e) => {
+          console.warn(`Video error for ${videoUrl}`, e);
+          cleanup();
+          resolve();
+        }, { once: true });
+      });
+    }
+
+    function stopProcessVideo() {
+      // ... (existing code unchanged) ...
+    }
+
+    function showProgressBar() {
+      // ... (existing code unchanged) ...
+    }
+
+    function hideProgressBar() {
+      // ... (existing code unchanged) ...
+    }
+
+    function updateProgressBar(percentage) {
+      // ... (existing code unchanged) ...
+    }
+
+    let progressPollingInterval = null;
+    let currentJobId = null;
+
+    function startProgressPolling(jobId) {
+      currentJobId = jobId;
+      showProgressBar();
+      updateProgressBar(0);
+
+      progressPollingInterval = setInterval(async () => {
+        try {
+          // If it's a mock job ID, simulate progress
+          if (jobId === 'mock-job-id') {
+            const currentProgress = parseFloat(document.getElementById('progressBarFill').style.width) || 0;
+            const newProgress = Math.min(95, currentProgress + Math.random() * 15);
+            updateProgressBar(newProgress);
+            return;
+          }
+
+          const response = await fetch(`/api/video/progress/${jobId}`, { credentials: 'include' });
+          if (response.ok) {
+            const data = await response.json();
+            // Handle your backend's progress format
+            const percentage = Math.min(95, Math.max(0, data.percent || data.percentage || 0));
+            console.log('📊 Progress update:', percentage + '%');
+            updateProgressBar(percentage);
+
+            if (data.status === 'completed' || data.step === 'completed' || percentage >= 95) {
+              updateProgressBar(100);
+              setTimeout(() => {
+                hideProgressBar();
+                stopProgressPolling();
+                // Mark processing as complete to trigger step 5
+                processingComplete = true;
+                console.log('🎉 Processing complete, moving to step 5');
+              }, 1000);
+            } else if (data.status === 'failed') {
+              hideProgressBar();
+              stopProgressPolling();
+            }
+          }
+        } catch (error) {
+          console.error('Progress polling error:', error);
+        }
+      }, 2000); // Poll every 2 seconds
+    }
+
+    function stopProgressPolling() {
+      if (progressPollingInterval) {
+        clearInterval(progressPollingInterval);
+        progressPollingInterval = null;
+      }
+      currentJobId = null;
+    }
+
+    // ... (existing code unchanged until processVideo) ...
+
+    async function processVideo() {
+      // ... (existing code unchanged) ...
+    }
+
+    async function runAutomatedVideoSequence(responsePromise) {
+      // ... (existing code unchanged) ...
+
+      // Step 4: Continue until backend completes - Stitching transparent PNGs
+      if (!processingComplete) {
+        console.log('Starting Step 4: Stitching transparent PNGs...');
+        playProcessStep('step4');
+
+        // Ensure progress bar is visible for step 4
+        if (currentJobId) {
+          console.log('🔄 Starting progress polling with real job ID:', currentJobId);
+          startProgressPolling(currentJobId);
+        } else {
+          console.log('🔄 Starting progress polling with mock job ID');
+          // If we don't have a real job ID yet, simulate progress
+          startProgressPolling('mock-job-id');
+        }
+
+        // Just continue step 4 until processing completes
+        step4Interval = setInterval(() => {
+          if (processingComplete) {
+            console.log('🚀 Step 4 complete, moving to Step 5');
+            clearInterval(step4Interval);
+            // Trigger step 5 immediately
+            runStep5();
+          }
+        }, 1000);
+      }
+    }
+
+    // Step 5: Play final 3 videos in sequence (12, 13, 15)
+    async function runStep5() {
+      console.log('Starting Step 5: Finalizing...');
+
+      // Stop any active step4 loop to prevent interference
+      if (typeof step4Interval !== 'undefined' && step4Interval) {
+        clearInterval(step4Interval);
+        step4Interval = null;
+      }
+
+      // Ensure finalization state is obvious
+      processingComplete = true;
+      currentStep = 'step5';
+      currentVideoIndex = 0;
+
+      const videoElement = document.getElementById('processVideo');
+      const overlayTitle = document.getElementById('overlayTitle');
+      const overlayDesc = document.getElementById('overlayDesc');
+
+      // Remove any residual handler from previous loops and pause
+      videoElement.onended = null;
+      videoElement.onerror = null;
+      videoElement.oncanplay = null;
+      videoElement.pause();
+
+      const finalVideos = [
+        '/Remove_Video_Background/assets/12.DeliveringtheMOV.mp4',
+        '/Remove_Video_Background/assets/13.TheMOV is Clean.mp4',
+        '/Remove_Video_Background/assets/15.GifDelivery-End.mp4'
+      ];
+
+      // Update overlay for final step
+      overlayTitle.textContent = 'Finalizing';
+      overlayDesc.textContent = 'Preparing your download...';
+
+      // Play each final video in sequence with better error handling
+      for (let i = 0; i < finalVideos.length; i++) {
+        const url = finalVideos[i];
+
+        // Prepare a promise that resolves when the video ends or times out
+        const endPromise = new Promise((resolve) => {
+          const timeout = setTimeout(() => {
+            console.log(`Video step ${i + 1} timeout, continuing...`);
+            // cleanup handlers
+            videoElement.onended = null;
+            videoElement.onerror = null;
+            videoElement.oncanplay = null;
+            resolve();
+          }, 10000); // 10 second max per video
+
+          // onended handler
+          videoElement.onended = () => {
+            clearTimeout(timeout);
+            // cleanup handlers
+            videoElement.onended = null;
+            videoElement.onerror = null;
+            videoElement.oncanplay = null;
+            resolve();
+          };
+
+          // also handle error event to avoid hanging
+          videoElement.onerror = () => {
+            clearTimeout(timeout);
+            console.warn(`Video error on final step ${i + 1}, continuing...`);
+            videoElement.onended = null;
+            videoElement.onerror = null;
+            videoElement.oncanplay = null;
+            resolve();
+          };
+        });
+
+        // Start playback (playVideoWithFallback sets src/muted/load/play as needed)
+        await playVideoWithFallback(videoElement, url);
+
+        // Wait for either onended or timeout / error
+        await endPromise;
+      }
+    }
+
+    function showResult(videoUrl) {
+      // ... (existing code unchanged) ...
+    }
+
+    function resetProcess() {
+      // ... (existing code unchanged) ...
+    }
+
+    function showToast(message, type = 'success') {
+      // ... (existing code unchanged) ...
+    }
+
+    // Initialize
+    checkAuth();
+  </script>
+</body>
+</html>

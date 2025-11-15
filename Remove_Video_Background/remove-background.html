@@ -7,6 +7,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link
+      rel="stylesheet"
+      href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9ce7aa2-0609-46cc-92a8-169d8d8ca076"
+    />
   <style>
     :root {
       --aetherwave-pink: #ff2ea6;
@@ -91,19 +95,22 @@
       66% { transform: translate(-20px, 20px) scale(0.9); }
     }
 
-    /* Header */
-    header {
-      position: relative;
-      z-index: 10;
-      padding: 0.75rem 1.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border-color);
-      backdrop-filter: blur(12px);
-      background: rgba(13, 11, 21, 0.8);
-    }
-
+      /* Header */
+      header {
+        position: relative;
+        z-index: 10;
+        padding: 0.5rem 2rem;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        backdrop-filter: blur(12px);
+        background:
+          url("/assets/header-panel_1761541736595.png") no-repeat center center,
+          rgba(13, 11, 21, 0.8);
+        background-size: cover;
+      }
     .logo {
       display: flex;
       align-items: center;
@@ -190,49 +197,15 @@
       position: relative;
       z-index: 1;
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
+      display: grid;
+      grid-template-columns: 400px 1fr;
+      gap: 1.5rem;
       padding: 0.75rem 1rem;
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
       width: 100%;
       overflow-y: visible;
       min-height: 0;
-    }
-
-    /* Hero Section */
-    .hero-section {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .hero-content {
-      width: 100%;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .hero-header {
-      margin-bottom: 2rem;
-    }
-
-    .hero-video-container {
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    /* Controls Section - Two Column Layout */
-    .controls-section {
-      width: 100%;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      max-width: 1200px;
-      margin: 0 auto;
     }
 
     main::-webkit-scrollbar {
@@ -252,21 +225,25 @@
       background: var(--aetherwave-purple);
     }
 
+    .page-header {
+      grid-column: 1 / -1;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
     .page-title {
-      font-size: 2.5rem;
+      font-size: 1.75rem;
       font-weight: 800;
       background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
     .page-subtitle {
       color: var(--text-muted);
-      font-size: 1.1rem;
-      max-width: 600px;
-      margin: 0 auto;
+      font-size: 0.9rem;
     }
 
     /* Layout Panels */
@@ -279,7 +256,7 @@
     .right-panel {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      min-height: 600px;
     }
 
     .card {
@@ -549,15 +526,9 @@
       margin-top: 1.5rem;
     }
 
-    /* Result Section - Hero Style */
+    /* Result Section */
     .result-card {
       display: none;
-      background: var(--card-bg);
-      border: 2px solid var(--border-color);
-      border-radius: 20px;
-      padding: 2rem;
-      text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     }
 
     .result-card.active {
@@ -610,32 +581,44 @@
       transform: translateY(-2px);
     }
 
-    /* Process Video Player - Hero Section */
+    /* Process Video Player */
     .process-video-container {
       position: relative;
       width: 100%;
+      height: 100%;
       background: var(--card-bg);
-      border: 2px solid var(--border-color);
-      border-radius: 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 500px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-      transition: all 0.3s ease;
-    }
-
-    .process-video-container:hover {
-      border-color: var(--aetherwave-purple);
-      box-shadow: 0 25px 50px rgba(139, 92, 246, 0.2);
+      min-height: 600px;
     }
 
     .process-video-container video {
       width: 100%;
-      height: 100%;
+      height: auto;
       object-fit: contain;
-      max-height: 500px;
+      background: #000;
+      max-height: 100%;
+    }
+
+    #processVideo {
+      aspect-ratio: 16/9 !important;
+    }
+
+    .process-video-container {
+      position: relative;
+      width: 100%;
+      max-height: 400px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .process-video-overlay {
@@ -665,6 +648,73 @@
       font-size: 0.875rem;
       color: var(--text-muted);
       text-align: center;
+    }
+
+    /* Progress Bar */
+    .progress-bar-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: rgba(13, 11, 21, 0.8);
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .progress-bar-container.visible {
+      opacity: 1;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--aetherwave-pink), var(--aetherwave-purple));
+      width: 0%;
+      transition: width 0.5s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      right: 0;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-percentage {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(13, 11, 21, 0.9);
+      backdrop-filter: blur(8px);
+      color: var(--text-primary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .progress-percentage.visible {
+      opacity: 1;
     }
 
     .video-placeholder {
@@ -753,14 +803,13 @@
 
     /* Responsive Design */
     @media (max-width: 1024px) {
-      .hero-video-container {
-        max-width: 100%;
-      }
-
-      .controls-section {
+      main {
         grid-template-columns: 1fr;
         gap: 1rem;
-        max-width: 800px;
+      }
+
+      .right-panel {
+        min-height: 400px;
       }
 
       .process-video-container {
@@ -768,29 +817,6 @@
       }
     }
 
-    @media (max-width: 768px) {
-      main {
-        gap: 1.5rem;
-      }
-
-      .page-title {
-        font-size: 2rem;
-      }
-
-      .page-subtitle {
-        font-size: 1rem;
-      }
-
-      .hero-header {
-        margin-bottom: 1.5rem;
-      }
-
-      .process-video-container {
-        min-height: 350px;
-      }
-    }
-
-    /* Header & Navigation Responsive */
     @media (max-width: 768px) {
       header {
         padding: 0.5rem 1rem;
@@ -871,7 +897,13 @@
       header {
         padding: 0.4rem 0.75rem;
       }
-
+/* Header adjustments */
+        header {
+          padding: 0.5rem 0.75rem;
+          position: sticky;
+          top: 0;
+          z-index: 100;
+        }
       .logo span {
         display: none;
       }
@@ -962,177 +994,214 @@
     <div class="orb orb-2"></div>
   </div>
 
-  <header>
-    <a href="/static/" class="logo">
-      <div class="logo-icon">AW</div>
-      <span>AetherWave Studio</span>
-    </a>
-    <nav>
-      <a href="/static/">Home</a>
-      <a href="/static/aimusic-media.html">Creator Studio</a>
-      <a href="/static/playlists.html">Playlists</a>
-      <div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
-        <a href="/api/dev/login" class="nav-btn" id="login-btn">Login</a>
+   <header style="background-image: url('https://www.dropbox.com/scl/fi/e2gt0ly1a65mskbskr591/Black_Form2.png?rlkey=kendmto6yvixml19z96h9g02q&raw=1')";>
+        <!-- Left: Logo -->
+        <div style="display: flex; align-items: center; gap: 1rem; justify-self: start;">
+          <a href="/static/" class="logo">
+            <div class="logo-icon2">
+              <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
+            </div>
+            <span>
+              <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
+            </span>
+          </a>
+        </div>
+      <!-- Center: Navigation -->
+      <nav class="aether-nav" style="justify-self: center">
+        <ul>
+          <li class="dropdown">
+          <a href="#">CREATOR'S STUDIO</a>
+           <div class="dropdown-content">
+            <a href="/static/aimusic-media.html">AI MUSIC & MEDIA</a>
+            <a href="/creator-studio/video-generation2.html">AI VIDEO STUDIO</a>
+            <a href="/static/seamless-loop-creator/seamless-loop-creator.html">SEAMLESS LOOPS</a>
+            <a href="/remove-background">REMOVE BACKGROUND</a>
+          </div>
+         </li> 
+  
+          <li class="dropdown">
+           <a href="/virtual-artists/">VIRTUAL ARTISTS</a>
+            <div class="dropdown-content">
+              <a href="/static/playlists.html">Playlists</a>
+              <a href="/virtual-artists/gallery/">Gallery</a>
+              <a href="/virtual-artists/helena/">Helena</a>
+              <a href="/virtual-artists/ghosts-online/">Ghosts Online</a>
+            </div>
+          </li>
+          <li><a href="/ai-machine">BAND GENERATOR</a></li>
+        </ul>
+      </nav>
+
+  
+      <!-- Right: Auth Section -->
+       <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
+        <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
         <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
-          <div class="credits-indicator" onclick="window.location.href='/static/aimusic-media.html'" title="Click to view plans">
+          <!-- Credits Badge -->
+          <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
             <span id="credits-count">0</span>
           </div>
-          <span id="user-name" style="color: var(--text-primary);"></span>
-          <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Logout</a>
+          <!-- Quest Gift Box Icon -->
+          <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
+            <span style="font-size: 1.3rem;">🎁</span>
+            <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
+          </div>
+          <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
+            <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
+            <span id="user-name" style="color: var(--text-primary); font-size: 0.9rem;" data-testid="text-username"></span>
+          </div>
+          <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
         </div>
       </div>
-    </nav>
-  </header>
+    </header>
 
   <main>
-    <!-- Hero Section: Video Display -->
-    <div class="hero-section">
-      <div class="hero-content">
-        <div class="hero-header">
-          <h1 class="page-title">✨ Remove Video Background</h1>
-          <p class="page-subtitle">AI-powered background removal for transparent videos</p>
+    <div class="page-header">
+      <h1 class="page-title">✨ Remove Video Background</h1>
+      <p class="page-subtitle">AI-powered background removal for transparent videos</p>
+    </div>
+
+    <!-- Left Panel: Controls -->
+    <div class="left-panel">
+      <!-- Upload Section -->
+      <div class="card" id="uploadSection">
+        <input type="file" id="videoInput" accept="video/*">
+        <video id="previewVideo" controls></video>
+
+        <div class="upload-area" id="uploadArea" onclick="document.getElementById('videoInput').click()">
+          <div class="upload-icon">🎬</div>
+          <div class="upload-text">Click to upload or drag and drop</div>
+          <div class="upload-hint">MP4, MOV, WebM (max 100MB)</div>
         </div>
+      </div>
 
-        <div class="hero-video-container">
-          <div class="process-video-container" id="processVideoContainer">
-            <div class="video-placeholder" id="videoPlaceholder">
-              <div class="video-placeholder-icon">🎬</div>
-              <div class="video-placeholder-text">Upload a video to begin</div>
-            </div>
-            <video id="processVideo" style="display: none;" muted loop autoplay></video>
-            <div class="process-video-overlay" id="processVideoOverlay" style="display: none;">
-              <div class="step-title" id="overlayTitle">Processing...</div>
-              <div class="step-desc" id="overlayDesc">Please wait</div>
-            </div>
+      <!-- Format Selection -->
+      <div class="card">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Output Format</h3>
+        <div class="format-selection">
+          <div class="format-option selected" data-format="webm">
+            <div class="format-name">WebM</div>
+            <div class="format-desc">Optimized for web, smaller file size</div>
           </div>
-
-          <!-- Result Section (Hidden by default) -->
-          <div class="result-card" id="resultCard">
-            <h2 style="margin-bottom: 1.5rem;">🎉 Background Removed!</h2>
-            <div class="result-video-container">
-              <video id="resultVideo" class="result-video" controls style="display: none;"></video>
-              <img id="resultImage" class="result-video" style="display: none;" alt="Processed GIF">
-            </div>
-            <div class="result-actions">
-              <a class="btn-secondary" id="downloadBtn" download>
-                ⬇️ Download
-              </a>
-              <button class="btn-secondary" onclick="resetProcess()">
-                🔄 Process Another
-              </button>
-            </div>
+          <div class="format-option" data-format="mov">
+            <div class="format-name">MOV (ProRes)</div>
+            <div class="format-desc">High quality for video editing</div>
+          </div>
+          <div class="format-option" data-format="gif">
+            <div class="format-name">GIF</div>
+            <div class="format-desc">Animated for social media & sharing</div>
           </div>
         </div>
+
+        <button class="btn-process" id="processBtn" disabled onclick="processVideo()">
+          Remove Background (20 credits)
+        </button>
+      </div>
+
+      <!-- Info Section -->
+      <div class="info-card">
+        <div class="info-title">💡 How it works</div>
+        <ul class="info-list">
+          <li>Upload your video (any format supported)</li>
+          <li>AI removes the background from every frame</li>
+          <li>Choose WebM (web), MOV (editing), or GIF (sharing) format</li>
+          <li>Download your transparent video/GIF</li>
+          <li>Use in websites, video editors, or social media</li>
+        </ul>
       </div>
     </div>
 
-    <!-- Controls Section: Two Column Layout -->
-    <div class="controls-section">
-      <!-- Left Column: Upload & Format -->
-      <div class="left-panel">
-        <!-- Upload Section -->
-        <div class="card" id="uploadSection">
-          <input type="file" id="videoInput" accept="video/*">
-          <video id="previewVideo" controls></video>
-
-          <div class="upload-area" id="uploadArea" onclick="document.getElementById('videoInput').click()">
-            <div class="upload-icon">🎬</div>
-            <div class="upload-text">Click to upload or drag and drop</div>
-            <div class="upload-hint">MP4, MOV, WebM (max 100MB)</div>
-          </div>
+    <!-- Right Panel: Video Player -->
+    <div class="right-panel">
+      <div class="process-video-container" id="processVideoContainer">
+        <div class="video-placeholder" id="videoPlaceholder">
+          <div class="video-placeholder-icon">🎬</div>
+          <div class="video-placeholder-text">Upload a video to begin</div>
+        </div>
+        <video id="processVideo" style="display: none;" muted></video>
+        <div class="process-video-overlay" id="processVideoOverlay" style="display: none;">
+          <div class="step-title" id="overlayTitle">Processing...</div>
+          <div class="step-desc" id="overlayDesc">Please wait</div>
         </div>
 
-        <!-- Format Selection -->
-        <div class="card">
-          <h3 style="margin-bottom: 1rem; font-weight: 600;">Output Format</h3>
-          <div class="format-selection">
-            <div class="format-option selected" data-format="webm">
-              <div class="format-name">WebM</div>
-              <div class="format-desc">Optimized for web, smaller file size</div>
-            </div>
-            <div class="format-option" data-format="mov">
-              <div class="format-name">MOV (ProRes)</div>
-              <div class="format-desc">High quality for video editing</div>
-            </div>
-            <div class="format-option" data-format="gif">
-              <div class="format-name">GIF</div>
-              <div class="format-desc">Animated for social media & sharing</div>
-            </div>
-          </div>
-
-          <form onsubmit="event.preventDefault(); processVideo(); return false;">
-            <button type="submit" class="btn-process" id="processBtn" disabled>
-              Remove Background (20 credits)
-            </button>
-          </form>
+        <!-- Progress Bar -->
+        <div class="progress-bar-container" id="progressBarContainer">
+          <div class="progress-bar-fill" id="progressBarFill"></div>
         </div>
-      </div>
-
-      <!-- Right Column: Info & Progress -->
-      <div class="right-panel">
-        <!-- Info Section -->
-        <div class="info-card">
-          <div class="info-title">💡 How it works</div>
-          <ul class="info-list">
-            <li>Upload your video (any format supported)</li>
-            <li>AI removes the background from every frame</li>
-            <li>Choose WebM (web), MOV (editing), or GIF (sharing) format</li>
-            <li>Download your transparent video/GIF</li>
-            <li>Use in websites, video editors, or social media</li>
-          </ul>
-        </div>
-
-        <!-- Progress Section (Hidden by default) -->
-        <div class="card progress-card" id="progressCard" style="display: none;">
-          <h3 style="margin-bottom: 1.5rem; text-align: center;">🔄 Processing Progress</h3>
-          <div class="progress-steps">
-            <div class="progress-step" id="step1">
-              <div class="step-icon">📤</div>
-              <div class="step-content">
-                <div class="step-title">Uploading Video</div>
-                <div class="step-desc">Sending your video to the cloud...</div>
-              </div>
-            </div>
-
-            <div class="progress-step" id="step2">
-              <div class="step-icon">🎞️</div>
-              <div class="step-content">
-                <div class="step-title">Extracting Frames</div>
-                <div class="step-desc">Converting video to PNG frames...</div>
-              </div>
-            </div>
-
-            <div class="progress-step" id="step3">
-              <div class="step-icon">🤖</div>
-              <div class="step-content">
-                <div class="step-title">AI Background Removal</div>
-                <div class="step-desc">Processing each PNG frame with AI (U2-Net)...</div>
-              </div>
-            </div>
-
-            <div class="progress-step" id="step4">
-              <div class="step-icon">🎬</div>
-              <div class="step-content">
-                <div class="step-title">Encoding Video</div>
-                <div class="step-desc">Stitching transparent PNGs back into video...</div>
-              </div>
-            </div>
-
-            <div class="progress-step" id="step5">
-              <div class="step-icon">✨</div>
-              <div class="step-content">
-                <div class="step-title">Finalizing</div>
-                <div class="step-desc">Preparing your download...</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="progress-hint">⏱️ Estimated time: 3-5 minutes</div>
-        </div>
+        <div class="progress-percentage" id="progressPercentage">0%</div>
       </div>
     </div>
 
-    </main>
+    <!-- Hidden Progress Section (for reference) -->
+    <div class="card progress-card" id="progressCard" style="display: none;">
+      <div class="progress-spinner">
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+        <div class="spinner-ring"></div>
+      </div>
+
+      <div class="progress-steps">
+        <div class="progress-step" id="step1">
+          <div class="step-icon">📤</div>
+          <div class="step-content">
+            <div class="step-title">Uploading Video</div>
+            <div class="step-desc">Sending your video to the cloud...</div>
+          </div>
+        </div>
+
+        <div class="progress-step" id="step2">
+          <div class="step-icon">🎞️</div>
+          <div class="step-content">
+            <div class="step-title">Extracting Frames</div>
+            <div class="step-desc">Converting video to PNG frames...</div>
+          </div>
+        </div>
+
+        <div class="progress-step" id="step3">
+          <div class="step-icon">🤖</div>
+          <div class="step-content">
+            <div class="step-title">AI Background Removal</div>
+            <div class="step-desc">Processing each PNG frame with AI (U2-Net)...</div>
+          </div>
+        </div>
+
+        <div class="progress-step" id="step4">
+          <div class="step-icon">🎬</div>
+          <div class="step-content">
+            <div class="step-title">Encoding Video</div>
+            <div class="step-desc">Stitching transparent PNGs back into video...</div>
+          </div>
+        </div>
+
+        <div class="progress-step" id="step5">
+          <div class="step-icon">✨</div>
+          <div class="step-content">
+            <div class="step-title">Finalizing</div>
+            <div class="step-desc">Preparing your download...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-hint">⏱️ Estimated time: 3-5 minutes</div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="card result-card" id="resultCard">
+      <h2 style="margin-bottom: 1.5rem;">🎉 Background Removed!</h2>
+      <div class="result-video-container">
+        <video id="resultVideo" class="result-video" controls style="display: none;"></video>
+        <img id="resultImage" class="result-video" style="display: none;" alt="Processed GIF">
+      </div>
+      <div class="result-actions">
+        <a class="btn-secondary" id="downloadBtn" download>
+          ⬇️ Download
+        </a>
+        <button class="btn-secondary" onclick="resetProcess()">
+          🔄 Process Another
+        </button>
+      </div>
+    </div>
+  </main>
 
   <script>
     let uploadedVideo = null;
@@ -1140,44 +1209,35 @@
     let currentUser = null;
     let userCredits = 0;
     let userPlanType = 'free';
+	let processingComplete = false;
+	let step4Interval = null;
 
-    // Video mapping for each processing step
-    // TODO: Update with correct video files for each step
+    // Video mapping for each processing step with correct paths
     const processVideoMap = {
       step1: {
-        title: 'Uploading Video',
-        desc: 'Sending your video to the cloud...',
-        videos: ['assets/01.Reading Metadata.mp4', 'assets/02.Reading Metadata.mp4']
+        title: 'Reading Metadata',
+        desc: 'Analyzing video file structure...',
+        videos: ['/Remove_Video_Background/assets/Zoom-into-screen.mp4','/Remove_Video_Background/assets/01.Reading Metadata.mp4', '/Remove_Video_Background/assets/02.Reading Metadata.mp4']
       },
       step2: {
         title: 'Extracting Frames',
-        desc: 'Converting video to PNG frames...',
-        videos: ['assets/03.Extracting_Frames.mp4', 'assets/04.extracting Frames.mp4', 'assets/05.Extracting_Frames.mp4']
+        desc: 'Converting video to PNG files...',
+        videos: ['/Remove_Video_Background/assets/03.Extracting_Frames.mp4', '/Remove_Video_Background/assets/04.extracting Frames.mp4', '/Remove_Video_Background/assets/05.Extracting_Frames.mp4']
       },
       step3: {
         title: 'AI Background Removal',
-        desc: 'Processing each PNG frame with AI (U2-Net)...',
-        videos: ['assets/06.Removing_backgrounds from frames.mp4', 'assets/07.Removing_backgrounds from frames.mp4']
+        desc: 'Processing each Frame using AI pixel removal...',
+        videos: ['/Remove_Video_Background/assets/06.Removing_backgrounds from frames.mp4', '/Remove_Video_Background/assets/07.Removing_backgrounds from frames.mp4']
       },
       step4: {
         title: 'Encoding Video',
         desc: 'Stitching transparent PNGs back into video...',
-        videos: ['assets/08.SavingframesasPNG.mp4', 'assets/09.SavingFramesasPNG.mp4', 'assets/10.EncodintheMOV.mp4', 'assets/11.EncodingtheMOV.mp4']
+        videos: ['/Remove_Video_Background/assets/08.SavingframesasPNG.mp4', '/Remove_Video_Background/assets/09.SavingFramesasPNG.mp4', '/Remove_Video_Background/assets/10.EncodintheMOV.mp4', '/Remove_Video_Background/assets/11.EncodingtheMOV.mp4']
       },
       step5: {
         title: 'Finalizing',
         desc: 'Preparing your download...',
-        videos: ['assets/12.DeliveringtheMOV.mp4', 'assets/13.TheMOV is Clean.mp4']
-      },
-      step6: {
-        title: 'Thank you!',
-        desc: 'Your video is ready for download',
-        videos: ['assets/15.GifDelivery-End.mp4', 'assets/15.thegifisFelivered.mp4']
-      },
-      step5: {
-        title: 'Finalizing',
-        desc: 'Preparing your download...',
-        videos: ['assets/12.DeliveringtheMOV.mp4', 'assets/13.TheMOV is Clean.mp4', 'assets/15.GifDelivery-End.mp4']
+        videos: ['/Remove_Video_Background/assets/12.DeliveringtheMOV.mp4', '/Remove_Video_Background/assets/13.TheMOV is Clean.mp4', '/Remove_Video_Background/assets/15.GifDelivery-End.mp4']
       }
     };
 
@@ -1292,9 +1352,8 @@
       });
     });
 
-    // Video Player Functions
+    // Video Player Functions - Simple and Reliable
     function playProcessStep(step) {
-      console.log('Playing process step:', step);
       const videoContainer = document.getElementById('processVideoContainer');
       const videoElement = document.getElementById('processVideo');
       const placeholder = document.getElementById('videoPlaceholder');
@@ -1303,14 +1362,12 @@
       const overlayDesc = document.getElementById('overlayDesc');
 
       const stepData = processVideoMap[step];
-      if (!stepData) {
-        console.error('No step data found for:', step);
-        return;
-      }
+      if (!stepData) return;
 
-      console.log('Step data:', stepData);
       currentStep = step;
       currentVideoIndex = 0;
+
+      console.log(`Starting step: ${step} with ${stepData.videos.length} videos`);
 
       // Show video player
       placeholder.style.display = 'none';
@@ -1321,7 +1378,7 @@
       overlayTitle.textContent = stepData.title;
       overlayDesc.textContent = stepData.desc;
 
-      // Play first video
+      // Play first video in the sequence
       playNextVideoInStep();
 
       // Preload next step videos if available
@@ -1329,23 +1386,51 @@
     }
 
     function playNextVideoInStep() {
-      if (!currentStep) {
-        console.log('No current step, returning');
-        return;
-      }
+      if (!currentStep) return;
+	  
+	  if (!processVideoMap[currentStep]) {
+  console.log(`🛑 Stopping playback loop for ${currentStep}`);
+  return;
+}
+	  
+	  
 
       const stepData = processVideoMap[currentStep];
       const videoElement = document.getElementById('processVideo');
 
-      console.log('Playing video:', stepData.videos[currentVideoIndex], 'from step:', currentStep);
+      // Reset video index if we've reached the end
+      if (currentVideoIndex >= stepData.videos.length) {
+        currentVideoIndex = 0;
+        console.log(`Looping back to start of ${currentStep}`);
+      }
 
-      // Play next video in the sequence
-      videoElement.src = stepData.videos[currentVideoIndex];
+      // Get current video
+      const videoUrl = stepData.videos[currentVideoIndex];
+      console.log(`▶️ Playing video ${currentVideoIndex + 1}/${stepData.videos.length}: ${videoUrl}`);
+
+      // Set up video to play the next one when it ends
+      videoElement.onended = () => {
+        console.log(`✅ Video ended, advancing to next`);
+        currentVideoIndex++;
+        playNextVideoInStep();
+      };
+
+      // Set source and play
+      videoElement.src = videoUrl;
       videoElement.load();
-      videoElement.play().catch(e => console.error('Video play error:', e));
 
-      // Move to next video (loop back to start if at end)
-      currentVideoIndex = (currentVideoIndex + 1) % stepData.videos.length;
+      // Try to play with fallback
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.error('❌ Video play failed:', error);
+          // Advance to next video after a short delay
+          setTimeout(() => {
+            currentVideoIndex++;
+            playNextVideoInStep();
+          }, 2000);
+        });
+      }
     }
 
     function preloadNextStepVideos(currentStepName) {
@@ -1357,10 +1442,66 @@
           const video = document.createElement('video');
           video.src = videoUrl;
           video.preload = 'auto';
+          video.muted = true; // Mute for autoplay compatibility
+          // Add to preload queue
           videoPreloadQueue.push(video);
+
+          // Remove from queue after loading to free memory
+          video.addEventListener('canplaythrough', () => {
+            const index = videoPreloadQueue.indexOf(video);
+            if (index > -1) {
+              videoPreloadQueue.splice(index, 1);
+            }
+          }, { once: true });
         });
       }
     }
+
+    // Enhanced video playing with better error handling
+    function playVideoWithFallback(videoElement, videoUrl) {
+  return new Promise((resolve) => {
+    // Clean previous handlers before starting
+    videoElement.onended = null;
+    videoElement.onerror = null;
+    videoElement.oncanplay = null;
+
+    videoElement.src = videoUrl;
+    videoElement.muted = true;
+    videoElement.load();
+
+    const timeout = setTimeout(() => {
+      console.warn(`Video timeout: ${videoUrl}`);
+      cleanup();
+      resolve();
+    }, 5000); // adjust timeout as needed
+
+    function cleanup() {
+      clearTimeout(timeout);
+      videoElement.onended = null;
+      videoElement.onerror = null;
+      videoElement.oncanplay = null;
+    }
+
+    videoElement.addEventListener('canplay', () => {
+      videoElement.play().catch((e) => {
+        console.warn(`Play failed for ${videoUrl}`, e);
+        cleanup();
+        resolve();
+      });
+    }, { once: true });
+
+    videoElement.addEventListener('ended', () => {
+      cleanup();
+      resolve();
+    }, { once: true });
+
+    videoElement.addEventListener('error', (e) => {
+      console.warn(`Video error for ${videoUrl}`, e);
+      cleanup();
+      resolve();
+    }, { once: true });
+  });
+}
 
     function stopProcessVideo() {
       const videoElement = document.getElementById('processVideo');
@@ -1372,27 +1513,148 @@
       overlay.style.display = 'none';
       placeholder.style.display = 'flex';
 
+      // Hide progress bar
+      hideProgressBar();
+
       currentStep = null;
       currentVideoIndex = 0;
     }
 
-    // Set up video element to auto-play next video when current one ends
+    // Progress Bar Functions
+    function showProgressBar() {
+      const progressBarContainer = document.getElementById('progressBarContainer');
+      const progressPercentage = document.getElementById('progressPercentage');
+
+      progressBarContainer.classList.add('visible');
+      progressPercentage.classList.add('visible');
+    }
+
+    function hideProgressBar() {
+      const progressBarContainer = document.getElementById('progressBarContainer');
+      const progressPercentage = document.getElementById('progressPercentage');
+
+      progressBarContainer.classList.remove('visible');
+      progressPercentage.classList.remove('visible');
+    }
+
+    function updateProgressBar(percentage) {
+      const progressBarFill = document.getElementById('progressBarFill');
+      const progressPercentage = document.getElementById('progressPercentage');
+
+      progressBarFill.style.width = `${percentage}%`;
+      progressPercentage.textContent = `${Math.round(percentage)}%`;
+    }
+
+    // Poll for processing progress
+    let progressPollingInterval = null;
+    let currentJobId = null;
+
+    function startProgressPolling(jobId) {
+      currentJobId = jobId;
+      showProgressBar();
+      updateProgressBar(0);
+
+      progressPollingInterval = setInterval(async () => {
+        try {
+          // If it's a mock job ID, simulate progress
+          if (jobId === 'mock-job-id') {
+            const currentProgress = parseFloat(document.getElementById('progressBarFill').style.width) || 0;
+            const newProgress = Math.min(95, currentProgress + Math.random() * 15);
+            updateProgressBar(newProgress);
+            return;
+          }
+
+          const response = await fetch(`/api/video/progress/${jobId}`, { credentials: 'include' });
+          if (response.ok) {
+            const data = await response.json();
+            // Handle your backend's progress format
+            const percentage = Math.min(95, Math.max(0, data.percent || data.percentage || 0));
+            console.log('📊 Progress update:', percentage + '%');
+            updateProgressBar(percentage);
+
+            if (data.status === 'completed' || data.step === 'completed' || percentage >= 95) {
+              updateProgressBar(100);
+              setTimeout(() => {
+                hideProgressBar();
+                stopProgressPolling();
+                // Mark processing as complete to trigger step 5
+                processingComplete = true;
+                console.log('🎉 Processing complete, moving to step 5');
+              }, 1000);
+            } else if (data.status === 'failed') {
+              hideProgressBar();
+              stopProgressPolling();
+            }
+          }
+        } catch (error) {
+          console.error('Progress polling error:', error);
+        }
+      }, 2000); // Poll every 2 seconds
+    }
+
+    function stopProgressPolling() {
+      if (progressPollingInterval) {
+        clearInterval(progressPollingInterval);
+        progressPollingInterval = null;
+      }
+      currentJobId = null;
+    }
+
+    // Simple video setup and test function
     document.addEventListener('DOMContentLoaded', () => {
       const videoElement = document.getElementById('processVideo');
-      videoElement.addEventListener('ended', playNextVideoInStep);
+      console.log('🎬 Video player initialized');
+
+      // Add a global test function for debugging
+      window.testVideo = function() {
+        console.log('🧪 Testing video playback...');
+        const placeholder = document.getElementById('videoPlaceholder');
+
+        // Show video element
+        placeholder.style.display = 'none';
+        videoElement.style.display = 'block';
+
+        // Try to play the first video
+        const firstVideo = processVideoMap.step1.videos[0];
+        videoElement.src = firstVideo;
+        videoElement.play().then(() => {
+          console.log('✅ Test video playing successfully');
+        }).catch(err => {
+          console.error('❌ Test video failed:', err);
+        });
+      };
+
+      // Auto-test after 2 seconds
+      setTimeout(() => {
+        console.log('🔍 Auto-testing video availability...');
+        const testVideoUrl = processVideoMap.step1.videos[0];
+        console.log('Testing URL:', testVideoUrl);
+      }, 2000);
     });
 
-  
-    // Process video with video player
-    async function processVideo() {
-      const processBtn = document.getElementById('processBtn');
+    // Animate progress steps (legacy - can be removed if fully replaced by videos)
+    async function animateProgressSteps() {
+      const steps = ['step1', 'step2', 'step3', 'step4', 'step5'];
+      const timings = [1000, 2000, 120000, 60000, 5000]; // Realistic timings
 
-      // Prevent multiple submissions
-      if (processBtn.disabled) {
-        showToast('Processing already in progress...', 'warning');
-        return;
+      for (let i = 0; i < steps.length; i++) {
+        const stepEl = document.getElementById(steps[i]);
+
+        // Mark as active
+        stepEl.classList.add('active');
+
+        // Wait for this step's duration
+        await new Promise(resolve => setTimeout(resolve, timings[i]));
+
+        // Mark as completed
+        stepEl.classList.remove('active');
+        stepEl.classList.add('completed');
+        stepEl.querySelector('.step-icon').textContent = '✓';
       }
+    }
 
+    // Automated video sequence with fixed timing
+    async function processVideo() {
       if (!uploadedVideo) {
         showToast('Please upload a video first', 'error');
         return;
@@ -1410,105 +1672,210 @@
         return;
       }
 
-      // Disable button to prevent multiple submissions
-      processBtn.disabled = true;
-      processBtn.textContent = 'Processing...';
-
-      // Start with step1 video immediately while backend processes
-      playProcessStep('step1');
-
-    const formData = new FormData();
+      const formData = new FormData();
       formData.append('video', uploadedVideo);
       formData.append('format', selectedFormat);
 
       try {
-        const response = await fetch('/api/video/remove-background', {
+        // Start backend processing and get job ID
+        const responsePromise = fetch('/api/video/remove-background', {
           method: 'POST',
           body: formData,
           credentials: 'include'
         });
 
+        // Get the job ID from the response immediately
+        responsePromise.then(response => {
+          if (response.ok) {
+            return response.clone().json(); // Clone to allow both immediate and later processing
+          }
+          throw new Error('Failed to start processing');
+        }).then(data => {
+          console.log('📋 Backend response:', data);
+          if (data.jobId) {
+            console.log('✅ Got job ID:', data.jobId);
+            currentJobId = data.jobId; // Store it for step 4
+            // Progress polling will start in step 4
+          } else {
+            console.log('❌ No job ID in response');
+          }
+        }).catch(err => {
+          console.error('❌ Failed to get job ID:', err);
+        });
+
+        // Start automated video sequence immediately
+        await runAutomatedVideoSequence(responsePromise);
+
+      } catch (error) {
+        console.error('Processing error:', error);
+        showToast(error.message || 'Failed to process video', 'error');
+        stopProcessVideo();
+      }
+    }
+
+    // Fully automated video sequence with exact timing
+    async function runAutomatedVideoSequence(responsePromise) {
+      //let processingComplete = false;
+      //let step4Interval = null;
+
+      // Set up completion listener
+      responsePromise.then(async (response) => {
         if (!response.ok) {
           const error = await response.json();
           throw new Error(error.message || 'Failed to process video');
         }
 
         const result = await response.json();
-        let currentStepVideo = null;
+        processingComplete = true;
 
-        // Connect to SSE for real-time progress
-        if (result.jobId) {
-          const eventSource = new EventSource(`/api/video/remove-background/progress/${result.jobId}`);
+        // Stop progress polling
+        stopProgressPolling();
 
-          eventSource.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-              console.log('Progress update:', data);
-
-              // Update step based on real progress
-              if (data.step && data.step.startsWith('step')) {
-                if (data.step !== currentStepVideo) {
-                  currentStepVideo = data.step;
-                  playProcessStep(data.step);
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing progress data:', e);
-            }
-          };
-
-          eventSource.onerror = (error) => {
-            console.error('SSE error:', error);
-            eventSource.close();
-          };
-
-          // Auto-close SSE after processing completes (5 minute timeout)
-          setTimeout(() => {
-            eventSource.close();
-          }, 300000);
+        // Clear step 4 interval if running
+        if (step4Interval) {
+          clearInterval(step4Interval);
         }
 
-        // Handle completion - if step6 hasn't played automatically, play it
-        let completionTimeout = setTimeout(() => {
-          if (currentStepVideo !== 'step6') {
-            playProcessStep('step6');
+        // Move to step 5
+        await runStep5();
 
-            // Wait for thank you videos to play (8 seconds for both videos)
-            setTimeout(() => {
-              stopProcessVideo();
-              showResult(result.processedUrl);
-              showToast('Background removed successfully!', 'success');
-              fetchUserCredits();
-            }, 8000);
-          }
-        }, 2000); // Wait 2 seconds after processing to see if step6 triggers
+        // Update credits and show result
+        await fetchUserCredits();
+        showResult(result.processedUrl);
+        showToast('Background removed successfully!', 'success');
 
-        // Listen for step6 to trigger completion automatically
-        const originalStepVideo = currentStepVideo;
-        const checkStep6 = setInterval(() => {
-          if (currentStepVideo === 'step6' && currentStepVideo !== originalStepVideo) {
-            clearTimeout(completionTimeout);
-            clearInterval(checkStep6);
-
-            // Wait for thank you videos to complete
-            setTimeout(() => {
-              stopProcessVideo();
-              showResult(result.processedUrl);
-              showToast('Background removed successfully!', 'success');
-              fetchUserCredits();
-            }, 8000);
-          }
-        }, 500);
-
-      } catch (error) {
+      }).catch(error => {
+        processingComplete = true;
+        if (step4Interval) {
+          clearInterval(step4Interval);
+        }
+        stopProgressPolling();
         console.error('Processing error:', error);
         showToast(error.message || 'Failed to process video', 'error');
         stopProcessVideo();
-        // Reset button state
-        processBtn.disabled = false;
-        processBtn.textContent = 'Remove Background (20 credits)';
+      });
+
+      // Step 1: 10 seconds - Reading Metadata
+      console.log('Starting Step 1: Reading Metadata...');
+      playProcessStep('step1');
+      await new Promise(resolve => setTimeout(resolve, 10000));
+
+      // Step 2: 10 seconds - Extracting Frames
+      console.log('Starting Step 2: Extracting Frames...');
+      playProcessStep('step2');
+      await new Promise(resolve => setTimeout(resolve, 10000));
+
+      // Step 3: 60 seconds - AI Background Removal
+      console.log('Starting Step 3: AI Background Removal...');
+      playProcessStep('step3');
+      await new Promise(resolve => setTimeout(resolve, 60000));
+
+      // Step 4: Continue until backend completes - Stitching transparent PNGs
+      if (!processingComplete) {
+        console.log('Starting Step 4: Stitching transparent PNGs...');
+        playProcessStep('step4');
+
+        // Ensure progress bar is visible for step 4
+        if (currentJobId) {
+          console.log('🔄 Starting progress polling with real job ID:', currentJobId);
+          startProgressPolling(currentJobId);
+        } else {
+          console.log('🔄 Starting progress polling with mock job ID');
+          // If we don't have a real job ID yet, simulate progress
+          startProgressPolling('mock-job-id');
+        }
+
+        // Just continue step 4 until processing completes
+        step4Interval = setInterval(() => {
+          if (processingComplete) {
+            console.log('🚀 Step 4 complete, moving to Step 5');
+            clearInterval(step4Interval);
+            // Trigger step 5 immediately
+            runStep5();
+          }
+        }, 1000);
       }
     }
+
+    // Step 5: Play final 3 videos in sequence (12, 13, 15)
+ // Step 5: Play final 3 videos in sequence (12, 13, 15)
+async function runStep5() {
+  console.log('Starting Step 5: Finalizing...');
+
+  // Stop any active step4 loop to prevent interference
+  if (typeof step4Interval !== 'undefined' && step4Interval) {
+    clearInterval(step4Interval);
+    step4Interval = null;
+  }
+
+  // Ensure finalization state is obvious
+  processingComplete = true;
+  currentStep = 'step5';
+  currentVideoIndex = 0;
+
+  const videoElement = document.getElementById('processVideo');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlayDesc = document.getElementById('overlayDesc');
+
+  // Remove any residual handler from previous loops and pause
+  videoElement.onended = null;
+  videoElement.onerror = null;
+  videoElement.oncanplay = null;
+  videoElement.pause();
+
+  const finalVideos = [
+    '/Remove_Video_Background/assets/12.DeliveringtheMOV.mp4',
+    '/Remove_Video_Background/assets/13.TheMOV is Clean.mp4',
+    '/Remove_Video_Background/assets/15.GifDelivery-End.mp4'
+  ];
+
+  // Update overlay for final step
+  overlayTitle.textContent = 'Finalizing';
+  overlayDesc.textContent = 'Preparing your download...';
+
+  // Play each final video in sequence with better error handling
+  for (let i = 0; i < finalVideos.length; i++) {
+    const url = finalVideos[i];
+
+    // Prepare a promise that resolves when the video ends or times out
+    const endPromise = new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        console.log(`Video step ${i + 1} timeout, continuing...`);
+        // cleanup handlers
+        videoElement.onended = null;
+        videoElement.onerror = null;
+        videoElement.oncanplay = null;
+        resolve();
+      }, 10000); // 10 second max per video
+
+      // onended handler
+      videoElement.onended = () => {
+        clearTimeout(timeout);
+        // cleanup handlers
+        videoElement.onended = null;
+        videoElement.onerror = null;
+        videoElement.oncanplay = null;
+        resolve();
+      };
+
+      // also handle error event to avoid hanging
+      videoElement.onerror = () => {
+        clearTimeout(timeout);
+        console.warn(`Video error on final step ${i + 1}, continuing...`);
+        videoElement.onended = null;
+        videoElement.onerror = null;
+        videoElement.oncanplay = null;
+        resolve();
+      };
+    });
+
+    // Start playback (playVideoWithFallback sets src/muted/load/play as needed)
+    await playVideoWithFallback(videoElement, url);
+
+    // Wait for either onended or timeout / error
+    await endPromise;
+  }
+}
 
     function showResult(videoUrl) {
       document.getElementById('progressCard').classList.remove('active');
@@ -1547,11 +1914,7 @@
       previewVideo.src = '';
       uploadArea.classList.remove('has-video');
       uploadArea.querySelector('.upload-text').textContent = 'Click to upload or drag and drop';
-
-      // Reset button
-      const processBtn = document.getElementById('processBtn');
       processBtn.disabled = true;
-      processBtn.textContent = 'Remove Background (20 credits)';
       uploadedVideo = null;
     }
 

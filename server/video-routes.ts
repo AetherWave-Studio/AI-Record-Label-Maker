@@ -382,6 +382,39 @@ export function setupVideoRoutes(app: Express) {
     }
   });
 
+  // Simple polling endpoint for progress (works with frontend progress bar)
+  app.get("/api/video/progress/:jobId", (req: Request, res: Response) => {
+    const { jobId } = req.params;
+
+    // Get progress emitter for this job
+    const emitter = progressEmitters.get(jobId);
+
+    if (!emitter) {
+      return res.json({
+        percentage: 0,
+        status: 'not_found'
+      });
+    }
+
+    // Store the latest progress data for this job
+    let latestProgress: any = { percentage: 0, status: 'processing' };
+
+    // Listen for progress updates temporarily
+    const progressListener = (data: any) => {
+      latestProgress = data;
+    };
+
+    emitter.on('progress', progressListener);
+
+    // Return the latest progress data
+    res.json(latestProgress);
+
+    // Clean up listener after response
+    setTimeout(() => {
+      emitter.off('progress', progressListener);
+    }, 100);
+  });
+
   // SSE endpoint for real-time progress updates
   app.get("/api/video/remove-background/progress/:jobId", (req: Request, res: Response) => {
     const { jobId } = req.params;

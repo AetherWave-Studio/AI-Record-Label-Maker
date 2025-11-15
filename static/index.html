@@ -924,12 +924,13 @@
 
       .send-btn {
         padding: 0.875rem 1.5rem;
-        background: linear-gradient(
-          135deg,
-          var(--aetherwave-pink),
-          var(--aetherwave-purple)
-        );
-        color: white;
+		background: url("https://www.dropbox.com/scl/fi/y5rqvlzgm0zl44gmvi221/send-btn-active.png?rlkey=tdy7j0d4xar4aqvjshaixvy37&raw=1") 
+		no-repeat;
+        background-size: 100% 100%;
+        //border-color: var(--aetherwave-pink);
+        filter: brightness(1.3) drop-shadow(0 0 10px rgba(255, 46, 166, 0.5));
+        box-shadow: 0 4px 16px rgba(255, 46, 166, 0.3);
+		//border: 1px solid var(--aetherwave-pink);      
         border: none;
         border-radius: 12px;
         font-weight: 600;
@@ -937,7 +938,10 @@
         transition:
           transform 0.2s,
           box-shadow 0.2s;
-      }
+		 height:40px; 
+		 length: 80px;
+		  );
+      }*/
 
       .send-btn:hover {
         transform: translateY(-2px);
@@ -2276,7 +2280,7 @@
       <div class="orb orb-2"></div>
     </div>
 
-      <header style="background-image: url('static//public/assets/Black_Screen.png')";>
+      <header style="background-image: url('https://www.dropbox.com/scl/fi/e2gt0ly1a65mskbskr591/Black_Form2.png?rlkey=kendmto6yvixml19z96h9g02q&raw=1')";>
         <!-- Left: Logo -->
         <div style="display: flex; align-items: center; gap: 1rem; justify-self: start;">
           <a href="#" class="logo">
@@ -2297,7 +2301,7 @@
             <a href="/static/aimusic-media.html">AI MUSIC & MEDIA</a>
             <a href="/creator-studio/video-generation2.html">AI VIDEO STUDIO</a>
             <a href="/static/seamless-loop-creator/seamless-loop-creator.html">SEAMLESS LOOPS</a>
-            <a href="/Remove-Video-Background/remove-background.html">REMOVE BACKGROUND</a>
+            <a href="/remove-background">REMOVE BG (VIDEO)</a>
           </div>
          </li> 
   
@@ -2314,7 +2318,6 @@
         </ul>
       </nav>
 
-      <!-- Right: Auth Section -->
       <!-- Right: Auth Section -->
        <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
         <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
@@ -2374,7 +2377,7 @@
         <div class="panel-content">
           <div class="chat-messages" style="flex: 1; overflow-y: auto">
             <div class="message assistant">
-              <div class="message-label">AetherWave AI</div>
+              <div class="message-label">Vox-Bot AI</div>
               <div class="message-content">
                 Hello! I can help you create music, generate album art, or
                 answer questions about AetherWave Studio. What would you like to
@@ -2390,10 +2393,10 @@
               id="chat-input"
               placeholder="Ask me anything..."
               style="background-image:         
-              url('static//public/assets/Black_Screen.png');""
+              url('static//public/assets/Black_Screen.png');"
         
             />
-            <button class="send-btn" id="send-btn">Send</button>
+            <button class="send-btn" id="send-btn"></button>
           </div>
           <div class="suggestions">
             <div class="suggestion-chip">About AetherWave</div>
@@ -2532,7 +2535,7 @@
             );
           } finally {
             sendBtn.disabled = false;
-            sendBtn.textContent = "Send";
+            sendBtn.textContent = "";
           }
         }
 

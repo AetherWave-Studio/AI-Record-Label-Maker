@@ -21,16 +21,20 @@ export default function AIMachine() {
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/user', {
-        credentials: 'include'
-      });
-      setIsLoggedIn(response.ok);
-    } catch (error) {
+ const checkAuthStatus = async () => {
+  try {
+    const response = await fetch('http://localhost:5000/api/user', { credentials: 'include' });
+    if (response.ok) {
+      const user = await response.json();
+      setIsLoggedIn(!!user && user.id); // Or whatever indicates a user
+    } else {
       setIsLoggedIn(false);
     }
-  };
+  } catch (error) {
+    setIsLoggedIn(false);
+  }
+};
+
 
   const handleLogin = () => {
     window.location.href = 'http://localhost:5000/api/dev/login';
