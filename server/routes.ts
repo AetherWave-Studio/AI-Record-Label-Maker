@@ -1,6 +1,11 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import fs from "fs/promises";
 import { storage } from "./storage";
+import { BandGenerator } from "../band-generator/src/bandGenerator.js";
+import { AudioAnalyzer } from "../band-generator/src/audioAnalyzer.js";
+import { CardGenerator } from "../band-generator/src/cardGenerator.js";
+import type { GenerationOptions } from "../band-generator/src/types.js";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { setupDevAuth, isDevAuthenticated } from "./devAuth";
 import { z } from "zod";
@@ -145,8 +150,27 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // For now, always use dev auth (TODO: Implement proper production auth detection)
-  const isDevelopment = true;
+  // Automatically detect environment and use appropriate authentication
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+
+  // Validate required environment variables
+  if (!isDevelopment) {
+    const requiredEnvVars = ['REPLIT_DOMAINS', 'SESSION_SECRET', 'DATABASE_URL', 'REPL_ID'];
+    const missing = requiredEnvVars.filter(varName => !process.env[varName]);
+
+    if (missing.length > 0) {
+      throw new Error(
+        `Missing required environment variables for production: ${missing.join(', ')}\n` +
+        `Please set these variables before running in production mode.`
+      );
+    }
+
+    console.log('✅ All required production environment variables are set');
+  } else {
+    if (!process.env.SESSION_SECRET) {
+      console.warn('⚠️  SESSION_SECRET not set - using default (not recommended for production)');
+    }
+  }
 
   // Setup authentication based on environment
   if (isDevelopment) {
@@ -2681,6 +2705,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Setup AI Machine interface
   app.use("/api/aimachine", authMiddleware, aiMachineRouter);
+
+  // Configure multer for audio uploads
+  const uploadAudio = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB
+    },
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/flac', 'audio/ogg'];
+      if (allowedTypes.includes(file.mimetype) || file.mimetype.startsWith('audio/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only audio files are allowed'));
+      }
+    }
+  });
+
+  // Band Generation - integrated directly into main server
+  const bandGenerator = new BandGenerator();
+
+  app.post("/api/band-generation", authMiddleware, uploadAudio.single('audio'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'Audio file is required' });
+      }
+
+      console.log(`📁 Received audio file: ${req.file.originalname} (${(req.file.size / 1024 / 1024).toFixed(2)} MB)`);
+
+      // Parse options
+      const options: GenerationOptions = {
+        mode: (req.body.mode || 'explore') as 'explore' | 'refine',
+        artStyle: (req.body.artStyle || 'realistic') as any,
+        cardTheme: (req.body.cardTheme || 'dark') as any,
+        userBandName: req.body.userBandName,
+        songName: req.body.songName || req.file.originalname.replace(/\.[^/.]+$/, ''),
+        userGenre: req.body.userGenre,
+        artistType: (req.body.artistType || 'ensemble') as any
+      };
+
+      console.log('🎛️  Options:', options);
+
+      // Analyze audio
+      console.log('🔊 Analyzing audio...');
+      const audioMetrics = AudioAnalyzer.analyzeBuffer(req.file.buffer, req.file.originalname);
+      console.log('📊 Audio metrics:', audioMetrics);
+
+      // Generate band
+      console.log('🎨 Generating band profile...');
+      const result = await bandGenerator.generateBand(audioMetrics, options);
+
+      // Generate trading card
+      console.log('🎴 Generating trading card...');
+      const cardSvg = CardGenerator.generateCard(result.winner, options.cardTheme);
+      result.winner.cardImageUrl = CardGenerator.toDataUrl(cardSvg);
+
+      console.log(`✅ Generation complete: ${result.winner.bandName}`);
+
+      res.json(result);
+    } catch (error: any) {
+      console.error('❌ Band generation error:', error);
+      res.status(500).json({
+        error: 'Band generation failed',
+        message: error.message
+      });
+    }
+  });
 
   // Profile image upload endpoint using IMGBB
   app.post("/api/user/profile-image", authMiddleware, (req, res, next) => {

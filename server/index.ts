@@ -42,6 +42,10 @@ app.get("/api/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: Date.now() });
 });
 
+app.get('/public/:filename', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', req.params.filename));
+});
+
 // Maintenance mode - shows "Coming Soon" page to visitors
 app.use(maintenanceMiddleware);
 
@@ -86,21 +90,6 @@ app.use((req, res, next) => {
     throw err;
   });
 
-// This should be placed after CORS/middleware, before static serving
-app.get('/api/user', (req, res) => {
-  // You need actual user authentication logic here!
-  // For test, simulate user:
-  const user = { id: '123', name: 'Drew' };  // Replace with your user fetch logic
-  if (user) {
-    res.json(user);
-  } else {
-    res.status(401).json({ error: 'Not authenticated' });
-  }
-});
-
-
-
-
   // Serve static HTML directories and landing page
   const rootDir = path.resolve(import.meta.dirname, "..");
 
@@ -135,6 +124,10 @@ app.get('/api/user', (req, res) => {
   app.use(
     "/Remove_Video_Background",
     express.static(path.join(rootDir, "Remove_Video_Background")),
+  );
+  app.use(
+    "/band-generator",
+    express.static(path.join(rootDir, "band-generator")),
   );
 
   // Serve video background removal tool at cleaner URL

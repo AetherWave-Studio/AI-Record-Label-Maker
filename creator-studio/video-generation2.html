@@ -1,13 +1,22 @@
-
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Video Studio - Ghost Musician</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AetherWave Studio - All Intelligence is Welcome Here</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <link
+      rel="stylesheet"
+      href="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-files%2Fnav.css?alt=media&token=d9ce7aa2-0609-46cc-92a8-169d8d8ca076"
+    />
+    <!-- Tiled Background CSS -->
+    <link rel="stylesheet" href="/static/assets/css/tiled-background.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
   <style>
     :root {
@@ -813,7 +822,8 @@
     <div class="panels-container">
 
       <!-- LEFT PANEL: Recent Media Uploads (Full Height) -->
-      <div class="panel panel-media">
+      <div class="panel panel-media" style="background-image: url('https://www.dropbox.com/scl/fi/gf7h58b831lpnflkhbyj1/AetherWave-panelCover.png?rlkey=bchad8vnl4v7t9h7w8sssrc44&raw=1'); background-repeat: no-repeat; background-size: 100% 100%">
+		
         <div class="panel-header">
           <div class="panel-title">
             <i class="ri-folder-video-line"></i> Recent Media
@@ -972,7 +982,7 @@
             </button>
             <input type="file" id="videoEditInput" accept="video/*" style="display: none;">
 
-            <button class="btn-secondary" style="width: 100%; margin-bottom: 0.5rem;" onclick="removeBackground()">
+            <button class="btn-secondary" style="width: 100%; margin-bottom: 0.5rem;" onclick="href=/remove-background")>
               <i class="ri-eraser-line"></i>
               Remove Background
             </button>

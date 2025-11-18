@@ -413,51 +413,56 @@
   
 
   <header>
-   <div style="display: flex; align-items: center; gap: 1rem;">
-      <a href="/static/" class="logo">
-        <div class="logo-icon2">
-          <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
+  <header style="background-image: url('https://www.dropbox.com/scl/fi/e2gt0ly1a65mskbskr591/Black_Form2.png?rlkey=kendmto6yvixml19z96h9g02q&raw=1')";>
+        <!-- Left: Logo -->
+        <div style="display: flex; align-items: center; gap: 1rem; justify-self: start;">
+          <a href="#" class="logo">
+            <div class="logo-icon2">
+              <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
+            </div>
+            <span>
+              <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
+            </span>
+          </a>
         </div>
-        <span>
-          <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
-        </span>
-      </a>
-    </div>
-	<nav class="aether-nav">
-				<ul>
-					<li><a href="https://ai-hub.aetherwavestudio.com">AI-Hub</a></li>
-					<li class="dropdown">
-						<a href="#" class="active">Playlists</a>
-						<div class="dropdown-content">
-							<a href="#" class="active">AI MUSIC ALLIANCE</a>
-							<a href="/playlists/synthwave-epic-loops/">SynthWave Epic Loops</a>
-							<a href="/playlists/darkwave/">DarkWave Essentials</a>
-							<a href="/playlists/coastal-pulse/">Coastal Pulse</a>
-							<a href="/playlists/meditation/">Meditation Soundscapes</a>
-							
-						</div>
-					</li>
-					<!--<li><a href="https://featured-artist.aetherwavestudio.com/">Featured Artist</a></li>-->
-					<li class="dropdown">
-						<a href="https://shop.aetherwavestudio.com">Shop</a>
-						<div class="dropdown-content">
-							<a href="https://shop.aetherwavestudio.com/coastal-pulse">Coastal Pulse</a>
-							<a href="https://shop.aetherwavestudio.com/synthwave-epic-loops">SynthWave Epic Loops</a>
-						</div>
-					</li>
-					<li><a href="https://docs.google.com/forms/d/e/1FAIpQLSfHYRDb7iRmNFIneGJNsEhQ1wpi5QQYbXKy9mwFUMP4htvOoQ/viewform?usp=header" target="_blank">Submit Music</a></li>
-			</nav>
-			<div id="auth-section" style="display: flex; align-items: center; gap: 1rem;">
-			<a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
-			<div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
+      <!-- Center: Navigation -->
+      <nav class="aether-nav" style="justify-self: center">
+        <ul>
+          <li class="dropdown">
+          <a href="#">CREATOR'S STUDIO</a>
+           <div class="dropdown-content">
+            <a href="/static/aimusic-media.html">AI MUSIC & MEDIA</a>
+            <a href="/creator-studio/video-generation2.html">AI VIDEO STUDIO</a>
+            <a href="/static/seamless-loop-creator/seamless-loop-creator.html">SEAMLESS LOOPS</a>
+            <a href="/remove-background">REMOVE BG (VIDEO)</a>
+          </div>
+         </li> 
+  
+          <li class="dropdown">
+           <a href="/virtual-artists/">VIRTUAL ARTISTS</a>
+            <div class="dropdown-content">
+              <a href="/static/playlists.html">Playlists</a>
+              <a href="/virtual-artists/gallery/">Gallery</a>
+              <a href="/virtual-artists/helena/">Helena</a>
+              <a href="/virtual-artists/ghosts-online/">Ghosts Online</a>
+            </div>
+          </li>
+          <li><a href="/band-generator/examples/vanilla-html-integration.html">BAND GENERATOR</a></li>
+        </ul>
+      </nav>
+
+      <!-- Right: Auth Section -->
+       <div id="auth-section" style="display: flex; align-items: center; gap: 1rem; justify-self: end;">
+        <a href="/api/login" class="nav-btn" id="login-btn" data-testid="button-login">Login</a>
+        <div id="user-profile" style="display: none; align-items: center; gap: 0.75rem;">
           <!-- Credits Badge -->
           <div class="credits-indicator" data-testid="credits-display" onclick="showPaymentModal()" title="Click to view plans and upgrade" style="display: none;">
             <span id="credits-count">0</span>
           </div>
           <!-- Quest Gift Box Icon -->
-          <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
+          <div id="quest-gift-icon" onclick="showQuestModal()" style="display: none; cursor: pointer; position: relative; width: 40px; height: 40px; background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; box-shadow: 0 2px 8px rgba(255, 46, 166, 0.3);" onmouseover="this.style.transform='translateY(-2px) scale(1.05)'; this.style.boxShadow='0 4px 16px rgba(255, 46, 166, 0.5)'" onmouseout="this.style.transform=''; this.style.boxShadow='0 2px 8px rgba(255, 46, 166, 0.3)'" title="Earn free credits by completing quests!">
             <span style="font-size: 1.3rem;">🎁</span>
-            <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; align-items: center; justify-content: center;"></div>
+            <div id="quest-notification-badge" style="display: none; position: absolute; top: -4px; right: -4px; width: 16px; height: 16px; background: #ff2ea6; border-radius: 50%; border: 2px solid var(--dark-bg); font-size: 0.65rem; font-weight: 700; color: white; display: flex; align-items: center; justify-content: center;"></div>
           </div>
           <div id="profile-trigger" style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(139, 92, 246, 0.1)'" onmouseout="this.style.background='transparent'" data-testid="button-profile">
             <img id="user-avatar" src="/assets/icon-set/profile-icon.png" alt="User" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--aetherwave-purple);">
@@ -466,6 +471,7 @@
           <a href="/api/logout" class="nav-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;" data-testid="button-logout">Logout</a>
         </div>
       </div>
+    </header>
    
   </header>
 

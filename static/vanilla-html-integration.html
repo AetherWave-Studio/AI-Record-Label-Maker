@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherWave Band Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #00ffff;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            color: #ffffff;
+            font-size: 16px;
+        }
+
+        input[type="file"]:hover,
+        input[type="text"]:hover,
+        select:hover {
+            border-color: #00ffff;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: linear-gradient(45deg, #00ffff, #0099ff);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: #00ffff;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .band-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border: 2px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .band-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .band-name {
+            font-size: 2em;
+            color: #00ffff;
+            margin: 0;
+        }
+
+        .band-genre {
+            display: inline-block;
+            background: rgba(255, 0, 255, 0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .band-image {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .trading-card-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .trading-card {
+            max-width: 350px;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 255, 255, 0.3);
+        }
+
+        .info-section {
+            margin: 20px 0;
+        }
+
+        .info-section h3 {
+            color: #ff00ff;
+            margin-bottom: 10px;
+        }
+
+        .members-list {
+            list-style: none;
+        }
+
+        .member-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #00ffff;
+        }
+
+        .member-name {
+            font-weight: bold;
+            color: #00ffff;
+        }
+
+        .member-role {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+
+        .download-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #ff00ff, #ff0099);
+            padding: 12px 20px;
+            font-size: 16px;
+        }
+
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 2px solid #ff0000;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .tag {
+            background: rgba(0, 255, 255, 0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            border: 1px solid rgba(0, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎸 AetherWave Band Generator</h1>
+
+        <!-- Upload Form -->
+        <div class="upload-section">
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="audioFile">Upload Audio File (MP3/WAV)</label>
+                    <input type="file" id="audioFile" accept="audio/*" required>
+                </div>
+
+                <div class="options-grid">
+                    <div class="form-group">
+                        <label for="mode">Generation Mode</label>
+                        <select id="mode">
+                            <option value="explore">Explore (4 candidates, auto-select best)</option>
+                            <option value="refine">Refine (single polished result)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="artStyle">Art Style</label>
+                        <select id="artStyle">
+                            <option value="realistic">Realistic</option>
+                            <option value="anime">Anime</option>
+                            <option value="abstract">Abstract</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cardTheme">Card Theme</label>
+                        <select id="cardTheme">
+                            <option value="dark">Dark</option>
+                            <option value="light">Light</option>
+                            <option value="vibrant">Vibrant</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="options-grid">
+                    <div class="form-group">
+                        <label for="bandName">Band Name (optional)</label>
+                        <input type="text" id="bandName" placeholder="Let AI decide...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="songName">Song Name (optional)</label>
+                        <input type="text" id="songName" placeholder="Let AI decide...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="genre">Genre Preference (optional)</label>
+                        <input type="text" id="genre" placeholder="e.g., Alternative Rock">
+                    </div>
+                </div>
+
+                <button type="submit" id="generateBtn">
+                    Generate Virtual Band
+                </button>
+            </form>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Generating your virtual band...</p>
+            <p style="font-size: 0.9em; color: #aaa;">This may take 10-30 seconds</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error" id="error"></div>
+
+        <!-- Results -->
+        <div class="results" id="results">
+            <div class="band-card">
+                <div class="band-header">
+                    <h2 class="band-name" id="bandName"></h2>
+                    <span class="band-genre" id="bandGenre"></span>
+                </div>
+
+                <p style="font-style: italic; color: #aaa; margin-bottom: 20px;" id="bandPhilosophy"></p>
+
+                <!-- Band Image -->
+                <img class="band-image" id="bandImage" alt="Band Portrait" style="display: none;">
+
+                <!-- Trading Card -->
+                <div class="trading-card-container">
+                    <h3>🎴 Trading Card</h3>
+                    <img class="trading-card" id="tradingCard" alt="Trading Card">
+                </div>
+
+                <!-- Band Info -->
+                <div class="info-section">
+                    <h3>Band Identity</h3>
+                    <p id="bandIdentity"></p>
+                    <p style="color: #00ffff; margin-top: 10px;"><strong>Motto:</strong> <span id="bandMotto"></span></p>
+                </div>
+
+                <div class="info-section">
+                    <h3>Tags</h3>
+                    <div class="tags" id="tags"></div>
+                </div>
+
+                <div class="info-section">
+                    <h3>Origin Story</h3>
+                    <p id="originStory"></p>
+                </div>
+
+                <div class="info-section">
+                    <h3>Band Members</h3>
+                    <ul class="members-list" id="membersList"></ul>
+                </div>
+
+                <div class="info-section">
+                    <h3>Musical Details</h3>
+                    <p><strong>Signature Sound:</strong> <span id="signatureSound"></span></p>
+                    <p><strong>Influences:</strong> <span id="influences"></span></p>
+                </div>
+
+                <!-- Download Buttons -->
+                <div class="download-buttons">
+                    <button class="download-btn" onclick="downloadImage()">
+                        📸 Download Band Image
+                    </button>
+                    <button class="download-btn" onclick="downloadCard()">
+                        🎴 Download Trading Card
+                    </button>
+                    <button class="download-btn" onclick="downloadPDF()">
+                        📄 Download PDF Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000'; // Change to your server URL
+        let currentBandData = null;
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData();
+            const audioFile = document.getElementById('audioFile').files[0];
+
+            if (!audioFile) {
+                showError('Please select an audio file');
+                return;
+            }
+
+            // Add audio file
+            formData.append('audio', audioFile);
+
+            // Add options
+            formData.append('mode', document.getElementById('mode').value);
+            formData.append('artStyle', document.getElementById('artStyle').value);
+            formData.append('cardTheme', document.getElementById('cardTheme').value);
+
+            // Add optional preferences
+            const bandName = document.getElementById('bandName').value;
+            const songName = document.getElementById('songName').value;
+            const genre = document.getElementById('genre').value;
+
+            if (bandName) formData.append('userBandName', bandName);
+            if (songName) formData.append('songName', songName);
+            if (genre) formData.append('userGenre', genre);
+
+            // Show loading, hide results and errors
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('results').classList.remove('active');
+            document.getElementById('error').classList.remove('active');
+            document.getElementById('generateBtn').disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}/api/band-generation`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentBandData = data.winner;
+
+                displayResults(data.winner);
+
+            } catch (error) {
+                console.error('Error:', error);
+                showError(`Failed to generate band: ${error.message}`);
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.getElementById('generateBtn').disabled = false;
+            }
+        });
+
+        function displayResults(band) {
+            // Update band info
+            document.getElementById('bandName').textContent = band.bandName;
+            document.getElementById('bandGenre').textContent = band.genre;
+            document.getElementById('bandPhilosophy').textContent = `"${band.philosophy}"`;
+            document.getElementById('bandIdentity').textContent = band.band_identity;
+            document.getElementById('bandMotto').textContent = band.band_motto;
+            document.getElementById('originStory').textContent = band.world_building.origin_story || 'No origin story available';
+            document.getElementById('signatureSound').textContent = band.signatureSound;
+            document.getElementById('influences').textContent = band.influences.join(', ');
+
+            // Display band image if available
+            if (band.imageUrl) {
+                const bandImage = document.getElementById('bandImage');
+                bandImage.src = band.imageUrl;
+                bandImage.style.display = 'block';
+            }
+
+            // Display trading card
+            document.getElementById('tradingCard').src = band.cardImageUrl;
+
+            // Display tags
+            const tagsContainer = document.getElementById('tags');
+            tagsContainer.innerHTML = '';
+            band.tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.textContent = tag;
+                tagsContainer.appendChild(tagEl);
+            });
+
+            // Display members
+            const membersList = document.getElementById('membersList');
+            membersList.innerHTML = '';
+            band.members.forEach(member => {
+                const li = document.createElement('li');
+                li.className = 'member-item';
+                li.innerHTML = `
+                    <div class="member-name">${member.name}</div>
+                    <div class="member-role">${member.role}</div>
+                    <div style="margin-top: 8px; font-size: 0.9em;">${member.archetype}</div>
+                `;
+                membersList.appendChild(li);
+            });
+
+            // Show results
+            document.getElementById('results').classList.add('active');
+
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.classList.add('active');
+        }
+
+        // Download functions
+        function downloadImage() {
+            if (!currentBandData || !currentBandData.imageUrl) {
+                alert('No image available');
+                return;
+            }
+            downloadFile(currentBandData.imageUrl, `${currentBandData.bandName}-image.jpg`);
+        }
+
+        function downloadCard() {
+            if (!currentBandData || !currentBandData.cardImageUrl) {
+                alert('No card available');
+                return;
+            }
+            downloadFile(currentBandData.cardImageUrl, `${currentBandData.bandName}-card.svg`);
+        }
+
+        async function downloadPDF() {
+            if (!currentBandData) {
+                alert('No band data available');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/band-profile-pdf`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        bandData: currentBandData,
+                        imageUrl: currentBandData.imageUrl
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('PDF generation failed');
+                }
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${currentBandData.bandName}-profile.pdf`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            } catch (error) {
+                alert(`Failed to download PDF: ${error.message}`);
+            }
+        }
+
+        function downloadFile(dataUrl, filename) {
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = filename;
+            a.click();
+        }
+    </script>
+</body>
+</html>
