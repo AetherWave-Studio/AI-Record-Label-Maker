@@ -23,6 +23,6 @@
       "#shared/*": ["./shared/*"]
     }
   },
-  "include": ["client/src", "server", "shared"],
+  "include": ["client/src", "server", "shared","band-generator/src/services"],
   "exclude": ["node_modules", "dist"]
 }

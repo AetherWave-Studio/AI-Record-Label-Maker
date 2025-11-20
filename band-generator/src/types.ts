@@ -45,14 +45,33 @@ export interface BandData {
   cardImageUrl?: string;
 }
 
+export type Genre =
+  | 'Rock'
+  | 'Alternative Rock'
+  | 'Heavy Metal'
+  | 'Goth'
+  | 'Industrial'
+  | 'Synthpop'
+  | 'Ambient'
+  | 'Experimental'
+  | 'Punk'
+  | 'Jazz'
+  | 'Pop';
+
 export interface GenerationOptions {
   mode: 'explore' | 'refine';
   artStyle: 'realistic' | 'anime' | 'abstract';
   cardTheme: 'dark' | 'light' | 'vibrant';
   userBandName?: string;
   songName?: string;
-  userGenre?: string;
+  userGenre?: Genre;
   artistType?: 'solo' | 'ensemble';
+}
+
+export const defaultGenerationOptions: GenerationOptions = {
+  mode: 'explore',
+  artStyle: 'realistic',
+  cardTheme: 'dark',
 }
 
 export interface ScoringMetrics {

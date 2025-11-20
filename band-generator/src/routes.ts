@@ -3,6 +3,7 @@ import multer from 'multer';
 import { BandGenerator } from './bandGenerator.js';
 import { AudioAnalyzer } from './audioAnalyzer.js';
 import { CardGenerator } from './cardGenerator.js';
+import { PdfGenerator } from './pdfGenerator.js';
 import type { GenerationOptions } from './types.js';
 
 // Configure multer for file uploads
@@ -115,7 +116,7 @@ export function setupRoutes(app: Express) {
 
   /**
    * POST /api/band-profile-pdf
-   * Generate PDF profile (placeholder - requires pdfkit implementation)
+   * Generate PDF profile for a band
    */
   app.post('/api/band-profile-pdf', async (req: Request, res: Response) => {
     try {
@@ -125,13 +126,19 @@ export function setupRoutes(app: Express) {
         return res.status(400).json({ error: 'Band data is required' });
       }
 
-      // TODO: Implement PDF generation with pdfkit
-      res.status(501).json({
-        error: 'PDF generation not yet implemented',
-        message: 'This feature will be available in a future update'
-      });
+      console.log(`📄 Generating PDF for: ${bandData.bandName}`);
+
+      const pdfBuffer = await PdfGenerator.generateProfile(bandData);
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${bandData.bandName}-profile.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+
+      res.send(pdfBuffer);
+
+      console.log(`✅ PDF generated: ${bandData.bandName} (${(pdfBuffer.length / 1024).toFixed(2)} KB)`);
     } catch (error: any) {
-      console.error('PDF generation error:', error);
+      console.error('❌ PDF generation error:', error);
       res.status(500).json({
         error: 'PDF generation failed',
         message: error.message

@@ -1,5 +1,14 @@
 import OpenAI from 'openai';
 import type { AudioMetrics, BandData, GenerationOptions, GenerationResult, ScoringMetrics } from './types.js';
+import { defaultGenerationOptions} from './types.js';
+import { generateArtistImage, buildImagePrompt } from "./services/imageProvider.js";
+import { CardGenerator } from './cardGenerator.js';
+import { OPENAI_API_KEY } from './services/env.js';
+
+//const artStyle = selectedStyle || 'realistic';
+const theme = defaultGenerationOptions.cardTheme;
+
+
 
 /**
  * Band Generation System Prompt
@@ -44,12 +53,12 @@ export class BandGenerator {
   private openai: OpenAI;
 
   constructor() {
-    if (!process.env.OPENAI_API_KEY) {
+    if (!OPENAI_API_KEY) {
       throw new Error('OPENAI_API_KEY is required');
     }
 
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY
+      apiKey: OPENAI_API_KEY
     });
   }
 
@@ -73,69 +82,54 @@ export class BandGenerator {
    * Explore mode: Generate 4 candidates and pick the best
    */
   private async generateExploreMode(
-    audioMetrics: AudioMetrics,
-    options: GenerationOptions,
-    startTime: number
-  ): Promise<GenerationResult> {
-    console.log('🎨 Generating 4 band candidates...');
+  audioMetrics: AudioMetrics,
+  options: GenerationOptions,
+  startTime: number
+): Promise<GenerationResult> {
+  console.log('🎨 Generating 4 band candidates...');
 
-    // Generate 4 candidates in parallel
-    const candidates = await Promise.all([
-      this.generateSingleBand(audioMetrics, options, 1),
-      this.generateSingleBand(audioMetrics, options, 2),
-      this.generateSingleBand(audioMetrics, options, 3),
-      this.generateSingleBand(audioMetrics, options, 4)
-    ]);
+  // Generate 4 candidates in parallel
+  const candidates = await Promise.all([
+    this.generateSingleBand(audioMetrics, options, 1),
+    this.generateSingleBand(audioMetrics, options, 2),
+    this.generateSingleBand(audioMetrics, options, 3),
+    this.generateSingleBand(audioMetrics, options, 4)
+  ]);
 
-    // Score each candidate
-    const scoredCandidates = candidates.map(band => ({
-      band,
-      score: this.scoreBand(band, audioMetrics, options)
-    }));
+  // Score each candidate
+  const scoredCandidates = candidates.map(band => ({
+    band,
+    score: this.scoreBand(band, audioMetrics, options)
+  }));
 
-    // Sort by score
-    scoredCandidates.sort((a, b) => b.score.total - a.score.total);
+  // Sort by score
+  scoredCandidates.sort((a, b) => b.score.total - a.score.total);
 
-    const winner = scoredCandidates[0];
-    const processingTime = (Date.now() - startTime) / 1000;
+  const winner = scoredCandidates[0];
+  const processingTime = (Date.now() - startTime) / 1000;
+  const bandData = winner.band;
+  const artStyle = bandData.artStyle || options.artStyle || 'realistic';
+  const theme = options.cardTheme || 'dark';
 
-    console.log(`✅ Selected winner: ${winner.band.bandName} (score: ${winner.score.total.toFixed(2)})`);
+  await finalizeBandAssets(bandData, artStyle, theme);
 
-    return {
-      winner: winner.band,
-      alternatives: scoredCandidates.slice(1).map(c => c.band),
-      metadata: {
-        mode: 'explore',
-        processingTime,
-        candidatesGenerated: 4,
-        scoring: winner.score
-		
-		// After const winner = scoredCandidates[0]; (in explore) or enhancedData (in refine)
-// Force image gen (calls your separate ts)
-const imagePrompt = `Realistic image of ${winner.band.bandName}: high-energy 80's rock band with 5 male members, progressive instrumental style.`;
-const imageResponse = await this.openai.images.generate({
-  model: 'dall-e-3',
-  prompt: imagePrompt,
-  size: '1024x1024'
-});
-winner.band.imageUrl = imageResponse.data[0].url || 'No image available'; // Fallback
+  console.log(`✅ Selected winner: ${winner.band.bandName} (score: ${winner.score.total.toFixed(2)})`);
 
-// Force card SVG (calls cardGenerator.ts)
-const cardSvg = CardGenerator.generateCard(winner.band, options.cardTheme || 'dark');
-winner.band.cardImageUrl = CardGenerator.toDataUrl(cardSvg);
+  return {
+    winner: winner.band,
+    alternatives: scoredCandidates.slice(1).map(c => c.band),
+    metadata: {
+      mode: 'explore',
+      processingTime,
+      candidatesGenerated: 4,
+      scoring: winner.score
+    }
+  };
 
-// Force PDF (calls PDF-GENERATION.md)
-const pdfBuffer = await generateBandProfilePDF(winner.band, winner.band.imageUrl);
-const pdfFilename = `${winner.band.bandName.replace(/\s/g, '-')}-profile.pdf`;
-fs.writeFileSync(`public/${pdfFilename}`, pdfBuffer); // Save (or S3 for prod)
-winner.band.pdfUrl = `http://localhost:5001/public/${pdfFilename}`; // Add to JSON
-      }
-    };
-  }
+} // ✅ This closes generateExploreMode
 
-  /**
-   * Refine mode: Generate single polished result
-   */
+   /* Refine mode: Generate single polished result
+*/
   private async generateRefineMode(
     audioMetrics: AudioMetrics,
     options: GenerationOptions,
@@ -144,6 +138,12 @@ winner.band.pdfUrl = `http://localhost:5001/public/${pdfFilename}`; // Add to JS
     console.log('🎯 Generating refined band...');
 
     const band = await this.generateSingleBand(audioMetrics, options, 1);
+    const artStyle = band.artStyle || options.artStyle || 'realistic';
+    const theme = options.cardTheme || 'dark';
+
+    // Generate assets for refined band
+    await finalizeBandAssets(band, artStyle, theme);
+
     const processingTime = (Date.now() - startTime) / 1000;
 
     console.log(`✅ Generated: ${band.bandName}`);
@@ -157,7 +157,6 @@ winner.band.pdfUrl = `http://localhost:5001/public/${pdfFilename}`; // Add to JS
       }
     };
   }
-
   /**
    * Generate a single band
    */
@@ -197,7 +196,11 @@ winner.band.pdfUrl = `http://localhost:5001/public/${pdfFilename}`; // Add to JS
       console.error(`Error generating band (iteration ${iteration}):`, error);
       throw error;
     }
-  }
+  };
+
+
+
+
 
   /**
    * Build user prompt from audio metrics and options
@@ -259,7 +262,8 @@ winner.band.pdfUrl = `http://localhost:5001/public/${pdfFilename}`; // Add to JS
     if (band.bandName && band.bandName.length > 3) clarity += 1;
     if (band.genre && band.genre.length > 2) clarity += 1;
     if (band.philosophy && band.philosophy.length > 10) clarity += 1;
-    if (band.band_motto && band.band_motto.length > 5) clarity += 1;
+    //if (band.band_motto && band.band_motto.length > 5) clarity += 1;bandData.imageUrl = 'success';
+
 
     // Brand fit: Check style alignment
     if (band.artStyle === options.artStyle) brandFit += 2;
@@ -276,5 +280,30 @@ winner.band.pdfUrl = `http://localhost:5001/public/${pdfFilename}`; // Add to JS
     const total = (novelty + clarity + brandFit + constraintFit) / 4;
 
     return { novelty, clarity, brandFit, constraintFit, total };
+  }
+}//this should close the class
+async function finalizeBandAssets(
+  bandData: BandData,
+  artStyle: string,
+  theme: string
+): Promise<void> {
+  // Generate band image
+  try {
+    const prompt = buildImagePrompt(bandData, artStyle, theme); // or however you construct it
+    const imageUrl = await generateArtistImage(prompt, "seedream"); // or "nano"
+    console.log("🖼️ Generated image URL preview:", imageUrl?.slice?.(0, 100));
+    bandData.imageUrl = imageUrl;
+  } catch (error) {
+    console.error("Image generation failed:", error);
+  }
+
+  // Generate trading card
+  try {
+    const cardTheme = theme as 'dark' | 'light' | 'vibrant';
+    const cardSvg = CardGenerator.generateCard(bandData, cardTheme);
+    bandData.cardImageUrl = CardGenerator.toDataUrl(cardSvg);
+    console.log("Generated trading card");
+  } catch (error) {
+    console.error("Trading card generation failed:", error);
   }
 }

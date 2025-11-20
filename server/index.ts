@@ -1,12 +1,26 @@
-import "dotenv/config";
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Reconstruct __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Always load .env first to ensure NODE_ENV is available
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
+
+// Override with production env if needed
+if (process.env.NODE_ENV === "production") {
+  dotenv.config({ path: path.resolve(__dirname, "../../.env.production") });
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import cors from "cors";
-import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { maintenanceMiddleware } from "./maintenance";
 import path from "path";
 import { promises as fs } from "fs";
-
+import { registerRoutes } from "./routes";
 const app = express();
 
 // Configure CORS to allow credentials from frontend
@@ -42,6 +56,10 @@ app.get("/api/health", (_req, res) => {
   res.status(200).json({ status: "ok", timestamp: Date.now() });
 });
 
+ app.get("/", (_req, res) => {
+    res.redirect("/static/");
+  });
+  
 app.get('/public/:filename', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', req.params.filename));
 });
@@ -89,14 +107,11 @@ app.use((req, res, next) => {
     res.status(status).json({ message });
     throw err;
   });
-
   // Serve static HTML directories and landing page
   const rootDir = path.resolve(import.meta.dirname, "..");
 
   // Redirect root to static directory
-  app.get("/", (_req, res) => {
-    res.redirect("/static/");
-  });
+ 
 
   // Serve all static HTML directories
 
@@ -240,3 +255,4 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
+

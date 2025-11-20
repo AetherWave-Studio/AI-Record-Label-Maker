@@ -216,7 +216,7 @@
     grid-row: 1 / 2;
     text-align: center;
     animation: fadeInUp 0.8s ease-out;
-    background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FGlowing_smaller.gif?alt=media&token=1af867a1-5e5b-446c-bc62-f8cd6b311a72') no-repeat center center, linear-gradient(135deg, rgba(13, 11, 21, 0.98), rgba(20, 15, 35, 0.98));
+    background: url('') no-repeat center center, linear-gradient(135deg, rgba(13, 11, 21, 0.98), rgba(20, 15, 35, 0.98));
     background-size: cover;
     border: 1px solid var(--border-color);
     border-radius: 16px;
@@ -293,6 +293,16 @@
     flex-direction: column;
     gap: 0.5rem;
     }
+	.panel-header-blank {
+    padding: 1.25rem 1.5rem;
+    /*border-bottom: 1px solid var(--border-color);
+    background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FBlack_Surface.png?alt=media&token=06d4bfdc-41d8-4d55-bbfd-5756c5d63845') no-repeat center center, rgba(13, 11, 21, 0.5);
+    background-size: 100% 100%;
+    position: relative;
+    display: flex;  */
+    flex-direction: column;
+    gap: 0.5rem;
+    }
     
     .music-panel-header {
       display: flex;
@@ -331,10 +341,10 @@
     }
     
     .version-dropdown {
-      padding: 0.5rem 1rem;
-      background: var(--dark-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
+      padding: 0.1rem;
+      background-color: transparent;
+      //border: 1px solid var(--border-color);
+      border-radius: 5px;
       color: var(--text-primary);
       font-size: 0.9rem;
       font-weight: 500;
@@ -769,7 +779,9 @@
 
     .send-btn {
     padding: 0.875rem 1.5rem;
-    background: linear-gradient(135deg, var(--aetherwave-pink), var(--aetherwave-purple));
+    background: url("https://www.dropbox.com/scl/fi/y5rqvlzgm0zl44gmvi221/send-btn-active.png?rlkey=tdy7j0d4xar4aqvjshaixvy37&raw=1")
+	no-repeat;
+    background-size: 100% 100%;
     color: white;
     border: none;
     border-radius: 12px;
@@ -934,7 +946,7 @@
     .media-type-btn.active,
     .mode-toggle-btn.active,
     .gender-toggle-btn.active {
-    background: url('https://www.dropbox.com/scl/fi/713wojh1f5mmxw3j7ppim/Pick-btn-on.png?rlkey=74f7kp7he8grstmd7i1gtmwen&raw=1') no-repeat center center !important;
+    //background: url('https://www.dropbox.com/scl/fi/713wojh1f5mmxw3j7ppim/Pick-btn-on.png?rlkey=74f7kp7he8grstmd7i1gtmwen&raw=1') no-repeat center center !important;
     background-size: 100% 100% !important;
     color: #00F5A0 !important;
     filter: drop-shadow(0 0 15px rgba(255, 46, 166, 0.8));
@@ -1693,7 +1705,7 @@
       }
       
       .media-type-btn,
-      .mode-toggle-btn,
+      //.mode-toggle-btn,
       .gender-toggle-btn {
 	   background: url('https://www.dropbox.com/scl/fi/z4d19h9rgwx5q0z1egybs/Pick-btn.png?rlkey=4rqcc8yhxqs817dk7jogrj9wg&raw=1') no-repeat center center !important;
 		background-size: 100% 100% !important;
@@ -1816,7 +1828,7 @@
       <a href="/static/" class="logo">
         <div class="logo-icon2">
           <img class="logo-icon2" src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FLogo-SilverAlloy-Loop-1_1761279396703.gif?alt=media&token=57eb7fe9-fcd8-42fe-a845-b80a0347e2ad" alt="AetherWave Logo" style="width: 50px; height: 50px; object-fit: contain;">
-        </div>
+            </div>
         <span>
           <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2Faws-banner_1761542850665.png?alt=media&token=fe7db850-1c11-4f93-a04d-2f5ac6678133" alt="AetherWave Studio" style="height: 40px; object-fit: contain;">
         </span>
@@ -1874,28 +1886,58 @@
   <main>
     <div class="panels-container">
     <!-- Music Generation Panel -->
-    <div class="panel panel-music" style="background-image: url('https://www.dropbox.com/scl/fi/qi9iyuc6az8kfecl6o14h/SUNO-AI-400px.png?rlkey=vxmmq0yki6tiwrej9k19ivskk&raw=1'); 
-	background-repeat: no-repeat; 
-	background-position: center center; 
-	background-size: 100% 100%;">
-    <div class="panel-header">
+	<div class="panel panel-music" style="background-image: url('https://www.dropbox.com/scl/fi/qi9iyuc6az8kfecl6o14h/SUNO-AI-400px.png?rlkey=vxmmq0yki6tiwrej9k19ivskk&raw=1'); 
+		background-repeat: no-repeat; 
+		background-position: center center; 
+		background-size: 100% 100%;">
+		<div class="panel-header-blank">
         <div style="margin-top: 0.1rem;">
-        <div class="panel-title" style="display:inline";><img src="https://www.dropbox.com/scl/fi/1putgfww64eew3jcca8ol/Black_Surface.png?rlkey=81og51yb0112nqcy0z58jgo9j&raw=1" style="width: 24px; height: 24px; margin-left: 0.5rem; vertical-align: middle;"> Music Generation</div>
-        
-           <select id="music-model-header" class="version-dropdown" data-testid="select-version" style="margin-left:60p inner-glow">
+        <div class="panel-title" style="display:inline-flex";>
+        <div style="display: flex; flex-direction: column; align-items: left; width: 200px; height: 100%; object-fit: contain;">
+       <select id="music-model-header" class="version-dropdown" data-testid="select-version" 
+	   style="margin-top: 45px; margin-left: 50px; width: 180px;">
         <option value="V5">v5 (Premium) ▼</option>
         <option value="V4_5PLUS">v4.5+ (Premium) ▼</option>
         <option value="V4_5">v4.5 (Premium) ▼</option>
         <option value="V4" selected>v4 (Free) ▼</option>
         <option value="V3_5">v3.5 (Free) ▼</option>
       </select>
-          </div>
+	   <div style="display: flex; gap: 1rem; margin-top: 15px; margin-left: 70px;">
+	   <button class="mode-toggle-btn" data-testid="button-mode-simple" style="flex: 1;
+	   border: blue; 
+	   //cursor: pointer; 
+	   height: 20px; 
+	   background-image:url('https://www.dropbox.com/scl/fi/3d3camm1uveuwcj1k5pzv/upscaled_simple.png?rlkey=ewpc05ys5s9r83veeso9at0bw&raw-1');">
+	   </button>
+	   
+       <button class="mode-toggle-btn" data-mode="custom" data-testid="button-mode-custom" style="flex: 1; border: pink;  cursor: pointer; height: 20px;">
+       </button>
+	 </div>
+	  </div>
+	  
+	  
+	  <div class="form-group">
+    <label class="form-label" id="upload-file-label">Audio File to Cover (Optional)</label>
+    <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+      <input type="file" id="upload-file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac" style="display: none;" data-testid="input-upload-file">
+      <button type="button" id="upload-file-btn" class="premium-upload-btn" data-testid="button-upload-file"><img src="https://www.dropbox.com/scl/fi/6mvfeleqtxzosb2oo6ykd/102.upload-btn.png?rlkey=o9smhdojkfsz2u2cykhyxhq9r&raw=1" style="width: 16px; height: 16px; margin-right: 0.5rem; vertical-align: middle; filter: brightness(0) invert(1)"> UPLOAD AUDIO</button>
+      <span id="upload-file-name" style="color: var(--text-muted); font-size: 0.85rem; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 120px;">No file selected</span>
+      <button type="button" id="clear-upload-btn" style="display: none; padding: 0.5rem 0.75rem; background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-size: 0.85rem;" data-testid="button-clear-upload">Clear</button>
+    </div>
+    <input type="hidden" id="upload-url" data-testid="hidden-upload-url">
+    <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.25rem;">Upload an audio file to cover it with a new style while keeping the melody. Max 8 minutes, max 10MB.</p>
+    </div>
+	  
+	  
+	  
+	  
+	 </div>
     <div class="music-panel-header">
         
          
       <div class="panel-title" style="text-align: left";>
       
-          <div class="panel-description">Create AI-generated music Powered by SUNO</div>
+        
       </div>
    
    
@@ -1905,14 +1947,6 @@
     <!-- Mode Toggle -->
     <div class="form-group">
     <!--<label class="form-label">Mode</label>-->
-    <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
-    <button class="mode-toggle-btn active" data-mode="simple" data-testid="button-mode-simple" style="flex: 1; padding: 1rem; background: url('https://www.dropbox.com/scl/fi/z4d19h9rgwx5q0z1egybs/Pick-btn.png?rlkey=4rqcc8yhxqs817dk7jogrj9wg&raw=1'); no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-    Simple
-    </button>
-    <button class="mode-toggle-btn" data-mode="custom" data-testid="button-mode-custom" style="flex: 1; padding: 1rem; background: url('https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/Icon%20Set%20Black%2FPick-btn-off.png?alt=media&token=c02b88b4-6314-46df-8c7a-8af53f0bc6fb') no-repeat center center; background-size: 100% 100%; border: none; border-radius: 50px; color: var(--text-primary); font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-    Custom
-    </button>
-    </div>
     </div>
 
     <!-- Upload & Cover Audio File (Optional) -->
@@ -1950,7 +1984,7 @@
     <label class="form-label" id="custom-lyrics-label">Lyrics <span id="custom-char-count" style="color: var(--text-muted); font-size: 0.85rem;">(0/3000)</span></label>
     <textarea id="music-lyrics" maxlength="3000" placeholder="Write your own lyrics, two verses (8 lines) for the best result" style="min-height: 120px;"></textarea>
     </div>
-    </div>
+   </div>
 
 <div id="advanced-options" style="display: none;">
   <details open>
@@ -2022,24 +2056,45 @@
     Choose the visual style for Album Art
   </div>
 </div>
-
+</div>
     <img src="https://firebasestorage.googleapis.com/v0/b/aetherwave-playlists.firebasestorage.app/o/global-assets%2FStandbye.gif?alt=media&token=b9432e7a-9b93-4667-924b-17b8068b27a8" id="generate-music-btn" style="width: 110px; cursor: pointer; display: block;" alt="Generate Music">
     <div id="music-result" style="display: none;"></div>
     </div>
     </div>
 
     <!-- Hero Section -->
-    <div class="hero-text" style="height:130px">
-    <h1></h1>
-    <p class="subtitle"></p>
-    </div>
+      <div class="hero-text">
+        <h1>AI Music and Media Center</h1>
+        <p class="subtitle">
+          Create music, chat with AI, and generate album art - all in one
+          creative studio
+        </p>
+      </div>
+
 
     <!-- Chat Panel -->
     <div class="panel panel-chat">
-    <div class="panel-header">
-    <div class="panel-title"><h1>AI Music and Media Center</h1></div>
-    <div class="panel-description"><p class="subtitle">Create music, chat with AI, and generate album art - all in one creative studio</p></div>
-    </div>
+     <div
+          class="panel-header"
+          style="
+            background-image: url('https://www.dropbox.com/scl/fi/694fkoohulrzbum4vozm5/aetherwave_flame_header.gif?rlkey=ingwrd8ycom3f2uefovarbl8w&raw=1');
+          "
+          size="cover"
+          style="align: right"
+        >
+          <div class="panel-title" style="display: flex; align-items: center">
+			<video src="\static\public\assets\Voxbot-Profile.mp4"
+			autoplay
+			muted
+			playsinline
+			loop
+			style="width: 70px; height: auto;"
+			type="video/mp4/" 
+			</video>
+          </div>
+          <!--<div><span class="panel-content">AetherWave AI Chat </span>
+                  </div>-->
+        </div>
     <div class="panel-content">
     <div class="chat-messages">
     <div class="message assistant">
@@ -2053,7 +2108,7 @@
     <div class="chat-input-area">
     <div class="input-wrapper">
     <input type="text" id="chat-input" placeholder="Ask me anything..." />
-    <button class="send-btn" id="send-btn">Send</button>
+    <button class="send-btn" id="send-btn"></button>
     </div>
     <div class="suggestions">
     <div class="suggestion-chip">Prompts for Music</div>
@@ -4610,7 +4665,7 @@ window.premiumPlayer = {
     addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
     } finally {
     sendBtn.disabled = false;
-    sendBtn.textContent = 'Send';
+    sendBtn.textContent = '';
     }
     }
 
@@ -6452,7 +6507,7 @@ updateMediaInputs();
     }
   </script>
   <!-- Shared Navigation JavaScript -->
-  <script src="/static/assets/js/navigation.js"></script>
+  <!--<script src="/static/assets/js/navigation.js"></script>
   <!-- Authentication Module -->
   <script type="module" src="/static/assets/js/auth.js"></script>
 </body>

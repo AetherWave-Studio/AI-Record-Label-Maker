@@ -1,4 +1,5 @@
 import type { Express } from "express";
+//import { Express } from "express";
 import { createServer, type Server } from "http";
 import fs from "fs/promises";
 import { storage } from "./storage";
@@ -17,7 +18,7 @@ import nodeFetch from "node-fetch";
 import { fal } from "@fal-ai/client";
 import { kieSubscribe, uploadImageToKie, generateMidjourney, KIE_MODELS } from "./kieClient";
 import { generateMidjourneyTtapi } from "./ttapiClient";
-import Stripe from "stripe";
+// Stripe will be imported dynamically to avoid module format conflicts
 import {
   PLAN_FEATURES,
   SERVICE_CREDIT_COSTS,
@@ -34,21 +35,47 @@ import virtualArtistsRouter from './VirtualArtistsRoutes.js';
 import { setupVideoRoutes } from './video-routes';
 import aiMachineRouter from './aiMachineRoutes.js';
 
+const isDevelopment = process.env.IS_DEVELOPMENT === "true";
 
 
-// Create proxy agent for KIE.ai API calls
-function createProxyAgent() {
-  const { PROXY_HOST, PROXY_PORT, PROXY_USERNAME, PROXY_PASSWORD } = process.env;
-  
-  if (PROXY_HOST && PROXY_PORT && PROXY_USERNAME && PROXY_PASSWORD) {
-    const proxyUrl = `http://${PROXY_USERNAME}:${PROXY_PASSWORD}@${PROXY_HOST}:${PROXY_PORT}`;
-    console.log(`Using proxy: http://${PROXY_USERNAME}:***@${PROXY_HOST}:${PROXY_PORT}`);
-    return new HttpsProxyAgent(proxyUrl);
+
+function validateEnvVars(requiredVars: string[], isProduction: boolean) {
+  const missing = requiredVars.filter((v) => !process.env[v]);
+  if (missing.length > 0) {
+    const message = `Missing environment variables: ${missing.join(", ")}`;
+    if (isProduction) {
+      console.error(message);
+      process.exit(1);
+    } else {
+      console.warn(`Warning: ${message}`);
+    }
   }
-  
-  console.log('No proxy configured, using direct connection');
-  return undefined;
 }
+// Initialize Stripe (from blueprint:javascript_stripe)
+/*if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}*/
+
+function getStripeSecret(): string {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) {
+    throw new Error("Missing required Stripe secret: STRIPE_SECRET_KEY");
+  }
+  return key;
+}
+
+// Stripe functionality temporarily disabled to avoid module format conflicts
+// let stripeInstance: any = null;
+
+// export async function getStripe(): Promise<any> {
+//   if (!stripeInstance) {
+//     const { default: Stripe } = await import('stripe');
+//     stripeInstance = new Stripe(getStripeSecret(), {
+//       apiVersion: "2025-10-29.clover",
+//     });
+//   }
+//   return stripeInstance;
+// }
 
 // Plan-based validation helpers
 function validateVideoResolution(planType: PlanType, resolution: VideoResolution): boolean {
@@ -141,13 +168,10 @@ function calculateVideoCredits(
   return totalCredits;
 }
 
-// Initialize Stripe (from blueprint:javascript_stripe)
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+
+/*const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-10-29.clover",
-});
+});*/
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Automatically detect environment and use appropriate authentication
@@ -155,6 +179,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Validate required environment variables
   if (!isDevelopment) {
+    console.log(`⚠️  Running in production mode - checking required vars...`);
     const requiredEnvVars = ['REPLIT_DOMAINS', 'SESSION_SECRET', 'DATABASE_URL', 'REPL_ID'];
     const missing = requiredEnvVars.filter(varName => !process.env[varName]);
 
@@ -225,7 +250,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bonusCredits: bundle.bonusCredits,
         },
       });
-
       res.json({ 
         clientSecret: paymentIntent.client_secret,
         bundle 

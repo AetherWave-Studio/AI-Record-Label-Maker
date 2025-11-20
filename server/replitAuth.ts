@@ -9,9 +9,14 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
 // Only check for REPLIT_DOMAINS in production mode
-if (!process.env.REPLIT_DOMAINS && process.env.NODE_ENV !== 'development') {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+export function getReplitDomains(): string {
+  const domains = process.env.REPLIT_DOMAINS;
+  if (!domains) {
+    throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  }
+  return domains;
 }
+
 
 const getOidcConfig = memoize(
   async () => {
